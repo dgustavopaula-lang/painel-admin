@@ -16,6 +16,8 @@
             --accent-orange: #ff5500;  
             --accent-hover: #ff7733;   
             --hover-bg: #222222;       
+            --danger-red: #ef4444;
+            --success-green: #22c55e;
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -28,7 +30,7 @@
 
         .sidebar {
             width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; padding: 20px; overflow-y: auto;
+            display: flex; flex-direction: column; padding: 20px; overflow-y: auto; flex-shrink: 0;
         }
 
         .sidebar::-webkit-scrollbar { width: 6px; }
@@ -36,69 +38,114 @@
 
         .user-profile {
             display: flex; align-items: center; gap: 12px;
-            margin-bottom: 30px; padding: 10px; border-radius: 8px; cursor: pointer;
+            margin-bottom: 25px; padding: 10px; border-radius: 8px; cursor: pointer;
         }
         .user-profile:hover { background-color: var(--hover-bg); }
-        .user-profile img { width: 32px; height: 32px; border-radius: 50%; }
+        .user-profile img { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-color); }
         .user-name { font-weight: 600; font-size: 15px; }
 
         .nav-item {
             display: flex; align-items: center; gap: 12px; color: var(--text-primary); text-decoration: none;
-            padding: 10px 10px; border-radius: 6px; font-size: 14px; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+            padding: 10px 12px; border-radius: 6px; font-size: 14px; margin-bottom: 3px; cursor: pointer; 
+            border: none; background: none; width: 100%; text-align: left; transition: background 0.15s ease;
         }
         .nav-item:hover, .nav-item.active-menu { background-color: var(--hover-bg); }
+        .nav-item.active-menu { border-left: 3px solid var(--accent-orange); color: #fff; }
         .nav-item i { font-size: 18px; color: var(--text-secondary); }
+        .nav-item.active-menu i { color: var(--accent-orange); }
         .external-icon { margin-left: auto; font-size: 14px !important; }
 
         .nav-section-title {
             color: var(--text-secondary); font-size: 11px; text-transform: uppercase; 
-            margin: 20px 0 5px 10px; font-weight: 700; letter-spacing: 1px;
+            margin: 20px 0 6px 10px; font-weight: 700; letter-spacing: 1px;
         }
 
         .btn-create {
             background-color: var(--accent-orange); color: white; border: none; padding: 12px; border-radius: 6px;
-            font-size: 15px; font-weight: 600; display: flex; justify-content: center; text-decoration: none;
-            align-items: center; gap: 8px; cursor: pointer; margin: 15px 0; transition: 0.2s; width: 100%;
+            font-size: 14px; font-weight: 600; display: flex; justify-content: center; text-decoration: none;
+            align-items: center; gap: 8px; cursor: pointer; margin: 15px 0; transition: background 0.2s; width: 100%;
         }
         .btn-create:hover { background-color: var(--accent-hover); }
 
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
 
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 30px 40px 20px; }
-        .top-header h1 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1; }
-        .header-icons { display: flex; align-items: center; gap: 20px; font-size: 22px; color: var(--text-secondary); }
-        .header-icons i { cursor: pointer; transition: color 0.2s; }
-        .header-icons i:hover { color: var(--text-primary); }
-        .avatar-small { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 25px 40px 15px; border-bottom: 1px solid var(--border-color); }
+        .top-header h1 { font-size: 26px; font-weight: 700; margin: 0; line-height: 1; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
 
-        /* Alternância de Telas Internas */
-        .tela-interna { display: none; padding: 0 40px 40px; animation: fadeIn 0.2s ease; }
+        .btn-action {
+            background-color: var(--accent-orange); color: white; border: none; padding: 9px 16px;
+            border-radius: 6px; font-size: 13px; font-weight: 600; display: flex; align-items: center;
+            gap: 6px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-action:hover { background-color: var(--accent-hover); }
+        .btn-action.secondary { background-color: #262626; color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-action.secondary:hover { background-color: #333; }
+        .btn-action.danger { background-color: var(--danger-red); }
+
+        .tela-interna { display: none; padding: 30px 40px 40px; animation: fadeIn 0.2s ease; }
         .tela-interna.ativa { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        .internal-box { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 30px; margin-top: 20px; }
-        .internal-box h2 { font-size: 20px; margin-bottom: 15px; color: var(--accent-orange); display: flex; align-items: center; gap: 10px; }
-        .internal-box p { color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 25px; }
+        .metric-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; }
+        .metric-card span { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+        .metric-card h3 { font-size: 24px; margin-top: 6px; color: var(--text-primary); }
 
-        .toolbar { display: flex; justify-content: space-between; padding: 0 40px 20px; border-bottom: 1px solid var(--border-color); }
-        .search-box { display: flex; align-items: center; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; width: 350px; }
-        .search-box i { color: var(--text-secondary); margin-right: 8px; font-size: 18px; }
-        .search-box input { background: none; border: none; color: var(--text-primary); width: 100%; outline: none; }
+        .data-table-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background: #111; color: var(--text-secondary); padding: 14px 18px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
+        td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--hover-bg); }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .badge.green { background: rgba(34, 197, 94, 0.15); color: var(--success-green); }
+        .badge.red { background: rgba(239, 68, 68, 0.15); color: var(--danger-red); }
+        .badge.orange { background: rgba(255, 85, 0, 0.15); color: var(--accent-orange); }
+
+        .action-btns { display: flex; gap: 8px; }
+        .btn-icon { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; }
+        .btn-icon:hover { color: var(--text-primary); background: var(--hover-bg); }
+
+        .project-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; margin-bottom: 20px; }
+        .project-section h3 { font-size: 18px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         
-        .post-card { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border-color); }
-        .post-info-group { display: flex; gap: 20px; flex: 1; }
-        .post-thumbnail { width: 120px; height: 70px; border-radius: 6px; border: 1px solid var(--border-color); }
-        .post-details h3 { font-size: 16px; margin-bottom: 6px; margin-top: 0; color: var(--text-primary); }
-        .post-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
-        .post-stats { display: flex; align-items: center; gap: 40px; }
-        .stat { display: flex; flex-direction: column; align-items: center; width: 50px; }
-        .stat-num { font-size: 15px; font-weight: 500; }
-        .stat-label { font-size: 12px; color: var(--text-secondary); }
+        .editable-area {
+            width: 100%; min-height: 120px; background: #111; border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 15px; color: var(--text-primary); font-family: inherit; font-size: 14px;
+            resize: vertical; outline: none; margin-bottom: 15px;
+        }
+        .editable-area:focus { border-color: var(--accent-orange); }
+
+        .task-list { list-style: none; margin-top: 10px; }
+        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+        .task-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-orange); cursor: pointer; }
+        .task-item input[type="text"] { background: none; border: none; color: var(--text-primary); font-size: 14px; flex: 1; outline: none; }
+        .task-item input[type="text"]:focus { border-bottom: 1px solid var(--accent-orange); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 10000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px;
+            width: 90%; max-width: 500px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-box h3 { margin-bottom: 20px; font-size: 18px; color: var(--text-primary); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; }
+        .form-control {
+            width: 100%; background: #111; border: 1px solid var(--border-color); color: var(--text-primary);
+            padding: 10px; border-radius: 6px; outline: none; font-size: 14px;
+        }
+        .form-control:focus { border-color: var(--accent-orange); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
     </style>
 </head>
 <body>
-    
-    <!-- BARRA LATERAL -->
+
     <aside class="sidebar">
         <div class="user-profile">
             <img src="https://ui-avatars.com/api/?name=GPS.dev&background=333&color=fff" alt="User">
@@ -106,161 +153,536 @@
         </div>
 
         <nav class="main-nav">
-            <button onclick="abrirTela('tela-posts')" class="nav-item active-menu"><i class="ph ph-house"></i> Home</button>
-            
-            <!-- ABRE O SEU SITE PRINCIPAL EM NOVA ABA -->
+            <button onclick="abrirTela('tela-posts')" class="nav-item active-menu" id="nav-home"><i class="ph ph-house"></i> Home</button>
             <a href="https://gustavopaulasantos.com.br" target="_blank" class="nav-item"><i class="ph ph-browser"></i> Website <i class="ph ph-arrow-up-right external-icon"></i></a>
         </nav>
 
-        <button class="btn-create">
-            Create <i class="ph ph-caret-down"></i>
+        <button class="btn-create" onclick="abrirModalQuickAdd()">
+            <i class="ph ph-plus-circle"></i> Novo Cadastro
         </button>
 
-        <!-- SEÇÃO: CONTEÚDO -->
         <div class="nav-section-title">Conteúdo</div>
         <nav class="secondary-nav">
-            <button onclick="abrirTela('tela-posts')" class="nav-item"><i class="ph ph-file-text"></i> Articles</button>
-            <button onclick="abrirTela('tela-videos')" class="nav-item"><i class="ph ph-video-camera"></i> Video</button>
-            <button onclick="abrirTela('tela-podcast')" class="nav-item"><i class="ph ph-microphone-stage"></i> Podcast</button>
+            <button onclick="abrirTela('tela-posts')" class="nav-item" id="nav-articles"><i class="ph ph-file-text"></i> Articles</button>
+            <button onclick="abrirTela('tela-videos')" class="nav-item" id="nav-videos"><i class="ph ph-video-camera"></i> Video</button>
+            <button onclick="abrirTela('tela-podcast')" class="nav-item" id="nav-podcast"><i class="ph ph-microphone-stage"></i> Podcast</button>
         </nav>
 
-        <!-- SEÇÃO: PROJETOS ATIVOS -->
         <div class="nav-section-title">Meus Projetos</div>
         <nav class="secondary-nav">
-            <button onclick="abrirTela('tela-agro')" class="nav-item"><i class="ph ph-leaf"></i> Agro Digital</button>
-            <button onclick="abrirTela('tela-nexus')" class="nav-item"><i class="ph ph-planet"></i> Nexus Terracore</button>
-            <button onclick="abrirTela('tela-turin')" class="nav-item"><i class="ph ph-robot"></i> Projeto Turin (IA)</button>
+            <button onclick="abrirTela('tela-agro')" class="nav-item" id="nav-agro"><i class="ph ph-leaf"></i> Agro Digital</button>
+            <button onclick="abrirTela('tela-nexus')" class="nav-item" id="nav-nexus"><i class="ph ph-planet"></i> Nexus Terracore</button>
+            <button onclick="abrirTela('tela-turin')" class="nav-item" id="nav-turin"><i class="ph ph-robot"></i> Projeto Turin (IA)</button>
         </nav>
 
-        <!-- SEÇÃO: GESTÃO ADMINISTRATIVA -->
         <div class="nav-section-title">Gestão</div>
         <nav class="secondary-nav">
-            <button onclick="abrirTela('tela-financeiro')" class="nav-item"><i class="ph ph-currency-dollar"></i> Financeiro</button>
-            <button onclick="abrirTela('tela-clientes')" class="nav-item"><i class="ph ph-users"></i> Clientes</button>
-            <button onclick="abrirTela('tela-senhas')" class="nav-item"><i class="ph ph-lock-key"></i> Senhas e Acessos</button>
+            <button onclick="abrirTela('tela-financeiro')" class="nav-item" id="nav-financeiro"><i class="ph ph-currency-dollar"></i> Financeiro</button>
+            <button onclick="abrirTela('tela-clientes')" class="nav-item" id="nav-clientes"><i class="ph ph-users"></i> Clientes</button>
+            <button onclick="abrirTela('tela-senhas')" class="nav-item" id="nav-senhas"><i class="ph ph-lock-key"></i> Senhas e Acessos</button>
         </nav>
     </aside>
 
-    <!-- ÁREA PRINCIPAL DO CONSOLE -->
     <main class="main-content">
         <header class="top-header">
-            <h1 id="titulo-pagina">Home</h1>
-            <div class="header-icons">
-                <i class="ph ph-moon"></i>
-                <i class="ph ph-bell"></i>
-                <img src="https://ui-avatars.com/api/?name=G&background=fff&color=000" alt="Admin" class="avatar-small">
+            <h1 id="titulo-pagina">Home / Posts</h1>
+            <div class="header-actions" id="header-actions">
+                <!-- Dynamic Action Button Inserted via JS -->
             </div>
         </header>
 
-        <!-- TELA: POSTS / HOME -->
+        <!-- VIEW 1: POSTS & CONTENT -->
         <div id="tela-posts" class="tela-interna ativa">
-            <div class="toolbar" style="padding: 0 0 20px 0;">
-                <div class="search-box">
-                    <i class="ph ph-magnifying-glass"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
-            </div>
-            <div class="post-card">
-                <div class="post-info-group">
-                    <div class="post-thumbnail" style="background-color: #222;"></div>
-                    <div class="post-details">
-                        <h3>Why you need to learn about AI?</h3>
-                        <p class="post-meta">Sep 18 • GPS.dev</p>
-                    </div>
-                </div>
-            </div>
+            <div id="container-posts"></div>
         </div>
 
-        <!-- TELA: FINANCEIRO -->
+        <!-- VIEW 2: FINANCEIRO (CRUD) -->
         <div id="tela-financeiro" class="tela-interna">
-            <div class="internal-box">
-                <h2><i class="ph ph-currency-dollar"></i> Módulo Financeiro</h2>
-                <p>Painel de controlo financeiro privado. Insira os seus balanços e relatórios aqui.</p>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <span>Receitas</span>
+                    <h3 id="fin-receita" style="color: var(--success-green)">R$ 0,00</h3>
+                </div>
+                <div class="metric-card">
+                    <span>Despesas</span>
+                    <h3 id="fin-despesa" style="color: var(--danger-red)">R$ 0,00</h3>
+                </div>
+                <div class="metric-card">
+                    <span>Saldo Total</span>
+                    <h3 id="fin-saldo">R$ 0,00</h3>
+                </div>
+            </div>
+
+            <div class="data-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Descrição</th>
+                            <th>Tipo</th>
+                            <th>Categoria</th>
+                            <th>Valor</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-financeiro"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- TELA: CLIENTES -->
+        <!-- VIEW 3: CLIENTES (CRUD) -->
         <div id="tela-clientes" class="tela-interna">
-            <div class="internal-box">
-                <h2><i class="ph ph-users"></i> Base de Clientes</h2>
-                <p>Gestão interna de contactos e clientes confidenciais.</p>
+            <div class="data-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>Status</th>
+                            <th>Notas</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-clientes"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- TELA: SENHAS -->
+        <!-- VIEW 4: SENHAS & ACESSOS (CRUD) -->
         <div id="tela-senhas" class="tela-interna">
-            <div class="internal-box">
-                <h2><i class="ph ph-lock-key"></i> Cofre de Senhas</h2>
-                <p>Espaço reservado para credenciais, chaves API e dados de acesso aos servidores.</p>
+            <div class="data-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Serviço / Aplicação</th>
+                            <th>Usuário / Chave</th>
+                            <th>Senha / Key</th>
+                            <th>Categoria</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-senhas"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- TELA: AGRO DIGITAL -->
+        <!-- VIEW 5, 6, 7: PROJETOS (AGRO, NEXUS, TURIN) -->
         <div id="tela-agro" class="tela-interna">
-            <div class="internal-box">
-                <h2><i class="ph ph-leaf"></i> Agro Digital</h2>
-                <p>Gestão e documentação do projeto Agro Digital.</p>
+            <div class="project-section">
+                <h3><i class="ph ph-leaf"></i> Visão Geral & Especificações Técnicas</h3>
+                <textarea class="editable-area" id="agro-notas" placeholder="Digite aqui os detalhes, arquitetura e metas do projeto Agro Digital..." oninput="salvarProjeto('agro')"></textarea>
+            </div>
+            <div class="project-section">
+                <h3>Lista de Tarefas <button class="btn-action" onclick="adicionarTask('agro')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+                <div id="tasks-agro" class="task-list"></div>
             </div>
         </div>
 
-        <!-- TELA: NEXUS TERRACORE -->
         <div id="tela-nexus" class="tela-interna">
-            <div class="internal-box">
-                <h2><i class="ph ph-planet"></i> Nexus Terracore</h2>
-                <p>Gestão e documentação do projeto Nexus Terracore.</p>
+            <div class="project-section">
+                <h3><i class="ph ph-planet"></i> Visão Geral & Especificações Técnicas</h3>
+                <textarea class="editable-area" id="nexus-notas" placeholder="Digite aqui os detalhes e roadmap do Nexus Terracore..." oninput="salvarProjeto('nexus')"></textarea>
+            </div>
+            <div class="project-section">
+                <h3>Lista de Tarefas <button class="btn-action" onclick="adicionarTask('nexus')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+                <div id="tasks-nexus" class="task-list"></div>
             </div>
         </div>
 
-        <!-- TELA: PROJETO TURIN -->
         <div id="tela-turin" class="tela-interna">
-            <div class="internal-box">
-                <h2><i class="ph ph-robot"></i> Projeto Turin (IA)</h2>
-                <p>Documentação e dados de treino da inteligência artificial Turin.</p>
+            <div class="project-section">
+                <h3><i class="ph ph-robot"></i> Prompts & Arquitetura da IA Turin</h3>
+                <textarea class="editable-area" id="turin-notas" placeholder="Digite os modelos, parâmetros e especificações do Projeto Turin..." oninput="salvarProjeto('turin')"></textarea>
+            </div>
+            <div class="project-section">
+                <h3>Checklist de Desenvolvimento <button class="btn-action" onclick="adicionarTask('turin')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+                <div id="tasks-turin" class="task-list"></div>
             </div>
         </div>
 
-        <!-- TELA: VIDEOS -->
-        <div id="tela-videos" class="tela-interna">
-            <div class="internal-box">
-                <h2><i class="ph ph-video-camera"></i> Vídeos</h2>
-                <p>Gestão de conteúdos em vídeo.</p>
-            </div>
-        </div>
-
-        <!-- TELA: PODCAST -->
-        <div id="tela-podcast" class="tela-interna">
-            <div class="internal-box">
-                <h2><i class="ph ph-microphone-stage"></i> Podcast</h2>
-                <p>Gestão de áudios e episódios.</p>
-            </div>
-        </div>
-
+        <!-- VIEW 8, 9: VIDEOS & PODCAST -->
+        <div id="tela-videos" class="tela-interna"><div id="container-videos"></div></div>
+        <div id="tela-podcast" class="tela-interna"><div id="container-podcast"></div></div>
     </main>
 
-    <!-- PROGRAMAÇÃO INTERNA DOS CLIQUES -->
-    <script>
-        function abrirTela(idTela) {
-            // Esconde todas as telas
-            const telas = document.querySelectorAll('.tela-interna');
-            telas.forEach(tela => tela.classList.remove('ativa'));
+    <div id="modal-container" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modal-titulo">Adicionar Registro</h3>
+            <div id="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn-action secondary" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-action" onclick="salvarModal()">Salvar Dados</button>
+            </div>
+        </div>
+    </div>
 
-            // Mostra a tela selecionada
-            const telaAtiva = document.getElementById(idTela);
-            if (telaAtiva) {
-                telaAtiva.classList.add('ativa');
+    <script>
+        // Data Structures initialized or loaded from LocalStorage
+        let appData = JSON.parse(localStorage.getItem('gps_console_db')) || {
+            financeiro: [
+                { id: 1, desc: 'Consultoria Dev', tipo: 'Receita', cat: 'Projetos', valor: 4500, data: '2026-09-10' },
+                { id: 2, desc: 'Servidor VPS', tipo: 'Despesa', cat: 'Infra', valor: 180, data: '2026-09-15' }
+            ],
+            clientes: [
+                { id: 1, nome: 'Empresa Alpha', email: 'contato@alpha.com', tel: '(11) 99999-0000', status: 'Ativo', notas: 'Projeto Nexus' }
+            ],
+            senhas: [
+                { id: 1, servico: 'GitHub Admin', user: 'dgustavopaula-lang', pass: 'sk_live_992182738', cat: 'API Keys' }
+            ],
+            posts: [
+                { id: 1, titulo: 'Why you need to learn about AI?', tipo: 'Articles', data: '18 Sep 2026', desc: 'Introdução ao aprendizado prático de IA.' }
+            ],
+            projetos: {
+                agro: { notas: 'Módulo de telemetria agrícola.', tasks: [{ id: 1, texto: 'Configurar rotas API', feito: true }] },
+                nexus: { notas: 'Infraestrutura de dados Terracore.', tasks: [{ id: 1, texto: 'Modelagem de DB', feito: false }] },
+                turin: { notas: 'Modelo especialista de IA.', tasks: [{ id: 1, texto: 'Testar prompts de sistema', feito: true }] }
+            }
+        };
+
+        let currentView = 'tela-posts';
+        let activeModalType = '';
+        let editingId = null;
+
+        function persistData() {
+            localStorage.setItem('gps_console_db', JSON.stringify(appData));
+        }
+
+        function abrirTela(idTela) {
+            currentView = idTela;
+            document.querySelectorAll('.tela-interna').forEach(el => el.classList.remove('ativa'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active-menu'));
+
+            const target = document.getElementById(idTela);
+            if(target) target.classList.add('ativa');
+
+            const titleMap = {
+                'tela-posts': 'Home / Conteúdo',
+                'tela-financeiro': 'Administração Financeira',
+                'tela-clientes': 'Base de Clientes',
+                'tela-senhas': 'Cofre de Senhas & Acessos',
+                'tela-agro': 'Projeto: Agro Digital',
+                'tela-nexus': 'Projeto: Nexus Terracore',
+                'tela-turin': 'Projeto: Turin (IA)',
+                'tela-videos': 'Gerenciador de Vídeos',
+                'tela-podcast': 'Gerenciador de Podcasts'
+            };
+
+            document.getElementById('titulo-pagina').innerText = titleMap[idTela] || 'Console';
+            renderHeaderActions(idTela);
+            renderCurrentView();
+        }
+
+        function renderHeaderActions(idTela) {
+            const container = document.getElementById('header-actions');
+            if (idTela === 'tela-financeiro') {
+                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('financeiro')"><i class="ph ph-plus"></i> Nova Transação</button>`;
+            } else if (idTela === 'tela-clientes') {
+                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('clientes')"><i class="ph ph-user-plus"></i> Novo Cliente</button>`;
+            } else if (idTela === 'tela-senhas') {
+                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('senhas')"><i class="ph ph-key"></i> Nova Credencial</button>`;
+            } else if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(idTela)) {
+                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('posts')"><i class="ph ph-plus"></i> Novo Item</button>`;
+            } else {
+                container.innerHTML = ``;
+            }
+        }
+
+        function renderCurrentView() {
+            if (currentView === 'tela-financeiro') renderFinanceiro();
+            if (currentView === 'tela-clientes') renderClientes();
+            if (currentView === 'tela-senhas') renderSenhas();
+            if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
+            if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
+        }
+
+        function renderFinanceiro() {
+            const tbody = document.getElementById('tbody-financeiro');
+            tbody.innerHTML = '';
+            let rec = 0, des = 0;
+
+            appData.financeiro.forEach(item => {
+                const val = parseFloat(item.valor);
+                if (item.tipo === 'Receita') rec += val; else des += val;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.desc}</strong></td>
+                        <td><span class="badge ${item.tipo === 'Receita' ? 'green' : 'red'}">${item.tipo}</span></td>
+                        <td>${item.cat}</td>
+                        <td>R$ ${val.toFixed(2)}</td>
+                        <td>${item.data}</td>
+                        <td class="action-btns">
+                            <button class="btn-icon" onclick="editarItem('financeiro', ${item.id})"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-icon" onclick="deletarItem('financeiro', ${item.id})"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('fin-receita').innerText = `R$ ${rec.toFixed(2)}`;
+            document.getElementById('fin-despesa').innerText = `R$ ${des.toFixed(2)}`;
+            const saldo = rec - des;
+            const elSaldo = document.getElementById('fin-saldo');
+            elSaldo.innerText = `R$ ${saldo.toFixed(2)}`;
+            elSaldo.style.color = saldo >= 0 ? 'var(--success-green)' : 'var(--danger-red)';
+        }
+
+        function renderClientes() {
+            const tbody = document.getElementById('tbody-clientes');
+            tbody.innerHTML = '';
+            appData.clientes.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.nome}</strong></td>
+                        <td>${item.email}</td>
+                        <td>${item.tel}</td>
+                        <td><span class="badge orange">${item.status}</span></td>
+                        <td>${item.notas}</td>
+                        <td class="action-btns">
+                            <button class="btn-icon" onclick="editarItem('clientes', ${item.id})"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-icon" onclick="deletarItem('clientes', ${item.id})"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderSenhas() {
+            const tbody = document.getElementById('tbody-senhas');
+            tbody.innerHTML = '';
+            appData.senhas.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.servico}</strong></td>
+                        <td>${item.user}</td>
+                        <td>
+                            <span id="pass-${item.id}">••••••••</span>
+                            <button class="btn-icon" onclick="togglePass(${item.id}, '${item.pass}')"><i class="ph ph-eye"></i></button>
+                        </td>
+                        <td><span class="badge orange">${item.cat}</span></td>
+                        <td class="action-btns">
+                            <button class="btn-icon" onclick="copiarTexto('${item.pass}')"><i class="ph ph-copy"></i></button>
+                            <button class="btn-icon" onclick="editarItem('senhas', ${item.id})"><i class="ph ph-pencil"></i></button>
+                            <button class="btn-icon" onclick="deletarItem('senhas', ${item.id})"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function togglePass(id, val) {
+            const el = document.getElementById(`pass-${id}`);
+            el.innerText = el.innerText === '••••••••' ? val : '••••••••';
+        }
+
+        function copiarTexto(txt) {
+            const temp = document.createElement('input');
+            document.body.appendChild(temp);
+            temp.value = txt;
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            alert('Copiado para a área de transferência!');
+        }
+
+        function renderPosts() {
+            const container = document.getElementById(currentView === 'tela-posts' ? 'container-posts' : (currentView === 'tela-videos' ? 'container-videos' : 'container-podcast'));
+            if (!container) return;
+            container.innerHTML = '';
+
+            appData.posts.forEach(item => {
+                container.innerHTML += `
+                    <div class="project-section" style="margin-top: 15px;">
+                        <h3>${item.titulo} 
+                            <span>
+                                <button class="btn-icon" onclick="editarItem('posts', ${item.id})"><i class="ph ph-pencil"></i></button>
+                                <button class="btn-icon" onclick="deletarItem('posts', ${item.id})"><i class="ph ph-trash"></i></button>
+                            </span>
+                        </h3>
+                        <p style="color: var(--text-secondary); font-size: 13px;">${item.data} • ${item.tipo}</p>
+                        <p style="margin-top: 10px;">${item.desc}</p>
+                    </div>
+                `;
+            });
+        }
+
+        function renderProjeto(key) {
+            const proj = appData.projetos[key];
+            document.getElementById(`${key}-notas`).value = proj.notas || '';
+            
+            const list = document.getElementById(`tasks-${key}`);
+            list.innerHTML = '';
+            proj.tasks.forEach((t, index) => {
+                list.innerHTML += `
+                    <div class="task-item">
+                        <input type="checkbox" ${t.feito ? 'checked' : ''} onchange="toggleTask('${key}', ${index})">
+                        <input type="text" value="${t.texto}" onchange="atualizarTaskText('${key}', ${index}, this.value)">
+                        <button class="btn-icon" onclick="deletarTask('${key}', ${index})"><i class="ph ph-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function salvarProjeto(key) {
+            appData.projetos[key].notas = document.getElementById(`${key}-notas`).value;
+            persistData();
+        }
+
+        function adicionarTask(key) {
+            appData.projetos[key].tasks.push({ id: Date.now(), texto: 'Nova Tarefa', feito: false });
+            persistData();
+            renderProjeto(key);
+        }
+
+        function toggleTask(key, idx) {
+            appData.projetos[key].tasks[idx].feito = !appData.projetos[key].tasks[idx].feito;
+            persistData();
+        }
+
+        function atualizarTaskText(key, idx, txt) {
+            appData.projetos[key].tasks[idx].texto = txt;
+            persistData();
+        }
+
+        function deletarTask(key, idx) {
+            appData.projetos[key].tasks.splice(idx, 1);
+            persistData();
+            renderProjeto(key);
+        }
+
+        function abrirModalQuickAdd() {
+            abrirModalForm('financeiro');
+        }
+
+        function abrirModalForm(tipo, id = null) {
+            activeModalType = tipo;
+            editingId = id;
+            const overlay = document.getElementById('modal-container');
+            const body = document.getElementById('modal-body');
+            const titulo = document.getElementById('modal-titulo');
+
+            overlay.classList.add('active');
+            let item = id ? appData[tipo].find(x => x.id === id) : {};
+
+            if (tipo === 'financeiro') {
+                titulo.innerText = id ? 'Editar Transação' : 'Nova Transação';
+                body.innerHTML = `
+                    <div class="form-group"><label>Descrição</label><input id="form-desc" class="form-control" value="${item.desc || ''}"></div>
+                    <div class="form-group"><label>Tipo</label><select id="form-tipo" class="form-control"><option ${item.tipo === 'Receita' ? 'selected' : ''}>Receita</option><option ${item.tipo === 'Despesa' ? 'selected' : ''}>Despesa</option></select></div>
+                    <div class="form-group"><label>Categoria</label><input id="form-cat" class="form-control" value="${item.cat || 'Geral'}"></div>
+                    <div class="form-group"><label>Valor (R$)</label><input id="form-valor" type="number" class="form-control" value="${item.valor || ''}"></div>
+                    <div class="form-group"><label>Data</label><input id="form-data" type="date" class="form-control" value="${item.data || new Date().toISOString().split('T')[0]}"></div>
+                `;
+            } else if (tipo === 'clientes') {
+                titulo.innerText = id ? 'Editar Cliente' : 'Novo Cliente';
+                body.innerHTML = `
+                    <div class="form-group"><label>Nome</label><input id="form-nome" class="form-control" value="${item.nome || ''}"></div>
+                    <div class="form-group"><label>Email</label><input id="form-email" class="form-control" value="${item.email || ''}"></div>
+                    <div class="form-group"><label>Telefone</label><input id="form-tel" class="form-control" value="${item.tel || ''}"></div>
+                    <div class="form-group"><label>Status</label><input id="form-status" class="form-control" value="${item.status || 'Ativo'}"></div>
+                    <div class="form-group"><label>Notas</label><input id="form-notas" class="form-control" value="${item.notas || ''}"></div>
+                `;
+            } else if (tipo === 'senhas') {
+                titulo.innerText = id ? 'Editar Credencial' : 'Nova Credencial';
+                body.innerHTML = `
+                    <div class="form-group"><label>Serviço</label><input id="form-servico" class="form-control" value="${item.servico || ''}"></div>
+                    <div class="form-group"><label>Usuário / Email</label><input id="form-user" class="form-control" value="${item.user || ''}"></div>
+                    <div class="form-group"><label>Senha / Key</label><input id="form-pass" class="form-control" value="${item.pass || ''}"></div>
+                    <div class="form-group"><label>Categoria</label><input id="form-cat" class="form-control" value="${item.cat || 'Geral'}"></div>
+                `;
+            } else if (tipo === 'posts') {
+                titulo.innerText = id ? 'Editar Item' : 'Novo Conteúdo';
+                body.innerHTML = `
+                    <div class="form-group"><label>Título</label><input id="form-titulo" class="form-control" value="${item.titulo || ''}"></div>
+                    <div class="form-group"><label>Tipo</label><select id="form-tipo" class="form-control"><option ${item.tipo === 'Articles' ? 'selected' : ''}>Articles</option><option ${item.tipo === 'Video' ? 'selected' : ''}>Video</option><option ${item.tipo === 'Podcast' ? 'selected' : ''}>Podcast</option></select></div>
+                    <div class="form-group"><label>Descrição / Conteúdo</label><input id="form-desc" class="form-control" value="${item.desc || ''}"></div>
+                `;
+            }
+        }
+
+        function salvarModal() {
+            if (activeModalType === 'financeiro') {
+                const newItem = {
+                    id: editingId || Date.now(),
+                    desc: document.getElementById('form-desc').value,
+                    tipo: document.getElementById('form-tipo').value,
+                    cat: document.getElementById('form-cat').value,
+                    valor: parseFloat(document.getElementById('form-valor').value) || 0,
+                    data: document.getElementById('form-data').value
+                };
+                if (editingId) {
+                    const idx = appData.financeiro.findIndex(x => x.id === editingId);
+                    appData.financeiro[idx] = newItem;
+                } else {
+                    appData.financeiro.push(newItem);
+                }
+            } else if (activeModalType === 'clientes') {
+                const newItem = {
+                    id: editingId || Date.now(),
+                    nome: document.getElementById('form-nome').value,
+                    email: document.getElementById('form-email').value,
+                    tel: document.getElementById('form-tel').value,
+                    status: document.getElementById('form-status').value,
+                    notas: document.getElementById('form-notas').value
+                };
+                if (editingId) {
+                    const idx = appData.clientes.findIndex(x => x.id === editingId);
+                    appData.clientes[idx] = newItem;
+                } else {
+                    appData.clientes.push(newItem);
+                }
+            } else if (activeModalType === 'senhas') {
+                const newItem = {
+                    id: editingId || Date.now(),
+                    servico: document.getElementById('form-servico').value,
+                    user: document.getElementById('form-user').value,
+                    pass: document.getElementById('form-pass').value,
+                    cat: document.getElementById('form-cat').value
+                };
+                if (editingId) {
+                    const idx = appData.senhas.findIndex(x => x.id === editingId);
+                    appData.senhas[idx] = newItem;
+                } else {
+                    appData.senhas.push(newItem);
+                }
+            } else if (activeModalType === 'posts') {
+                const newItem = {
+                    id: editingId || Date.now(),
+                    titulo: document.getElementById('form-titulo').value,
+                    tipo: document.getElementById('form-tipo').value,
+                    data: new Date().toLocaleDateString('pt-BR'),
+                    desc: document.getElementById('form-desc').value
+                };
+                if (editingId) {
+                    const idx = appData.posts.findIndex(x => x.id === editingId);
+                    appData.posts[idx] = newItem;
+                } else {
+                    appData.posts.push(newItem);
+                }
             }
 
-            // Atualiza o título no topo
-            const titulo = document.getElementById('titulo-pagina');
-            if(idTela === 'tela-posts') titulo.innerText = 'Home';
-            else if(idTela === 'tela-financeiro') titulo.innerText = 'Financeiro';
-            else if(idTela === 'tela-clientes') titulo.innerText = 'Clientes';
-            else if(idTela === 'tela-senhas') titulo.innerText = 'Senhas e Acessos';
-            else if(idTela === 'tela-agro') titulo.innerText = 'Agro Digital';
-            else if(idTela === 'tela-nexus') titulo.innerText = 'Nexus Terracore';
-            else if(idTela === 'tela-turin') titulo.innerText = 'Projeto Turin (IA)';
-            else if(idTela === 'tela-videos') titulo.innerText = 'Vídeos';
-            else if(idTela === 'tela-podcast') titulo.innerText = 'Podcast';
+            persistData();
+            fecharModal();
+            renderCurrentView();
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-container').classList.remove('active');
+        }
+
+        function editarItem(tipo, id) {
+            abrirModalForm(tipo, id);
+        }
+
+        function deletarItem(tipo, id) {
+            appData[tipo] = appData[tipo].filter(x => x.id !== id);
+            persistData();
+            renderCurrentView();
+        }
+
+        window.onload = function() {
+            abrirTela('tela-posts');
         }
     </script>
 </body>
