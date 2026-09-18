@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - GPS.dev</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <!-- BARRA LATERAL -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=GPS.dev&background=333&color=fff" alt="User">
+                <span class="user-name">GPS.dev</span>
+            </div>
+
+            <nav class="main-nav">
+                <a href="#" class="nav-item"><i class="ph ph-house"></i> Home</a>
+                <a href="#" class="nav-item"><i class="ph ph-browser"></i> Website <i class="ph ph-arrow-up-right external-icon"></i></a>
+            </nav>
+
+            <button class="btn-create">
+                Create <i class="ph ph-caret-down"></i>
+            </button>
+
+            <nav class="secondary-nav">
+                <a href="#" class="nav-item"><i class="ph ph-file-text"></i> Article</a>
+                <a href="#" class="nav-item"><i class="ph ph-video-camera"></i> Video</a>
+                <a href="#" class="nav-item"><i class="ph ph-microphone-stage"></i> Podcast</a>
+                <a href="#" class="nav-item"><i class="ph ph-pencil-simple"></i> Note</a>
+                <a href="#" class="nav-item"><i class="ph ph-chats"></i> Chat thread</a>
+                <a href="#" class="nav-item"><i class="ph ph-broadcast"></i> Live video</a>
+                <a href="#" class="nav-item"><i class="ph ph-video-camera-slash"></i> Recording studio</a>
+            </nav>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL -->
+        <main class="main-content">
+            <header class="top-header">
+                <h1>Posts</h1>
+                <div class="header-icons">
+                    <i class="ph ph-moon"></i>
+                    <i class="ph ph-magnifying-glass"></i>
+                    <i class="ph ph-chat-circle"></i>
+                    <i class="ph ph-bell"></i>
+                    <img src="https://ui-avatars.com/api/?name=G&background=fff&color=000" alt="Admin" class="avatar-small">
+                </div>
+            </header>
+
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="toolbar-actions">
+                    <button class="btn-filter"><i class="ph ph-faders"></i> Filter</button>
+                    <button class="btn-sort">Newest first <i class="ph ph-caret-down"></i></button>
+                </div>
+            </div>
+
+            <div class="posts-list">
+                
+                <!-- Post 1 (IA) -->
+                <div class="post-card">
+                    <div class="post-info-group">
+                        <div class="post-thumbnail" style="background-color: #222;"></div>
+                        <div class="post-details">
+                            <h3>Why you need to learn about AI?</h3>
+                            <p class="post-meta">Sep 18 • GPS.dev</p>
+                            <div class="post-interactions">
+                                <span><i class="ph ph-heart"></i> 0</span>
+                                <span><i class="ph ph-chat-circle"></i> 0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="post-stats">
+                        <div class="stat">
+                            <span class="stat-num">0</span>
+                            <span class="stat-label">Subs</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-num">1</span>
+                            <span class="stat-label">Views</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-num">100%</span>
+                            <span class="stat-label">Opened</span>
+                        </div>
+                        <div class="post-actions">
+                            <i class="ph ph-arrow-up-right"></i>
+                            <i class="ph ph-dots-three"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="month-divider">SEPTEMBER</div>
+
+                <!-- Post 2 (Filosofia e Ética) -->
+                <div class="post-card">
+                    <div class="post-info-group">
+                        <div class="post-thumbnail" style="background-color: #1a1a2e; display: flex; align-items: center; justify-content: center;">
+                            <i class="ph-fill ph-play-circle" style="font-size: 2rem; color: white;"></i>
+                        </div>
+                        <div class="post-details">
+                            <h3><i class="ph ph-headphones"></i> The philosophy can use ethics to help Ai?</h3>
+                            <p class="post-meta">Sep 18 • GPS.dev</p>
+                            <div class="post-interactions">
+                                <span><i class="ph ph-heart"></i> 0</span>
+                                <span><i class="ph ph-chat-circle"></i> 0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="post-stats">
+                        <div class="stat">
+                            <span class="stat-num">0</span>
+                            <span class="stat-label">Subs</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-num">17</span>
+                            <span class="stat-label">Views</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-num">100%</span>
+                            <span class="stat-label">Opened</span>
+                        </div>
+                        <div class="post-actions">
+                            <i class="ph ph-arrow-up-right"></i>
+                            <i class="ph ph-dots-three"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>
