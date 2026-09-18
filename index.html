@@ -18,6 +18,7 @@
             --hover-bg: #222222;       
             --danger-red: #ef4444;
             --success-green: #22c55e;
+            --info-blue: #3b82f6;
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -25,9 +26,10 @@
 
         body {
             background-color: var(--bg-main); color: var(--text-primary); font-family: var(--font-family);
-            display: flex; height: 100vh; width: 100%; overflow: hidden;
+            display: flex; height: 100vh; width: 100vw; overflow: hidden;
         }
 
+        /* */
         .sidebar {
             width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);
             display: flex; flex-direction: column; padding: 20px; overflow-y: auto; flex-shrink: 0;
@@ -67,6 +69,7 @@
         }
         .btn-create:hover { background-color: var(--accent-hover); }
 
+        /* */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
 
         .top-header { display: flex; justify-content: space-between; align-items: center; padding: 25px 40px 15px; border-bottom: 1px solid var(--border-color); }
@@ -81,7 +84,6 @@
         .btn-action:hover { background-color: var(--accent-hover); }
         .btn-action.secondary { background-color: #262626; color: var(--text-primary); border: 1px solid var(--border-color); }
         .btn-action.secondary:hover { background-color: #333; }
-        .btn-action.danger { background-color: var(--danger-red); }
 
         .tela-interna { display: none; padding: 30px 40px 40px; animation: fadeIn 0.2s ease; }
         .tela-interna.ativa { display: block; }
@@ -103,18 +105,23 @@
         .badge.green { background: rgba(34, 197, 94, 0.15); color: var(--success-green); }
         .badge.red { background: rgba(239, 68, 68, 0.15); color: var(--danger-red); }
         .badge.orange { background: rgba(255, 85, 0, 0.15); color: var(--accent-orange); }
+        .badge.blue { background: rgba(59, 130, 246, 0.15); color: var(--info-blue); }
 
         .action-btns { display: flex; gap: 8px; }
         .btn-icon { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; }
         .btn-icon:hover { color: var(--text-primary); background: var(--hover-bg); }
 
+        /* */
+        .project-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        @media(max-width: 1024px) { .project-grid { grid-template-columns: 1fr; } }
+
         .project-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; margin-bottom: 20px; }
-        .project-section h3 { font-size: 18px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        
+        .project-section h3 { font-size: 17px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
         .editable-area {
-            width: 100%; min-height: 120px; background: #111; border: 1px solid var(--border-color);
+            width: 100%; min-height: 140px; background: #111; border: 1px solid var(--border-color);
             border-radius: 6px; padding: 15px; color: var(--text-primary); font-family: inherit; font-size: 14px;
-            resize: vertical; outline: none; margin-bottom: 15px;
+            resize: vertical; outline: none; margin-bottom: 15px; line-height: 1.5;
         }
         .editable-area:focus { border-color: var(--accent-orange); }
 
@@ -124,6 +131,11 @@
         .task-item input[type="text"] { background: none; border: none; color: var(--text-primary); font-size: 14px; flex: 1; outline: none; }
         .task-item input[type="text"]:focus { border-bottom: 1px solid var(--accent-orange); }
 
+        .link-list { list-style: none; margin-top: 10px; }
+        .link-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+        .link-item a { color: var(--accent-orange); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+        .link-item a:hover { text-decoration: underline; }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 10000;
@@ -131,7 +143,7 @@
         .modal-overlay.active { display: flex; }
         .modal-box {
             background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px;
-            width: 90%; max-width: 500px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%; max-width: 520px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .modal-box h3 { margin-bottom: 20px; font-size: 18px; color: var(--text-primary); }
         .form-group { margin-bottom: 15px; }
@@ -171,8 +183,8 @@
         <div class="nav-section-title">Meus Projetos</div>
         <nav class="secondary-nav">
             <button onclick="abrirTela('tela-agro')" class="nav-item" id="nav-agro"><i class="ph ph-leaf"></i> Agro Digital</button>
-            <button onclick="abrirTela('tela-nexus')" class="nav-item" id="nav-nexus"><i class="ph ph-planet"></i> Nexus Terracore</button>
-            <button onclick="abrirTela('tela-turin')" class="nav-item" id="nav-turin"><i class="ph ph-robot"></i> Projeto Turin (IA)</button>
+            <button onclick="abrirTela('tela-nexus')" class="nav-item" id="nav-nexus"><i class="ph ph-planet"></i> NexoTerraCore</button>
+            <button onclick="abrirTela('tela-turin')" class="nav-item" id="nav-turin"><i class="ph ph-robot"></i> Projeto Turim (IA)</button>
         </nav>
 
         <div class="nav-section-title">Gestão</div>
@@ -185,18 +197,16 @@
 
     <main class="main-content">
         <header class="top-header">
-            <h1 id="titulo-pagina">Home / Posts</h1>
-            <div class="header-actions" id="header-actions">
-                <!-- Dynamic Action Button Inserted via JS -->
-            </div>
+            <h1 id="titulo-pagina">Home / Conteúdo</h1>
+            <div class="header-actions" id="header-actions"></div>
         </header>
 
-        <!-- VIEW 1: POSTS & CONTENT -->
+        <!-- VIEW 1: HOME & POSTS -->
         <div id="tela-posts" class="tela-interna ativa">
             <div id="container-posts"></div>
         </div>
 
-        <!-- VIEW 2: FINANCEIRO (CRUD) -->
+        <!-- VIEW 2: FINANCEIRO -->
         <div id="tela-financeiro" class="tela-interna">
             <div class="metrics-grid">
                 <div class="metric-card">
@@ -230,7 +240,7 @@
             </div>
         </div>
 
-        <!-- VIEW 3: CLIENTES (CRUD) -->
+        <!-- VIEW 3: CLIENTES -->
         <div id="tela-clientes" class="tela-interna">
             <div class="data-table-container">
                 <table>
@@ -249,7 +259,7 @@
             </div>
         </div>
 
-        <!-- VIEW 4: SENHAS & ACESSOS (CRUD) -->
+        <!-- VIEW 4: SENHAS & ACESSOS -->
         <div id="tela-senhas" class="tela-interna">
             <div class="data-table-container">
                 <table>
@@ -267,37 +277,96 @@
             </div>
         </div>
 
-        <!-- VIEW 5, 6, 7: PROJETOS (AGRO, NEXUS, TURIN) -->
+        <!-- VIEW 5: AGRO DIGITAL -->
         <div id="tela-agro" class="tela-interna">
-            <div class="project-section">
-                <h3><i class="ph ph-leaf"></i> Visão Geral & Especificações Técnicas</h3>
-                <textarea class="editable-area" id="agro-notas" placeholder="Digite aqui os detalhes, arquitetura e metas do projeto Agro Digital..." oninput="salvarProjeto('agro')"></textarea>
-            </div>
-            <div class="project-section">
-                <h3>Lista de Tarefas <button class="btn-action" onclick="adicionarTask('agro')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-                <div id="tasks-agro" class="task-list"></div>
+            <div class="project-grid">
+                <div>
+                    <div class="project-section">
+                        <h3><i class="ph ph-leaf"></i> Visão Geral & Documentação do Projeto</h3>
+                        <textarea class="editable-area" id="agro-notas" placeholder="Digite as especificações técnicas, visão geral e requisitos do Agro Digital..." oninput="salvarProjeto('agro')"></textarea>
+                    </div>
+                    <div class="project-section">
+                        <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('agro')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+                        <div id="tasks-agro" class="task-list"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="project-section">
+                        <h3>Status do Projeto</h3>
+                        <select id="agro-status" class="form-control" onchange="salvarProjeto('agro')">
+                            <option value="Em Planejamento">Em Planejamento</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Concluído">Concluído</option>
+                            <option value="Pausado">Pausado</option>
+                        </select>
+                    </div>
+                    <div class="project-section">
+                        <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('agro')"><i class="ph ph-plus"></i> Link</button></h3>
+                        <div id="links-agro" class="link-list"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- VIEW 6: NEXOTERRACORE -->
         <div id="tela-nexus" class="tela-interna">
-            <div class="project-section">
-                <h3><i class="ph ph-planet"></i> Visão Geral & Especificações Técnicas</h3>
-                <textarea class="editable-area" id="nexus-notas" placeholder="Digite aqui os detalhes e roadmap do Nexus Terracore..." oninput="salvarProjeto('nexus')"></textarea>
-            </div>
-            <div class="project-section">
-                <h3>Lista de Tarefas <button class="btn-action" onclick="adicionarTask('nexus')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-                <div id="tasks-nexus" class="task-list"></div>
+            <div class="project-grid">
+                <div>
+                    <div class="project-section">
+                        <h3><i class="ph ph-planet"></i> Visão Geral & Arquitetura NexoTerraCore</h3>
+                        <textarea class="editable-area" id="nexus-notas" placeholder="Digite aqui os detalhes e especificações do NexoTerraCore..." oninput="salvarProjeto('nexus')"></textarea>
+                    </div>
+                    <div class="project-section">
+                        <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('nexus')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+                        <div id="tasks-nexus" class="task-list"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="project-section">
+                        <h3>Status do Projeto</h3>
+                        <select id="nexus-status" class="form-control" onchange="salvarProjeto('nexus')">
+                            <option value="Em Planejamento">Em Planejamento</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Concluído">Concluído</option>
+                            <option value="Pausado">Pausado</option>
+                        </select>
+                    </div>
+                    <div class="project-section">
+                        <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('nexus')"><i class="ph ph-plus"></i> Link</button></h3>
+                        <div id="links-nexus" class="link-list"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- VIEW 7: PROJETO TURIM (IA) -->
         <div id="tela-turin" class="tela-interna">
-            <div class="project-section">
-                <h3><i class="ph ph-robot"></i> Prompts & Arquitetura da IA Turin</h3>
-                <textarea class="editable-area" id="turin-notas" placeholder="Digite os modelos, parâmetros e especificações do Projeto Turin..." oninput="salvarProjeto('turin')"></textarea>
-            </div>
-            <div class="project-section">
-                <h3>Checklist de Desenvolvimento <button class="btn-action" onclick="adicionarTask('turin')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-                <div id="tasks-turin" class="task-list"></div>
+            <div class="project-grid">
+                <div>
+                    <div class="project-section">
+                        <h3><i class="ph ph-robot"></i> Prompts & Arquitetura da IA Turim</h3>
+                        <textarea class="editable-area" id="turin-notas" placeholder="Digite aqui as instruções do sistema, prompts e especificações da IA Turim..." oninput="salvarProjeto('turin')"></textarea>
+                    </div>
+                    <div class="project-section">
+                        <h3>Checklist de Desenvolvimento <button class="btn-action" onclick="adicionarTask('turin')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+                        <div id="tasks-turin" class="task-list"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="project-section">
+                        <h3>Status do Projeto</h3>
+                        <select id="turin-status" class="form-control" onchange="salvarProjeto('turin')">
+                            <option value="Em Planejamento">Em Planejamento</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Concluído">Concluído</option>
+                            <option value="Pausado">Pausado</option>
+                        </select>
+                    </div>
+                    <div class="project-section">
+                        <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('turin')"><i class="ph ph-plus"></i> Link</button></h3>
+                        <div id="links-turin" class="link-list"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -318,34 +387,49 @@
     </div>
 
     <script>
-        // Data Structures initialized or loaded from LocalStorage
-        let appData = JSON.parse(localStorage.getItem('gps_console_db')) || {
+        // Data Store Persistence initialized from LocalStorage
+        let appData = JSON.parse(localStorage.getItem('gps_console_v3')) || {
             financeiro: [
-                { id: 1, desc: 'Consultoria Dev', tipo: 'Receita', cat: 'Projetos', valor: 4500, data: '2026-09-10' },
-                { id: 2, desc: 'Servidor VPS', tipo: 'Despesa', cat: 'Infra', valor: 180, data: '2026-09-15' }
+                { id: 1, desc: 'Desenvolvimento do Console', tipo: 'Receita', cat: 'Projetos', valor: 5000, data: '2026-09-18' }
             ],
             clientes: [
-                { id: 1, nome: 'Empresa Alpha', email: 'contato@alpha.com', tel: '(11) 99999-0000', status: 'Ativo', notas: 'Projeto Nexus' }
+                { id: 1, nome: 'Cliente Exemplo', email: 'contato@cliente.com', tel: '(11) 99999-8888', status: 'Ativo', notas: 'Projeto NexoTerraCore' }
             ],
             senhas: [
-                { id: 1, servico: 'GitHub Admin', user: 'dgustavopaula-lang', pass: 'sk_live_992182738', cat: 'API Keys' }
+                { id: 1, servico: 'GitHub Deployment', user: 'dgustavopaula-lang', pass: 'sk_live_console_pass', cat: 'Infra' }
             ],
             posts: [
-                { id: 1, titulo: 'Why you need to learn about AI?', tipo: 'Articles', data: '18 Sep 2026', desc: 'Introdução ao aprendizado prático de IA.' }
+                { id: 1, titulo: 'Why you need to learn about AI?', tipo: 'Articles', data: '18 Sep 2026', desc: 'Introdução ao aprendizado prático de IA e automação.' }
             ],
             projetos: {
-                agro: { notas: 'Módulo de telemetria agrícola.', tasks: [{ id: 1, texto: 'Configurar rotas API', feito: true }] },
-                nexus: { notas: 'Infraestrutura de dados Terracore.', tasks: [{ id: 1, texto: 'Modelagem de DB', feito: false }] },
-                turin: { notas: 'Modelo especialista de IA.', tasks: [{ id: 1, texto: 'Testar prompts de sistema', feito: true }] }
+                agro: {
+                    notas: 'Sistema de monitoramento e gestão para agronegócio inteligente.',
+                    status: 'Em Andamento',
+                    tasks: [{ id: 1, texto: 'Modelagem de API e sensores', feito: true }],
+                    links: [{ id: 1, nome: 'Repositório GitHub', url: 'https://github.com' }]
+                },
+                nexus: {
+                    notas: 'Plataforma integrada de inteligência territorial NexoTerraCore.',
+                    status: 'Em Planejamento',
+                    tasks: [{ id: 1, texto: 'Definição da estrutura do banco de dados', feito: false }],
+                    links: []
+                },
+                turin: {
+                    notas: 'Assistente pessoal e agente especializado com IA.',
+                    status: 'Em Andamento',
+                    tasks: [{ id: 1, texto: 'Ajuste de prompts e contextos de sistema', feito: true }],
+                    links: []
+                }
             }
         };
 
         let currentView = 'tela-posts';
         let activeModalType = '';
         let editingId = null;
+        let activeProjectLinkKey = null;
 
         function persistData() {
-            localStorage.setItem('gps_console_db', JSON.stringify(appData));
+            localStorage.setItem('gps_console_v3', JSON.stringify(appData));
         }
 
         function abrirTela(idTela) {
@@ -362,8 +446,8 @@
                 'tela-clientes': 'Base de Clientes',
                 'tela-senhas': 'Cofre de Senhas & Acessos',
                 'tela-agro': 'Projeto: Agro Digital',
-                'tela-nexus': 'Projeto: Nexus Terracore',
-                'tela-turin': 'Projeto: Turin (IA)',
+                'tela-nexus': 'Projeto: NexoTerraCore',
+                'tela-turin': 'Projeto: Turim (IA)',
                 'tela-videos': 'Gerenciador de Vídeos',
                 'tela-podcast': 'Gerenciador de Podcasts'
             };
@@ -382,7 +466,7 @@
             } else if (idTela === 'tela-senhas') {
                 container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('senhas')"><i class="ph ph-key"></i> Nova Credencial</button>`;
             } else if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(idTela)) {
-                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('posts')"><i class="ph ph-plus"></i> Novo Item</button>`;
+                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('posts')"><i class="ph ph-plus"></i> Novo Item / Post</button>`;
             } else {
                 container.innerHTML = ``;
             }
@@ -493,28 +577,29 @@
 
             appData.posts.forEach(item => {
                 container.innerHTML += `
-                    <div class="project-section" style="margin-top: 15px;">
+                    <div class="project-section" style="margin-bottom: 15px;">
                         <h3>${item.titulo} 
                             <span>
                                 <button class="btn-icon" onclick="editarItem('posts', ${item.id})"><i class="ph ph-pencil"></i></button>
                                 <button class="btn-icon" onclick="deletarItem('posts', ${item.id})"><i class="ph ph-trash"></i></button>
                             </span>
                         </h3>
-                        <p style="color: var(--text-secondary); font-size: 13px;">${item.data} • ${item.tipo}</p>
-                        <p style="margin-top: 10px;">${item.desc}</p>
+                        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">${item.data} • <span class="badge blue">${item.tipo}</span></p>
+                        <p style="line-height: 1.5;">${item.desc}</p>
                     </div>
                 `;
             });
         }
 
         function renderProjeto(key) {
-            const proj = appData.projetos[key];
+            const proj = appData.projetos[key] || { notas: '', status: 'Em Planejamento', tasks: [], links: [] };
             document.getElementById(`${key}-notas`).value = proj.notas || '';
+            document.getElementById(`${key}-status`).value = proj.status || 'Em Planejamento';
             
-            const list = document.getElementById(`tasks-${key}`);
-            list.innerHTML = '';
-            proj.tasks.forEach((t, index) => {
-                list.innerHTML += `
+            const taskList = document.getElementById(`tasks-${key}`);
+            taskList.innerHTML = '';
+            (proj.tasks || []).forEach((t, index) => {
+                taskList.innerHTML += `
                     <div class="task-item">
                         <input type="checkbox" ${t.feito ? 'checked' : ''} onchange="toggleTask('${key}', ${index})">
                         <input type="text" value="${t.texto}" onchange="atualizarTaskText('${key}', ${index}, this.value)">
@@ -522,14 +607,28 @@
                     </div>
                 `;
             });
+
+            const linkList = document.getElementById(`links-${key}`);
+            linkList.innerHTML = '';
+            (proj.links || []).forEach((l, index) => {
+                linkList.innerHTML += `
+                    <div class="link-item">
+                        <a href="${l.url}" target="_blank"><i class="ph ph-link"></i> ${l.nome}</a>
+                        <button class="btn-icon" onclick="deletarLink('${key}', ${index})"><i class="ph ph-trash"></i></button>
+                    </div>
+                `;
+            });
         }
 
         function salvarProjeto(key) {
+            if(!appData.projetos[key]) appData.projetos[key] = { tasks: [], links: [] };
             appData.projetos[key].notas = document.getElementById(`${key}-notas`).value;
+            appData.projetos[key].status = document.getElementById(`${key}-status`).value;
             persistData();
         }
 
         function adicionarTask(key) {
+            if(!appData.projetos[key].tasks) appData.projetos[key].tasks = [];
             appData.projetos[key].tasks.push({ id: Date.now(), texto: 'Nova Tarefa', feito: false });
             persistData();
             renderProjeto(key);
@@ -547,6 +646,27 @@
 
         function deletarTask(key, idx) {
             appData.projetos[key].tasks.splice(idx, 1);
+            persistData();
+            renderProjeto(key);
+        }
+
+        function abrirModalLink(key) {
+            activeProjectLinkKey = key;
+            activeModalType = 'link';
+            const overlay = document.getElementById('modal-container');
+            const body = document.getElementById('modal-body');
+            const titulo = document.getElementById('modal-titulo');
+
+            overlay.classList.add('active');
+            titulo.innerText = 'Novo Link do Projeto';
+            body.innerHTML = `
+                <div class="form-group"><label>Nome do Link</label><input id="form-link-nome" class="form-control" placeholder="ex: Documentação, Repositório"></div>
+                <div class="form-group"><label>URL</label><input id="form-link-url" class="form-control" placeholder="https://..."></div>
+            `;
+        }
+
+        function deletarLink(key, idx) {
+            appData.projetos[key].links.splice(idx, 1);
             persistData();
             renderProjeto(key);
         }
@@ -592,17 +712,24 @@
                     <div class="form-group"><label>Categoria</label><input id="form-cat" class="form-control" value="${item.cat || 'Geral'}"></div>
                 `;
             } else if (tipo === 'posts') {
-                titulo.innerText = id ? 'Editar Item' : 'Novo Conteúdo';
+                titulo.innerText = id ? 'Editar Item / Post' : 'Novo Item / Post';
                 body.innerHTML = `
                     <div class="form-group"><label>Título</label><input id="form-titulo" class="form-control" value="${item.titulo || ''}"></div>
                     <div class="form-group"><label>Tipo</label><select id="form-tipo" class="form-control"><option ${item.tipo === 'Articles' ? 'selected' : ''}>Articles</option><option ${item.tipo === 'Video' ? 'selected' : ''}>Video</option><option ${item.tipo === 'Podcast' ? 'selected' : ''}>Podcast</option></select></div>
-                    <div class="form-group"><label>Descrição / Conteúdo</label><input id="form-desc" class="form-control" value="${item.desc || ''}"></div>
+                    <div class="form-group"><label>Descrição / Conteúdo</label><textarea id="form-desc" class="form-control" style="min-height: 90px;">${item.desc || ''}</textarea></div>
                 `;
             }
         }
 
         function salvarModal() {
-            if (activeModalType === 'financeiro') {
+            if (activeModalType === 'link') {
+                const nome = document.getElementById('form-link-nome').value;
+                const url = document.getElementById('form-link-url').value;
+                if (nome && url && activeProjectLinkKey) {
+                    if(!appData.projetos[activeProjectLinkKey].links) appData.projetos[activeProjectLinkKey].links = [];
+                    appData.projetos[activeProjectLinkKey].links.push({ id: Date.now(), nome, url });
+                }
+            } else if (activeModalType === 'financeiro') {
                 const newItem = {
                     id: editingId || Date.now(),
                     desc: document.getElementById('form-desc').value,
