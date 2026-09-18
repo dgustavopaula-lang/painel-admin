@@ -3,140 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - GPS.dev</title>
-    <link rel="stylesheet" href="style.css">
+    <title>GPS.dev - Admin Console</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --bg-main: #141414;        
+            --bg-sidebar: #0f0f0f;     
+            --bg-card: #1a1a1a;        
+            --border-color: #2a2a2a;   
+            --text-primary: #ffffff;   
+            --text-secondary: #888888; 
+            --accent-orange: #ff5500;  
+            --accent-hover: #ff7733;   
+            --hover-bg: #222222;       
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-main); color: var(--text-primary); font-family: var(--font-family);
+            display: flex; height: 100vh; width: 100%; overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; padding: 20px; overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background-color: #333; border-radius: 4px; }
+
+        .user-profile {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 30px; padding: 10px; border-radius: 8px; cursor: pointer;
+        }
+        .user-profile:hover { background-color: var(--hover-bg); }
+        .user-profile img { width: 32px; height: 32px; border-radius: 50%; }
+        .user-name { font-weight: 600; font-size: 15px; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; color: var(--text-primary); text-decoration: none;
+            padding: 10px 10px; border-radius: 6px; font-size: 14px; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+        }
+        .nav-item:hover, .nav-item.active-menu { background-color: var(--hover-bg); }
+        .nav-item i { font-size: 18px; color: var(--text-secondary); }
+        .external-icon { margin-left: auto; font-size: 14px !important; }
+
+        .nav-section-title {
+            color: var(--text-secondary); font-size: 11px; text-transform: uppercase; 
+            margin: 20px 0 5px 10px; font-weight: 700; letter-spacing: 1px;
+        }
+
+        .btn-create {
+            background-color: var(--accent-orange); color: white; border: none; padding: 12px; border-radius: 6px;
+            font-size: 15px; font-weight: 600; display: flex; justify-content: center; text-decoration: none;
+            align-items: center; gap: 8px; cursor: pointer; margin: 15px 0; transition: 0.2s; width: 100%;
+        }
+        .btn-create:hover { background-color: var(--accent-hover); }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 30px 40px 20px; }
+        .top-header h1 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1; }
+        .header-icons { display: flex; align-items: center; gap: 20px; font-size: 22px; color: var(--text-secondary); }
+        .header-icons i { cursor: pointer; transition: color 0.2s; }
+        .header-icons i:hover { color: var(--text-primary); }
+        .avatar-small { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; }
+
+        /* Classes para alternar as telas internas */
+        .tela-interna { display: none; padding: 0 40px 40px; animation: fadeIn 0.3s ease; }
+        .tela-interna.ativa { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Estilos genéricos para as telas internas */
+        .internal-box { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 30px; margin-top: 20px; }
+        .internal-box h2 { font-size: 20px; margin-bottom: 15px; color: var(--accent-orange); }
+        .internal-box p { color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+
+        /* Barra de ferramentas (Busca) apenas para Posts */
+        .toolbar { display: flex; justify-content: space-between; padding: 0 40px 20px; border-bottom: 1px solid var(--border-color); }
+        .search-box { display: flex; align-items: center; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; width: 350px; }
+        .search-box i { color: var(--text-secondary); margin-right: 8px; font-size: 18px; }
+        .search-box input { background: none; border: none; color: var(--text-primary); width: 100%; outline: none; }
+        
+        .post-card { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border-color); }
+        .post-info-group { display: flex; gap: 20px; flex: 1; }
+        .post-thumbnail { width: 120px; height: 70px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .post-details h3 { font-size: 16px; margin-bottom: 6px; margin-top: 0; color: var(--text-primary); }
+        .post-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+        .post-interactions { display: flex; gap: 15px; color: var(--text-secondary); font-size: 13px; }
+        .post-stats { display: flex; align-items: center; gap: 40px; }
+        .stat { display: flex; flex-direction: column; align-items: center; width: 50px; }
+        .stat-num { font-size: 15px; font-weight: 500; }
+        .stat-label { font-size: 12px; color: var(--text-secondary); }
+        .post-actions i { cursor: pointer; margin-left: 15px; color: var(--text-secondary); font-size: 18px;}
+        .post-actions i:hover { color: var(--text-primary); }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        
-        <!-- BARRA LATERAL -->
-        <aside class="sidebar">
-            <div class="user-profile">
-                <img src="https://ui-avatars.com/api/?name=GPS.dev&background=333&color=fff" alt="User">
-                <span class="user-name">GPS.dev</span>
+    
+    <!-- BARRA LATERAL -->
+    <aside class="sidebar">
+        <div class="user-profile">
+            <img src="https://ui-avatars.com/api/?name=GPS.dev&background=333&color=fff" alt="User">
+            <span class="user-name">GPS.dev</span>
+        </div>
+
+        <nav class="main-nav">
+            <!-- Botão Home abre a tela de Posts -->
+            <button onclick="abrirTela('tela-posts')" class="nav-item active-menu" id="menu-home"><i class="ph ph-house"></i> Home</button>
+            
+            <!-- Único botão que realmente abre fora do console -->
+            <a href="https://gustavopaulasantos.com.br" target="_blank" class="nav-item"><i class="ph ph-browser"></i> Website <i class="ph ph-arrow-up-right external-icon"></i></a>
+        </nav>
+
+        <button class="btn-create">
+            Create <i class="ph ph-caret-down"></i>
+        </button>
+
+        <!-- SEÇÃO: CONTEÚDO -->
+        <div class="nav-section-title">Conteúdo</div>
+        <nav class="secondary-nav">
+            <button onclick="abrirTela('tela-posts')" class="nav-item"><i class="ph ph-file-text"></i> Articles</button>
+            <button class="nav-item"><i class="ph ph-video-camera"></i> Video</button>
+            <button class="nav-item"><i class="ph ph-microphone-stage"></i> Podcast</button>
+        </nav>
+
+        <!-- SEÇÃO: PROJETOS ATIVOS -->
+        <div class="nav-section-title">Meus Projetos</div>
+        <nav class="secondary-nav">
+            <button onclick="abrirTela('tela-agro')" class="nav-item"><i class="ph ph-leaf"></i> Agro Digital</button>
+            <button onclick="abrirTela('tela-nexus')" class="nav-item"><i class="ph ph-planet"></i> Nexus Terracore</button>
+            <button onclick="abrirTela('tela-turin')" class="nav-item"><i class="ph ph-robot"></i> Projeto Turin (IA)</button>
+        </nav>
+
+        <!-- SEÇÃO: GESTÃO ADMINISTRATIVA -->
+        <div class="nav-section-title">Gestão</div>
+        <nav class="secondary-nav">
+            <button onclick="abrirTela('tela-financeiro')" class="nav-item"><i class="ph ph-currency-dollar"></i> Financeiro</button>
+            <button onclick="abrirTela('tela-clientes')" class="nav-item"><i class="ph ph-users"></i> Clientes</button>
+            <button onclick="abrirTela('tela-senhas')" class="nav-item"><i class="ph ph-lock-key"></i> Senhas e Acessos</button>
+        </nav>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL DO CONSOLE -->
+    <main class="main-content">
+        <header class="top-header">
+            <h1 id="titulo-pagina">Posts</h1>
+            <div class="header-icons">
+                <i class="ph ph-moon"></i>
+                <i class="ph ph-bell"></i>
+                <img src="https://ui-avatars.com/api/?name=G&background=fff&color=000" alt="Admin" class="avatar-small">
             </div>
+        </header>
 
-            <nav class="main-nav">
-                <a href="#" class="nav-item"><i class="ph ph-house"></i> Home</a>
-                <a href="#" class="nav-item"><i class="ph ph-browser"></i> Website <i class="ph ph-arrow-up-right external-icon"></i></a>
-            </nav>
-
-            <button class="btn-create">
-                Create <i class="ph ph-caret-down"></i>
-            </button>
-
-            <nav class="secondary-nav">
-                <a href="#" class="nav-item"><i class="ph ph-file-text"></i> Article</a>
-                <a href="#" class="nav-item"><i class="ph ph-video-camera"></i> Video</a>
-                <a href="#" class="nav-item"><i class="ph ph-microphone-stage"></i> Podcast</a>
-                <a href="#" class="nav-item"><i class="ph ph-pencil-simple"></i> Note</a>
-                <a href="#" class="nav-item"><i class="ph ph-chats"></i> Chat thread</a>
-                <a href="#" class="nav-item"><i class="ph ph-broadcast"></i> Live video</a>
-                <a href="#" class="nav-item"><i class="ph ph-video-camera-slash"></i> Recording studio</a>
-            </nav>
-        </aside>
-
-        <!-- ÁREA PRINCIPAL -->
-        <main class="main-content">
-            <header class="top-header">
-                <h1>Posts</h1>
-                <div class="header-icons">
-                    <i class="ph ph-moon"></i>
-                    <i class="ph ph-magnifying-glass"></i>
-                    <i class="ph ph-chat-circle"></i>
-                    <i class="ph ph-bell"></i>
-                    <img src="https://ui-avatars.com/api/?name=G&background=fff&color=000" alt="Admin" class="avatar-small">
-                </div>
-            </header>
-
-            <div class="toolbar">
+        <!-- TELA 1: POSTS E ARTIGOS (Padrão) -->
+        <div id="tela-posts" class="tela-interna ativa">
+            <div class="toolbar" style="padding: 0 0 20px 0;">
                 <div class="search-box">
                     <i class="ph ph-magnifying-glass"></i>
                     <input type="text" placeholder="Search...">
                 </div>
-                <div class="toolbar-actions">
-                    <button class="btn-filter"><i class="ph ph-faders"></i> Filter</button>
-                    <button class="btn-sort">Newest first <i class="ph ph-caret-down"></i></button>
+            </div>
+
+            <!-- Post 1 -->
+            <div class="post-card">
+                <div class="post-info-group">
+                    <div class="post-thumbnail" style="background-color: #222;"></div>
+                    <div class="post-details">
+                        <h3>Why you need to learn about AI?</h3>
+                        <p class="post-meta">Sep 18 • GPS.dev</p>
+                    </div>
+                </div>
+                <div class="post-stats">
+                    <div class="stat"><span class="stat-num">1</span><span class="stat-label">Views</span></div>
+                    <div class="post-actions"><i class="ph ph-dots-three"></i></div>
                 </div>
             </div>
 
-            <div class="posts-list">
-                
-                <!-- Post 1 (IA) -->
-                <div class="post-card">
-                    <div class="post-info-group">
-                        <div class="post-thumbnail" style="background-color: #222;"></div>
-                        <div class="post-details">
-                            <h3>Why you need to learn about AI?</h3>
-                            <p class="post-meta">Sep 18 • GPS.dev</p>
-                            <div class="post-interactions">
-                                <span><i class="ph ph-heart"></i> 0</span>
-                                <span><i class="ph ph-chat-circle"></i> 0</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="post-stats">
-                        <div class="stat">
-                            <span class="stat-num">0</span>
-                            <span class="stat-label">Subs</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-num">1</span>
-                            <span class="stat-label">Views</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-num">100%</span>
-                            <span class="stat-label">Opened</span>
-                        </div>
-                        <div class="post-actions">
-                            <i class="ph ph-arrow-up-right"></i>
-                            <i class="ph ph-dots-three"></i>
-                        </div>
+            <!-- Post 2 -->
+            <div class="post-card">
+                <div class="post-info-group">
+                    <div class="post-thumbnail" style="background-color: #1a1a2e; display: flex; align-items: center; justify-content: center;"><i class="ph-fill ph-play-circle" style="font-size: 2rem; color: white;"></i></div>
+                    <div class="post-details">
+                        <h3><i class="ph ph-headphones"></i> The philosophy can use ethics to help Ai?</h3>
+                        <p class="post-meta">Sep 18 • GPS.dev</p>
                     </div>
                 </div>
-
-                <div class="month-divider">SEPTEMBER</div>
-
-                <!-- Post 2 (Filosofia e Ética) -->
-                <div class="post-card">
-                    <div class="post-info-group">
-                        <div class="post-thumbnail" style="background-color: #1a1a2e; display: flex; align-items: center; justify-content: center;">
-                            <i class="ph-fill ph-play-circle" style="font-size: 2rem; color: white;"></i>
-                        </div>
-                        <div class="post-details">
-                            <h3><i class="ph ph-headphones"></i> The philosophy can use ethics to help Ai?</h3>
-                            <p class="post-meta">Sep 18 • GPS.dev</p>
-                            <div class="post-interactions">
-                                <span><i class="ph ph-heart"></i> 0</span>
-                                <span><i class="ph ph-chat-circle"></i> 0</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="post-stats">
-                        <div class="stat">
-                            <span class="stat-num">0</span>
-                            <span class="stat-label">Subs</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-num">17</span>
-                            <span class="stat-label">Views</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-num">100%</span>
-                            <span class="stat-label">Opened</span>
-                        </div>
-                        <div class="post-actions">
-                            <i class="ph ph-arrow-up-right"></i>
-                            <i class="ph ph-dots-three"></i>
-                        </div>
-                    </div>
+                <div class="post-stats">
+                    <div class="stat"><span class="stat-num">17</span><span class="stat-label">Views</span></div>
+                    <div class="post-actions"><i class="ph ph-dots-three"></i></div>
                 </div>
-
             </div>
-        </main>
-    </div>
+        </div>
+
+        <!-- TELA 2: FINANCEIRO (Privado) -->
+        <div id="tela-financeiro" class="tela-interna">
+            <div class="internal-box">
+                <h2><i class="ph ph-currency-dollar"></i> Administração Financeira</h2>
+                <p>Esta é a sua área privada interna. Você pode inserir suas tabelas, planilhas do Google (via iframe) ou caixas de texto com dados sensíveis aqui.</p>
+                <br>
+                <p style="color: #4CAF50; font-size: 24px; font-weight: bold;">Saldo Atual: R$ 0,00</p>
+            </div>
+        </div>
+
+        <!-- TELA 3: CLIENTES -->
+        <div id="tela-clientes" class="tela-interna">
+            <div class="internal-box">
+                <h2><i class="ph ph-users"></i> Gestão de Clientes</h2>
+                <p>Módulo interno para cadastro de clientes, relatórios e contatos confidenciais.</p>
+            </div>
+        </div>
+
+        <!-- TELA 4: SENHAS E ACESSOS -->
+        <div id="tela-senhas" class="tela-interna">
+            <div class="internal-box">
+                <h2><i class="ph ph-lock-key"></i> Cofre de Senhas</h2>
+                <p>Área estritamente confidencial para armazenar chaves de API, senhas de servidores e credenciais de projetos.</p>
+            </div>
+        </div>
+
+        <!-- TELA 5: PROJETO TURIN -->
+        <div id="tela-turin" class="tela-interna">
+            <div class="internal-box">
+                <h2><i class="ph ph-robot"></i> Projeto Turin (IA)</h2>
+                <p>Console de controle interno para o desenvolvimento e prompts do Projeto Turin.</p>
+            </div>
+        </div>
+
+        <!-- TELA 6: AGRO DIGITAL -->
+        <div id="tela-agro" class="tela-interna">
+            <div class="internal-box">
+                <h2><i class="ph ph-leaf"></i> Agro Digital</h2>
+                <p>Gestão e documentação do projeto Agro Digital.</p>
+            </div>
+        </div>
+
+        <!-- TELA 7: NEXUS TERRACORE -->
+        <div id="tela-nexus" class="tela-interna">
+            <div class="internal-box">
+                <h2><i class="ph ph-planet"></i> Nexus Terracore</h2>
+                <p>Ambiente administrativo do projeto Nexus Terracore.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SCRIPT QUE FAZ O PAINEL FUNCIONAR INTERNAMENTE -->
+    <script>
+        function abrirTela(idTela) {
+            // 1. Esconde todas as telas internas
+            const telas = document.querySelectorAll('.tela-interna');
+            telas.forEach(tela => tela.classList.remove('ativa'));
+
+            // 2. Mostra a tela que você clicou
+            const telaAtiva = document.getElementById(idTela);
+            if (telaAtiva) {
+                telaAtiva.classList.add('ativa');
+            }
+
+            // 3. Muda o título principal lá no topo para combinar com o que você clicou
+            const titulo = document.getElementById('titulo-pagina');
+            if(idTela === 'tela-posts') titulo.innerText = 'Posts';
+            else if(idTela === 'tela-financeiro') titulo.innerText = 'Financeiro';
+            else if(idTela === 'tela-clientes') titulo.innerText = 'Clientes';
+            else if(idTela === 'tela-senhas') titulo.innerText = 'Senhas e Acessos';
+            else if(idTela === 'tela-turin') titulo.innerText = 'Projeto Turin (IA)';
+            else if(idTela === 'tela-agro') titulo.innerText = 'Agro Digital';
+            else if(idTela === 'tela-nexus') titulo.innerText = 'Nexus Terracore';
+        }
+    </script>
 </body>
 </html>
