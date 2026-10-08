@@ -274,7 +274,7 @@ function abrirTela(idTela) {
     'tela-posts': 'nav-home', 'tela-videos': 'nav-videos', 'tela-podcast': 'nav-podcast',
     'tela-financeiro': 'nav-financeiro', 'tela-clientes': 'nav-clientes', 'tela-senhas': 'nav-senhas',
     'tela-agro': 'nav-agro', 'tela-nexus': 'nav-nexus', 'tela-turin': 'nav-turin',
-    'tela-catalogo': 'nav-catalogo'
+    'tela-catalogo': 'nav-catalogo', 'tela-edutech': 'nav-edutech', 'tela-angola': 'nav-angola'
   };
   const navEl = document.getElementById(navMap[idTela]);
   if (navEl) navEl.classList.add('active-menu');
@@ -287,9 +287,11 @@ function abrirTela(idTela) {
     'tela-catalogo': 'Mini-softwares',
     'tela-agro': 'Projeto: Agro Digital',
     'tela-nexus': 'Projeto: NexoTerraCore',
-    'tela-turin': 'Projeto: Turim (IA)',
+    'tela-turin': 'Turing · Inteligência',
     'tela-videos': 'Gerenciador de Vídeos',
-    'tela-podcast': 'Gerenciador de Podcasts'
+    'tela-podcast': 'Gerenciador de Podcasts',
+    'tela-edutech': 'EduTech · Cursos',
+    'tela-angola': 'Angola · Formação e oportunidades'
   };
 
   document.getElementById('titulo-pagina').innerText = titleMap[idTela] || 'Console';
