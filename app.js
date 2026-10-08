@@ -388,7 +388,10 @@ function renderCurrentView() {
   if (currentView === 'tela-vendas') renderVendas();
   if (currentView === 'tela-api') renderApi();
   if (currentView === 'tela-treino') renderTreino();
-  if (currentView === 'tela-posts') renderMetricasHome();
+  if (currentView === 'tela-posts') {
+    renderMetricasHome();
+    if (!apiChecadaNaSessao) { apiChecadaNaSessao = true; checarSaudeApi(); }
+  }
   if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
   if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
 }
@@ -958,15 +961,83 @@ function renderMetricasHome() {
   const comLink = minis.filter(m => urlSegura(m.url)).length;
   const noAr = (appData.vendas || []).filter(v => v.status === 'No ar').length;
   const fila = (appData.treino || []).filter(t => !t.enviado).length;
+  const est = ESTADOS_API[statusApi.estado] || ESTADOS_API['nao-configurada'];
   const cards = [
-    ['Mini-softwares', `${minis.length}`, `${publicados} publicado(s) · ${comLink} com link`],
-    ['Páginas de venda', `${(appData.vendas || []).length}`, `${noAr} no ar`],
-    ['Fila do Turing', `${fila}`, 'exemplos aguardando envio'],
-    ['Conexão', navigator.onLine ? 'Online' : 'Offline', navigator.onLine ? 'internet disponível' : 'dados salvos no aparelho']
+    ['Mini-softwares', `${minis.length}`, `${publicados} publicado(s) · ${comLink} com link`, 'tela-catalogo'],
+    ['Páginas de venda', `${(appData.vendas || []).length}`, `${noAr} no ar`, 'tela-vendas'],
+    ['Fila do Turing', `${fila}`, 'exemplos aguardando envio', 'tela-treino'],
+    ['API / Turing', est.curto, statusApi.ms != null ? `${statusApi.ms} ms` : est.sub, 'tela-api']
   ];
-  el.innerHTML = cards.map(([rot, val, sub]) =>
-    `<div class="metric-card"><span>${escapeHtml(rot)}</span><h3>${escapeHtml(val)}</h3><p class="metric-sub">${escapeHtml(sub)}</p></div>`
+  el.innerHTML = cards.map(([rot, val, sub, alvo]) =>
+    `<button type="button" class="metric-card clicavel" onclick="abrirTela('${alvo}')"><span>${escapeHtml(rot)}</span><h3>${escapeHtml(val)}</h3><p class="metric-sub">${escapeHtml(sub)}</p></button>`
   ).join('');
+  renderHomeApi();
+}
+
+/* ---------- Home: painel de status da API / Turing ---------- */
+
+const ESTADOS_API = {
+  'online':          { curto: 'Online',         txt: 'Online',                    cls: 'green',  sub: 'respondendo' },
+  'erro':            { curto: 'Com erro',       txt: 'Respondeu com erro',        cls: 'red',    sub: 'veja o código HTTP' },
+  'sem-resposta':    { curto: 'Sem resposta',   txt: 'Sem resposta (rede ou CORS)', cls: 'red',  sub: 'rede ou CORS' },
+  'sem-internet':    { curto: 'Sem internet',   txt: 'Sem internet',              cls: 'orange', sub: 'modo offline' },
+  'verificando':     { curto: 'Verificando…',   txt: 'Verificando…',              cls: 'blue',   sub: 'aguarde' },
+  'nao-configurada': { curto: 'Configurar',     txt: 'Não configurada',           cls: 'orange', sub: 'preencha a URL da API' }
+};
+
+let statusApi = { estado: 'nao-configurada', ms: null, http: null, quando: null };
+let apiChecadaNaSessao = false;
+
+function rotaSaude() {
+  const e = (appData.config.endpoints || []).find(x => x.metodo === 'GET' && /\/health$/.test(x.rota));
+  return e ? e.rota : null;
+}
+
+// Só GET na rota de saúde: não envia nenhum dado.
+async function checarSaudeApi() {
+  const base = appData.config.apiBase;
+  const rota = rotaSaude();
+  if (!base || !rota) {
+    statusApi = { estado: 'nao-configurada', ms: null, http: null, quando: null };
+  } else if (!navigator.onLine) {
+    statusApi = { estado: 'sem-internet', ms: null, http: null, quando: new Date() };
+  } else {
+    statusApi = Object.assign({}, statusApi, { estado: 'verificando' });
+    renderHomeApi();
+    const t0 = performance.now();
+    try {
+      const res = await fetch(base + rota, { method: 'GET', cache: 'no-store' });
+      statusApi = { estado: res.ok ? 'online' : 'erro', ms: Math.round(performance.now() - t0), http: res.status, quando: new Date() };
+    } catch (e) {
+      statusApi = { estado: 'sem-resposta', ms: null, http: null, quando: new Date() };
+    }
+  }
+  if (currentView === 'tela-posts') renderMetricasHome();
+}
+
+function renderHomeApi() {
+  const el = document.getElementById('home-api');
+  if (!el) return;
+  const est = ESTADOS_API[statusApi.estado] || ESTADOS_API['nao-configurada'];
+  const fila = (appData.treino || []).filter(t => !t.enviado).length;
+  const hora = statusApi.quando ? statusApi.quando.toLocaleTimeString('pt-BR') : '—';
+  el.innerHTML = `
+    <div class="project-section api-painel">
+      <h3>
+        <span><i class="ph ph-brain"></i> API / Turing — status</span>
+        <span class="btn-row-inline">
+          <button class="btn-action secondary" onclick="checarSaudeApi()"><i class="ph ph-arrows-clockwise"></i> Atualizar status</button>
+          <button class="btn-action secondary" onclick="abrirTela('tela-api')"><i class="ph ph-gear"></i> Configurar</button>
+        </span>
+      </h3>
+      <div class="api-status-grid">
+        <div class="api-status-item"><span>Core API</span><strong><span class="badge ${est.cls}">${escapeHtml(est.txt)}</span></strong></div>
+        <div class="api-status-item"><span>Latência</span><strong>${statusApi.ms != null ? statusApi.ms + ' ms' : '—'}${statusApi.http ? ' · HTTP ' + statusApi.http : ''}</strong></div>
+        <div class="api-status-item"><span>Última checagem</span><strong>${escapeHtml(hora)}</strong></div>
+        <div class="api-status-item"><span>Fila do Turing</span><strong>${fila} exemplo(s)</strong></div>
+      </div>
+      ${statusApi.estado === 'nao-configurada' ? '<p class="regra-texto" style="margin-top:12px;">Preencha a URL base em <strong>Conexão da API</strong> para ver o estado real da API aqui.</p>' : ''}
+    </div>`;
 }
 
 /* ---------- Vendas / WordPress ---------- */
