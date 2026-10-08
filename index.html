@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPS.dev Console</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a2332">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Gate de acesso local -->
+  <div id="gate" class="gate">
+    <div class="gate-box">
+      <h1>GPS.dev Console</h1>
+      <p>Área administrativa</p>
+      <input type="password" id="gate-pass" placeholder="Senha" autocomplete="current-password">
+      <button id="gate-btn" onclick="tentarLogin()">Entrar</button>
+      <p id="gate-erro" class="erro"></p>
+    </div>
+  </div>
+
+  <!-- App principal -->
+  <div id="app" class="app escondido">
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">GPS.dev</span>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="menu-item ativo" data-tela="tela-dashboard"><i class="ph ph-squares-four"></i> Dashboard</a></li>
+        <li><a href="#" class="menu-item" data-tela="tela-catalogo"><i class="ph ph-package"></i> Mini-softwares</a></li>
+        <li><a href="#" class="menu-item" data-tela="tela-projetos"><i class="ph ph-folders"></i> Projetos</a></li>
+        <li><a href="#" class="menu-item" data-tela="tela-api"><i class="ph ph-plugs-connected"></i> API / Turing</a></li>
+        <li><a href="#" class="menu-item" data-tela="tela-vendas"><i class="ph ph-storefront"></i> Vendas</a></li>
+        <li><a href="#" class="menu-item" data-tela="tela-config"><i class="ph ph-gear-six"></i> Configurações</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <button onclick="sair()" class="btn-sair"><i class="ph ph-sign-out"></i> Sair</button>
+        <div class="offline-badge" id="offline-badge">⚡ Offline</div>
+      </div>
+    </nav>
+
+    <!-- Conteúdo -->
+    <main id="conteudo" class="conteudo">
+
+      <!-- DASHBOARD -->
+      <section id="tela-dashboard" class="tela">
+        <header class="tela-header">
+          <h2>Dashboard</h2>
+          <span class="tela-sub">Visão geral do ecossistema GPS.dev</span>
+        </header>
+        <div class="metricas-grid" id="metricas"></div>
+        <div class="secao-titulo">Acesso rápido</div>
+        <div class="cards-grid" id="cards-rapidos"></div>
+      </section>
+
+      <!-- CATÁLOGO MINI-SOFTWARES -->
+      <section id="tela-catalogo" class="tela escondido">
+        <header class="tela-header">
+          <h2>Mini-softwares</h2>
+          <button class="btn btn-primario" onclick="adicionarMini()"><i class="ph ph-plus"></i> Novo</button>
+        </header>
+        <div id="filtro-catalogo" class="filtro-bar">
+          <input type="text" id="busca-catalogo" placeholder="Buscar..." oninput="renderCatalogo()">
+          <select id="filtro-categoria" onchange="renderCatalogo()">
+            <option value="">Todas as categorias</option>
+          </select>
+          <select id="filtro-status" onchange="renderCatalogo()">
+            <option value="">Todos os status</option>
+          </select>
+        </div>
+        <div id="grid-catalogo"></div>
+      </section>
+
+      <!-- PROJETOS -->
+      <section id="tela-projetos" class="tela escondido">
+        <header class="tela-header">
+          <h2>Projetos</h2>
+          <span class="tela-sub">Frentes ativas do ecossistema</span>
+        </header>
+        <div class="cards-grid" id="cards-projetos"></div>
+      </section>
+
+      <!-- API / TURING -->
+      <section id="tela-api" class="tela escondido">
+        <header class="tela-header">
+          <h2>API / Turing</h2>
+          <span class="tela-sub">Endpoints, status e inteligência</span>
+        </header>
+        <div class="cards-grid" id="cards-api"></div>
+        <div class="secao-titulo" style="margin-top:24px;">Endpoints do Turing</div>
+        <div class="tabela-container">
+          <table class="tabela" id="tabela-endpoints">
+            <thead><tr><th>Rota</th><th>Método</th><th>Auth</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VENDAS -->
+      <section id="tela-vendas" class="tela escondido">
+        <header class="tela-header">
+          <h2>Vendas</h2>
+          <span class="tela-sub">Páginas de venda e links WordPress</span>
+        </header>
+        <div class="cards-grid" id="cards-vendas"></div>
+      </section>
+
+      <!-- CONFIGURAÇÕES -->
+      <section id="tela-config" class="tela escondido">
+        <header class="tela-header">
+          <h2>Configurações</h2>
+        </header>
+        <div class="config-grupo">
+          <h3>Backup & Restauração</h3>
+          <p>Exporte todos os dados do console para um arquivo JSON. Importe para restaurar.</p>
+          <div class="config-btns">
+            <button class="btn btn-secundario" onclick="exportarBackup()"><i class="ph ph-download-simple"></i> Exportar backup</button>
+            <label class="btn btn-secundario"><i class="ph ph-upload-simple"></i> Importar backup <input type="file" accept=".json" onchange="importarBackup(event)" hidden></label>
+          </div>
+        </div>
+        <div class="config-grupo">
+          <h3>Tema</h3>
+          <div class="config-btns">
+            <button class="btn btn-secundario" onclick="alternarTema()"><i class="ph ph-moon"></i> Alternar claro/escuro</button>
+          </div>
+        </div>
+        <div class="config-grupo">
+          <h3>Senha do gate</h3>
+          <div class="config-btns">
+            <button class="btn btn-secundario" onclick="mudarSenha()"><i class="ph ph-key"></i> Alterar senha</button>
+          </div>
+        </div>
+        <div class="config-grupo">
+          <h3>Dados</h3>
+          <div class="config-btns">
+            <button class="btn btn-perigo" onclick="limparDados()"><i class="ph ph-trash"></i> Limpar todos os dados</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
