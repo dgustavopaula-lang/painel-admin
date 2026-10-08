@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>GPS.dev — Admin Console</title>
+<meta name="theme-color" content="#0f0f0f" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" type="image/png" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 <link rel="stylesheet" href="style.css" />
 </head>
@@ -57,6 +61,14 @@
       <div class="nav-section-title">Produtos</div>
       <nav class="secondary-nav">
         <button onclick="abrirTela('tela-catalogo')" class="nav-item" id="nav-catalogo"><i class="ph ph-squares-four"></i> Mini-softwares</button>
+        <button onclick="abrirTela('tela-vendas')" class="nav-item" id="nav-vendas"><i class="ph ph-storefront"></i> Vendas / WordPress</button>
+      </nav>
+
+      <div class="nav-section-title">API &amp; Turing</div>
+      <nav class="secondary-nav">
+        <button onclick="abrirTela('tela-api')" class="nav-item" id="nav-api"><i class="ph ph-plugs-connected"></i> Conexão da API</button>
+        <button onclick="abrirTela('tela-treino')" class="nav-item" id="nav-treino"><i class="ph ph-brain"></i> Treinamento Turing</button>
+        <a href="https://console.gustavopaulasantos.com.br/painel/" target="_blank" rel="noopener" class="nav-item"><i class="ph ph-terminal-window"></i> Sala de Comando <i class="ph ph-arrow-up-right external-icon"></i></a>
       </nav>
 
       <div class="nav-section-title">Gestão</div>
@@ -64,20 +76,30 @@
         <button onclick="abrirTela('tela-financeiro')" class="nav-item" id="nav-financeiro"><i class="ph ph-currency-dollar"></i> Financeiro</button>
         <button onclick="abrirTela('tela-clientes')" class="nav-item" id="nav-clientes"><i class="ph ph-users"></i> Clientes</button>
         <button onclick="abrirTela('tela-senhas')" class="nav-item" id="nav-senhas"><i class="ph ph-lock-key"></i> Senhas e Acessos</button>
+        <button onclick="abrirTela('tela-backup')" class="nav-item" id="nav-backup"><i class="ph ph-floppy-disk"></i> Backup</button>
       </nav>
 
-      <button class="nav-item" style="margin-top: auto; color: var(--text-secondary);" onclick="sair()">
-        <i class="ph ph-sign-out"></i> Sair
-      </button>
+      <div class="sidebar-bottom">
+        <div id="offline-badge" class="offline-badge" hidden><i class="ph ph-wifi-slash"></i> Sem internet — modo offline</div>
+        <button class="nav-item" style="color: var(--text-secondary);" onclick="alternarTema()">
+          <i class="ph ph-palette"></i> Tema: laranja / verde
+        </button>
+        <button class="nav-item" style="color: var(--text-secondary);" onclick="sair()">
+          <i class="ph ph-sign-out"></i> Sair
+        </button>
+      </div>
     </aside>
+    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="alternarMenu(false)"></div>
 
     <main class="main-content">
       <header class="top-header">
+        <button class="btn-menu" onclick="alternarMenu()" aria-label="Abrir menu"><i class="ph ph-list"></i></button>
         <h1 id="titulo-pagina">Home / Conteúdo</h1>
         <div class="header-actions" id="header-actions"></div>
       </header>
 
       <div id="tela-posts" class="tela-interna ativa">
+        <div class="metrics-grid" id="home-metricas"></div>
         <div id="container-posts"></div>
       </div>
 
@@ -132,6 +154,85 @@
       <div id="tela-catalogo" class="tela-interna">
         <p class="vault-hint"><i class="ph ph-info"></i> Clique em qualquer campo para editar. As alterações são salvas ao sair do campo.</p>
         <div id="grid-catalogo"></div>
+      </div>
+
+      <div id="tela-vendas" class="tela-interna">
+        <p class="vault-hint"><i class="ph ph-info"></i> Cadastre aqui os links das páginas de venda do WordPress. Os campos começam vazios: preencha com as URLs reais e use o lápis para editar.</p>
+        <div id="grid-vendas" class="catalogo-grid"></div>
+      </div>
+
+      <div id="tela-api" class="tela-interna">
+        <div class="project-section">
+          <h3><i class="ph ph-plugs-connected"></i> Conexão com a NexoTerraCore API</h3>
+          <div class="config-grid">
+            <div class="form-group">
+              <label>URL base da API (https)</label>
+              <input id="cfg-apibase" class="form-control" placeholder="https://..." onchange="salvarConfig()">
+            </div>
+            <div class="form-group">
+              <label>Rota de envio do treinamento</label>
+              <input id="cfg-treinopath" class="form-control" placeholder="/api/turing/training/feedback" onchange="salvarConfig()">
+            </div>
+          </div>
+          <p class="vault-hint" id="api-token-status"></p>
+          <div class="btn-row">
+            <button class="btn-action secondary" onclick="cadastrarTokenNoCofre()"><i class="ph ph-key"></i> Cadastrar token no cofre</button>
+          </div>
+        </div>
+        <div class="project-section">
+          <h3><i class="ph ph-list-checks"></i> Endpoints do Turing</h3>
+          <p class="vault-hint"><i class="ph ph-shield-warning"></i> Marque "Auth verificada" só depois de confirmar que a rota exige autenticação. O envio de treinamento fica bloqueado enquanto a rota não estiver marcada.</p>
+          <div class="data-table-container">
+            <table>
+              <thead><tr><th>Rota</th><th>Método</th><th>Auth</th><th>Verificada</th><th>Teste</th></tr></thead>
+              <tbody id="tbody-endpoints"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="tela-treino" class="tela-interna">
+        <div class="project-grid">
+          <div>
+            <div class="project-section">
+              <h3><i class="ph ph-brain"></i> Exemplos de treinamento (fila local)</h3>
+              <div class="data-table-container">
+                <table>
+                  <thead><tr><th>Texto</th><th>Rótulo</th><th>Origem</th><th>Autorizado</th><th>Envio</th><th>Ações</th></tr></thead>
+                  <tbody id="tbody-treino"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="project-section">
+              <h3>Checklist de envio</h3>
+              <div id="treino-checks" class="check-list"></div>
+              <div class="btn-row">
+                <button class="btn-action secondary" onclick="exportarTreino()"><i class="ph ph-download-simple"></i> Exportar lote</button>
+                <button class="btn-action secondary" onclick="previewTreino()"><i class="ph ph-eye"></i> Pré-visualizar</button>
+                <button class="btn-action" id="btn-enviar-treino" onclick="enviarTreino()"><i class="ph ph-paper-plane-tilt"></i> Enviar</button>
+              </div>
+            </div>
+            <div class="project-section">
+              <h3>Regra de dados</h3>
+              <p class="regra-texto">Exemplos com origem <strong>Fazenda PIPE / Malanje</strong> só entram no lote depois que o Altair avaliar a proposta e autorizar o uso. Sem a marca "Autorizado", ficam retidos na fila local.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tela-backup" class="tela-interna">
+        <div class="project-section">
+          <h3><i class="ph ph-floppy-disk"></i> Backup dos dados do painel</h3>
+          <p class="regra-texto">Exporta catálogo, projetos, vendas, fila do Turing, financeiro, clientes e posts em um arquivo JSON. O cofre de senhas <strong>não</strong> entra no backup.</p>
+          <div class="btn-row">
+            <button class="btn-action" onclick="exportarBackup()"><i class="ph ph-download-simple"></i> Exportar backup</button>
+            <label class="btn-action secondary" style="cursor:pointer;"><i class="ph ph-upload-simple"></i> Importar backup
+              <input type="file" accept=".json,application/json" hidden onchange="importarBackup(event)">
+            </label>
+          </div>
+        </div>
       </div>
 
       <div id="tela-agro" class="tela-interna">

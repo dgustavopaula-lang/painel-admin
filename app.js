@@ -21,8 +21,48 @@ let appData = {
   posts: [],
   projetos: {},
   minis: [],
+  vendas: [],
+  treino: [],
+  config: {},
   senhas: []
 };
+
+/* ---------------- v5: vendas, API/Turing ---------------- */
+
+const VENDAS_STATUS = ['A configurar', 'Em edição', 'No ar'];
+const TREINO_ORIGENS = ['Sintético', 'Público', 'Centro-Oeste', 'Fazenda PIPE / Malanje'];
+// Origens que só podem sair da fila local com autorização explícita (Altair).
+const TREINO_ORIGENS_RESTRITAS = ['Fazenda PIPE / Malanje'];
+const TOKEN_SERVICO = 'turing api token'; // nome do item no cofre (comparação sem maiúsculas)
+
+// Links ficam vazios de propósito: preencha com as URLs reais pelo painel.
+const SEED_VENDAS = [
+  { id: 1, nome: 'Site WordPress (principal)', desc: 'Página institucional da GPS.dev no WordPress.', url: '', status: 'A configurar' },
+  { id: 2, nome: 'EduTech — cursos (Tutor LMS)', desc: 'Cursos próprios: Inglês, Teologia, Filosofia, IA no agro e Tecnologia.', url: '', status: 'A configurar' },
+  { id: 3, nome: 'Sistema Raiz — página de venda', desc: 'Linha de mini-softwares modulares (Mini, Cloud Mini, Pro Cloud). Página no WordPress, a editar.', url: 'https://gustavopaulasantos.com.br', status: 'Em edição' },
+  { id: 4, nome: 'Turing Agro — proposta', desc: 'Inteligência e gestão para fazendas: insumos, estoque, máquinas, custos e alertas.', url: '', status: 'A configurar' }
+];
+
+const SEED_ENDPOINTS = [
+  { rota: '/api/turing/training/health', metodo: 'GET', auth: 'Nenhuma (verificar)', verificado: false },
+  { rota: '/api/turing/training/classificar', metodo: 'POST', auth: 'Verificar', verificado: false },
+  { rota: '/api/turing/training/feedback', metodo: 'POST', auth: 'Verificar', verificado: false },
+  { rota: '/api/turing/training/promote', metodo: 'POST', auth: 'TRAINING_APPROVAL_TOKEN', verificado: false },
+  { rota: '/api/turing/centro-oeste', metodo: '*', auth: 'Verificar', verificado: false },
+  { rota: '/api/turing/angola', metodo: '*', auth: 'Autenticar', verificado: false },
+  { rota: '/api/turing/publico', metodo: '*', auth: 'Rate limit', verificado: false }
+];
+
+function configPadrao() {
+  return { apiBase: '', treinoPath: '/api/turing/training/feedback', endpoints: JSON.parse(JSON.stringify(SEED_ENDPOINTS)) };
+}
+
+function normalizarConfig(cfg) {
+  const base = configPadrao();
+  const c = Object.assign(base, cfg || {});
+  if (!Array.isArray(c.endpoints) || !c.endpoints.length) c.endpoints = base.endpoints;
+  return c;
+}
 
 const MINI_STATUS = ['Publicado', 'Em desenvolvimento', 'Rascunho', 'Pausado'];
 const MINI_CATEGORIAS = ['GPS.dev', 'Turing', 'Nexa Tech', 'Sistema Raiz', 'Agro', 'Outros'];
@@ -128,8 +168,8 @@ async function decryptJSON(key, record) {
 /* ---------------- Persistência ---------------- */
 
 function persistData() {
-  const { financeiro, clientes, posts, projetos, minis } = appData;
-  localStorage.setItem(STORAGE_DATA, JSON.stringify({ financeiro, clientes, posts, projetos, minis, seedVersion: SEED_VERSION }));
+  const { financeiro, clientes, posts, projetos, minis, vendas, treino, config } = appData;
+  localStorage.setItem(STORAGE_DATA, JSON.stringify({ financeiro, clientes, posts, projetos, minis, vendas, treino, config, seedVersion: SEED_VERSION }));
 }
 
 function loadPlainData() {
@@ -142,11 +182,17 @@ function loadPlainData() {
       appData.posts = parsed.posts || [];
       appData.projetos = parsed.projetos || {};
       appData.minis = migrarMinis(parsed.minis || JSON.parse(JSON.stringify(SEED_MINIS)), parsed.seedVersion);
+      appData.vendas = Array.isArray(parsed.vendas) ? parsed.vendas : JSON.parse(JSON.stringify(SEED_VENDAS));
+      appData.treino = Array.isArray(parsed.treino) ? parsed.treino : [];
+      appData.config = normalizarConfig(parsed.config);
       persistData();
       return;
     } catch (e) { /* cai no default abaixo */ }
   }
   appData.minis = JSON.parse(JSON.stringify(SEED_MINIS));
+  appData.vendas = JSON.parse(JSON.stringify(SEED_VENDAS));
+  appData.treino = [];
+  appData.config = configPadrao();
   appData.financeiro = [
     { id: 1, desc: 'Desenvolvimento do Console', tipo: 'Receita', cat: 'Projetos', valor: 5000, data: new Date().toISOString().split('T')[0] }
   ];
@@ -274,7 +320,8 @@ function abrirTela(idTela) {
     'tela-posts': 'nav-home', 'tela-videos': 'nav-videos', 'tela-podcast': 'nav-podcast',
     'tela-financeiro': 'nav-financeiro', 'tela-clientes': 'nav-clientes', 'tela-senhas': 'nav-senhas',
     'tela-agro': 'nav-agro', 'tela-nexus': 'nav-nexus', 'tela-turin': 'nav-turin',
-    'tela-catalogo': 'nav-catalogo'
+    'tela-catalogo': 'nav-catalogo', 'tela-vendas': 'nav-vendas', 'tela-api': 'nav-api',
+    'tela-treino': 'nav-treino', 'tela-backup': 'nav-backup'
   };
   const navEl = document.getElementById(navMap[idTela]);
   if (navEl) navEl.classList.add('active-menu');
@@ -285,6 +332,10 @@ function abrirTela(idTela) {
     'tela-clientes': 'Base de Clientes',
     'tela-senhas': 'Cofre de Senhas & Acessos',
     'tela-catalogo': 'Mini-softwares',
+    'tela-vendas': 'Vendas / WordPress',
+    'tela-api': 'API / Conexão',
+    'tela-treino': 'Treinamento do Turing',
+    'tela-backup': 'Backup',
     'tela-agro': 'Projeto: Agro Digital',
     'tela-nexus': 'Projeto: NexoTerraCore',
     'tela-turin': 'Projeto: Turim (IA)',
@@ -295,6 +346,17 @@ function abrirTela(idTela) {
   document.getElementById('titulo-pagina').innerText = titleMap[idTela] || 'Console';
   renderHeaderActions(idTela);
   renderCurrentView();
+  alternarMenu(false);
+}
+
+// Menu lateral em telas pequenas (celular).
+function alternarMenu(forcar) {
+  const sb = document.querySelector('.sidebar');
+  const bd = document.getElementById('sidebar-backdrop');
+  if (!sb) return;
+  const abrir = typeof forcar === 'boolean' ? forcar : !sb.classList.contains('aberta');
+  sb.classList.toggle('aberta', abrir);
+  if (bd) bd.classList.toggle('ativa', abrir);
 }
 
 function renderHeaderActions(idTela) {
@@ -307,6 +369,10 @@ function renderHeaderActions(idTela) {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('senhas')"><i class="ph ph-key"></i> Nova Credencial</button>`;
   } else if (idTela === 'tela-catalogo') {
     container.innerHTML = `<button class="btn-action" onclick="adicionarMini()"><i class="ph ph-plus"></i> Novo Mini-software</button>`;
+  } else if (idTela === 'tela-vendas') {
+    container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('vendas')"><i class="ph ph-plus"></i> Nova página</button>`;
+  } else if (idTela === 'tela-treino') {
+    container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('treino')"><i class="ph ph-plus"></i> Novo exemplo</button>`;
   } else if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(idTela)) {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('posts')"><i class="ph ph-plus"></i> Novo Item / Post</button>`;
   } else {
@@ -319,6 +385,10 @@ function renderCurrentView() {
   if (currentView === 'tela-clientes') renderClientes();
   if (currentView === 'tela-senhas') renderSenhas();
   if (currentView === 'tela-catalogo') renderCatalogo();
+  if (currentView === 'tela-vendas') renderVendas();
+  if (currentView === 'tela-api') renderApi();
+  if (currentView === 'tela-treino') renderTreino();
+  if (currentView === 'tela-posts') renderMetricasHome();
   if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
   if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
 }
@@ -489,6 +559,7 @@ function renderMiniCard(m, index, total) {
           <select class="form-control mini-status" title="Status" onchange="editarMini(${m.id}, 'status', this.value)">${statusOpts}</select>
           <select class="form-control mini-status" title="Categoria" onchange="editarMini(${m.id}, 'categoria', this.value)">${catOpts}</select>
           <div class="action-btns">
+            <button class="btn-icon" title="Editar" onclick="editarItem('minis', ${m.id})"><i class="ph ph-pencil"></i></button>
             <button class="btn-icon" title="Subir" onclick="moverMini(${m.id}, -1)" ${index === 0 ? 'disabled' : ''}><i class="ph ph-arrow-up"></i></button>
             <button class="btn-icon" title="Descer" onclick="moverMini(${m.id}, 1)" ${index === total - 1 ? 'disabled' : ''}><i class="ph ph-arrow-down"></i></button>
             <button class="btn-icon" title="Excluir" onclick="deletarMini(${m.id})"><i class="ph ph-trash"></i></button>
@@ -542,17 +613,18 @@ function renderPosts() {
   if (!container) return;
   container.innerHTML = '';
 
-  appData.posts.forEach(item => {
+  const filtroTipo = currentView === 'tela-videos' ? 'Video' : (currentView === 'tela-podcast' ? 'Podcast' : null);
+  appData.posts.filter(p => !filtroTipo || p.tipo === filtroTipo).forEach(item => {
     container.innerHTML += `
       <div class="project-section" style="margin-bottom: 15px;">
-        <h3>${item.titulo}
+        <h3>${escapeHtml(item.titulo)}
           <span>
             <button class="btn-icon" onclick="editarItem('posts', ${item.id})"><i class="ph ph-pencil"></i></button>
             <button class="btn-icon" onclick="deletarItem('posts', ${item.id})"><i class="ph ph-trash"></i></button>
           </span>
         </h3>
-        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">${item.data} • <span class="badge blue">${item.tipo}</span></p>
-        <p style="line-height: 1.5;">${item.desc}</p>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">${escapeHtml(item.data)} • <span class="badge blue">${escapeHtml(item.tipo)}</span></p>
+        <p style="line-height: 1.5;">${escapeHtml(item.desc)}</p>
       </div>
     `;
   });
@@ -578,10 +650,16 @@ function renderProjeto(key) {
   const linkList = document.getElementById(`links-${key}`);
   linkList.innerHTML = '';
   (proj.links || []).forEach((l, index) => {
+    const href = urlSegura(l.url);
     linkList.innerHTML += `
       <div class="link-item">
-        <a href="${l.url}" target="_blank" rel="noopener"><i class="ph ph-link"></i> ${l.nome}</a>
-        <button class="btn-icon" onclick="deletarLink('${key}', ${index})"><i class="ph ph-trash"></i></button>
+        ${href
+          ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"><i class="ph ph-link"></i> ${escapeHtml(l.nome)}</a>`
+          : `<span class="mini-sem-link"><i class="ph ph-link-break"></i> ${escapeHtml(l.nome)} (link inválido)</span>`}
+        <span class="action-btns">
+          <button class="btn-icon" title="Editar" onclick="abrirModalLink('${key}', ${index})"><i class="ph ph-pencil"></i></button>
+          <button class="btn-icon" title="Excluir" onclick="deletarLink('${key}', ${index})"><i class="ph ph-trash"></i></button>
+        </span>
       </div>
     `;
   });
@@ -617,18 +695,22 @@ function deletarTask(key, idx) {
   renderProjeto(key);
 }
 
-function abrirModalLink(key) {
+let editingLinkIdx = null;
+
+function abrirModalLink(key, idx = null) {
   activeProjectLinkKey = key;
   activeModalType = 'link';
+  editingLinkIdx = idx;
   const overlay = document.getElementById('modal-container');
   const body = document.getElementById('modal-body');
   const titulo = document.getElementById('modal-titulo');
+  const atual = idx !== null ? (appData.projetos[key].links || [])[idx] || {} : {};
 
   overlay.classList.add('active');
-  titulo.innerText = 'Novo Link do Projeto';
+  titulo.innerText = idx !== null ? 'Editar Link do Projeto' : 'Novo Link do Projeto';
   body.innerHTML = `
-    <div class="form-group"><label>Nome do Link</label><input id="form-link-nome" class="form-control" placeholder="ex: Documentação, Repositório"></div>
-    <div class="form-group"><label>URL</label><input id="form-link-url" class="form-control" placeholder="https://..."></div>
+    <div class="form-group"><label>Nome do Link</label><input id="form-link-nome" class="form-control" placeholder="ex: Documentação, Repositório" value="${escapeHtml(atual.nome || '')}"></div>
+    <div class="form-group"><label>URL</label><input id="form-link-url" class="form-control" placeholder="https://..." value="${escapeHtml(atual.url || '')}"></div>
   `;
 }
 
@@ -685,6 +767,32 @@ function abrirModalForm(tipo, id = null) {
       <div class="form-group"><label>Tipo</label><select id="form-tipo" class="form-control"><option ${item.tipo === 'Articles' ? 'selected' : ''}>Articles</option><option ${item.tipo === 'Video' ? 'selected' : ''}>Video</option><option ${item.tipo === 'Podcast' ? 'selected' : ''}>Podcast</option></select></div>
       <div class="form-group"><label>Descrição / Conteúdo</label><textarea id="form-desc" class="form-control" style="min-height: 90px;">${item.desc || ''}</textarea></div>
     `;
+  } else if (tipo === 'minis') {
+    titulo.innerText = 'Editar Mini-software';
+    const cats = [...new Set([...MINI_CATEGORIAS, item.categoria].filter(Boolean))];
+    body.innerHTML = `
+      <div class="form-group"><label>Nome</label><input id="form-mini-nome" class="form-control" value="${escapeHtml(item.nome)}"></div>
+      <div class="form-group"><label>Categoria</label><select id="form-mini-cat" class="form-control">${cats.map(c => `<option ${c === item.categoria ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Status</label><select id="form-mini-status" class="form-control">${MINI_STATUS.map(s => `<option ${s === item.status ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Link (https://...)</label><input id="form-mini-url" class="form-control" value="${escapeHtml(item.url)}" placeholder="https://..."></div>
+      <div class="form-group"><label>Descrição</label><textarea id="form-mini-desc" class="form-control" style="min-height: 80px;">${escapeHtml(item.desc)}</textarea></div>
+    `;
+  } else if (tipo === 'vendas') {
+    titulo.innerText = id ? 'Editar página de venda' : 'Nova página de venda';
+    body.innerHTML = `
+      <div class="form-group"><label>Nome</label><input id="form-venda-nome" class="form-control" value="${escapeHtml(item.nome)}"></div>
+      <div class="form-group"><label>Status</label><select id="form-venda-status" class="form-control">${VENDAS_STATUS.map(s => `<option ${s === (item.status || 'A configurar') ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Link da página (https://...)</label><input id="form-venda-url" class="form-control" value="${escapeHtml(item.url)}" placeholder="https://..."></div>
+      <div class="form-group"><label>Descrição</label><textarea id="form-venda-desc" class="form-control" style="min-height: 80px;">${escapeHtml(item.desc)}</textarea></div>
+    `;
+  } else if (tipo === 'treino') {
+    titulo.innerText = id ? 'Editar exemplo de treinamento' : 'Novo exemplo de treinamento';
+    body.innerHTML = `
+      <div class="form-group"><label>Texto do exemplo</label><textarea id="form-treino-texto" class="form-control" style="min-height: 90px;">${escapeHtml(item.texto)}</textarea></div>
+      <div class="form-group"><label>Rótulo / classificação</label><input id="form-treino-rotulo" class="form-control" value="${escapeHtml(item.rotulo)}" placeholder="ex: anomalia, normal, exposição"></div>
+      <div class="form-group"><label>Origem dos dados</label><select id="form-treino-origem" class="form-control">${TREINO_ORIGENS.map(o => `<option ${o === (item.origem || 'Sintético') ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select></div>
+      <div class="form-group"><label><input id="form-treino-autorizado" type="checkbox" ${item.autorizado ? 'checked' : ''}> Uso autorizado (obrigatório para Fazenda PIPE / Malanje — autorização do Altair)</label></div>
+    `;
   }
 }
 
@@ -693,10 +801,52 @@ async function salvarModal() {
     const nome = document.getElementById('form-link-nome').value;
     const url = document.getElementById('form-link-url').value;
     if (nome && url && activeProjectLinkKey) {
+      if (!appData.projetos[activeProjectLinkKey]) appData.projetos[activeProjectLinkKey] = { tasks: [], links: [] };
       if (!appData.projetos[activeProjectLinkKey].links) appData.projetos[activeProjectLinkKey].links = [];
-      appData.projetos[activeProjectLinkKey].links.push({ id: Date.now(), nome, url });
+      const lista = appData.projetos[activeProjectLinkKey].links;
+      if (editingLinkIdx !== null && lista[editingLinkIdx]) {
+        lista[editingLinkIdx] = Object.assign({}, lista[editingLinkIdx], { nome, url });
+      } else {
+        lista.push({ id: Date.now(), nome, url });
+      }
+    }
+    editingLinkIdx = null;
+    persistData();
+  } else if (activeModalType === 'minis') {
+    const item = appData.minis.find(x => x.id === editingId);
+    if (item) {
+      item.nome = document.getElementById('form-mini-nome').value.trim() || item.nome;
+      item.categoria = document.getElementById('form-mini-cat').value;
+      item.status = document.getElementById('form-mini-status').value;
+      item.url = document.getElementById('form-mini-url').value.trim();
+      item.desc = document.getElementById('form-mini-desc').value.trim();
     }
     persistData();
+  } else if (activeModalType === 'vendas') {
+    const dados = {
+      nome: document.getElementById('form-venda-nome').value.trim() || 'Nova página',
+      status: document.getElementById('form-venda-status').value,
+      url: document.getElementById('form-venda-url').value.trim(),
+      desc: document.getElementById('form-venda-desc').value.trim()
+    };
+    const existente = editingId ? appData.vendas.find(x => x.id === editingId) : null;
+    if (existente) Object.assign(existente, dados); else appData.vendas.push(Object.assign({ id: Date.now() }, dados));
+    persistData();
+  } else if (activeModalType === 'treino') {
+    const texto = document.getElementById('form-treino-texto').value.trim();
+    if (!texto) { alert('Escreva o texto do exemplo.'); return; }
+    const dados = {
+      texto,
+      rotulo: document.getElementById('form-treino-rotulo').value.trim(),
+      origem: document.getElementById('form-treino-origem').value,
+      autorizado: document.getElementById('form-treino-autorizado').checked
+    };
+    const existente = editingId ? appData.treino.find(x => x.id === editingId) : null;
+    if (existente) { Object.assign(existente, dados); existente.enviado = false; }
+    else appData.treino.push(Object.assign({ id: Date.now(), enviado: false, criado: new Date().toISOString() }, dados));
+    persistData();
+  } else if (activeModalType === 'preview') {
+    /* só visualização */
   } else if (activeModalType === 'financeiro') {
     const newItem = {
       id: editingId || Date.now(),
@@ -783,9 +933,353 @@ async function deletarItem(tipo, id) {
   renderCurrentView();
 }
 
+/* ============================================================
+   v5 — Vendas, API/Turing, Backup, tema, offline
+   ============================================================ */
+
+function baixarJSON(nome, obj) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------- Home: métricas ---------- */
+
+function renderMetricasHome() {
+  const el = document.getElementById('home-metricas');
+  if (!el) return;
+  const minis = appData.minis || [];
+  const publicados = minis.filter(m => m.status === 'Publicado').length;
+  const comLink = minis.filter(m => urlSegura(m.url)).length;
+  const noAr = (appData.vendas || []).filter(v => v.status === 'No ar').length;
+  const fila = (appData.treino || []).filter(t => !t.enviado).length;
+  const cards = [
+    ['Mini-softwares', `${minis.length}`, `${publicados} publicado(s) · ${comLink} com link`],
+    ['Páginas de venda', `${(appData.vendas || []).length}`, `${noAr} no ar`],
+    ['Fila do Turing', `${fila}`, 'exemplos aguardando envio'],
+    ['Conexão', navigator.onLine ? 'Online' : 'Offline', navigator.onLine ? 'internet disponível' : 'dados salvos no aparelho']
+  ];
+  el.innerHTML = cards.map(([rot, val, sub]) =>
+    `<div class="metric-card"><span>${escapeHtml(rot)}</span><h3>${escapeHtml(val)}</h3><p class="metric-sub">${escapeHtml(sub)}</p></div>`
+  ).join('');
+}
+
+/* ---------- Vendas / WordPress ---------- */
+
+function renderVendas() {
+  const root = document.getElementById('grid-vendas');
+  if (!root) return;
+  if (!appData.vendas.length) {
+    root.innerHTML = `<p class="catalogo-vazio">Nenhuma página cadastrada. Clique em "Nova página".</p>`;
+    return;
+  }
+  root.innerHTML = appData.vendas.map(v => {
+    const href = urlSegura(v.url);
+    const cls = v.status === 'No ar' ? 'green' : (v.status === 'Em edição' ? 'blue' : 'orange');
+    return `
+      <article class="mini-card">
+        <div class="mini-card-top">
+          <strong class="venda-nome">${escapeHtml(v.nome)}</strong>
+          <span class="badge ${cls}">${escapeHtml(v.status)}</span>
+        </div>
+        <p class="venda-desc">${v.desc ? escapeHtml(v.desc) : '<span class="mini-sem-link">sem descrição</span>'}</p>
+        <div class="mini-link-row">
+          <i class="ph ph-link"></i>
+          <span class="venda-url">${href ? escapeHtml(href) : '<span class="mini-sem-link">link pendente — clique no lápis</span>'}</span>
+        </div>
+        <div class="mini-card-footer">
+          ${href ? `<a class="btn-action secondary mini-abrir" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"><i class="ph ph-arrow-square-out"></i> Abrir</a>` : '<span></span>'}
+          <div class="action-btns">
+            <button class="btn-icon" title="Editar" onclick="editarItem('vendas', ${v.id})"><i class="ph ph-pencil"></i></button>
+            <button class="btn-icon" title="Excluir" onclick="confirmarExcluir('vendas', ${v.id})"><i class="ph ph-trash"></i></button>
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+function confirmarExcluir(tipo, id) {
+  if (confirm('Excluir este item?')) deletarItem(tipo, id);
+}
+
+/* ---------- API: conexão e endpoints ---------- */
+
+function apiBaseValida(v) {
+  if (!v) return true;
+  try {
+    const u = new URL(v);
+    if (u.protocol === 'https:') return true;
+    return u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1');
+  } catch (e) { return false; }
+}
+
+function tokenDoCofre() {
+  const it = (appData.senhas || []).find(s => String(s.servico || '').trim().toLowerCase() === TOKEN_SERVICO);
+  return it && it.pass ? it.pass : '';
+}
+
+const resultadosTeste = {};
+
+function renderApi() {
+  const c = appData.config;
+  document.getElementById('cfg-apibase').value = c.apiBase || '';
+  document.getElementById('cfg-treinopath').value = c.treinoPath || '';
+  const st = document.getElementById('api-token-status');
+  st.innerHTML = tokenDoCofre()
+    ? `<i class="ph ph-shield-check"></i> Token encontrado no cofre (item "Turing API token"). Ele nunca é gravado fora do cofre criptografado.`
+    : `<i class="ph ph-warning"></i> Nenhum token no cofre. Cadastre um item chamado "Turing API token" em Senhas e Acessos.`;
+
+  const tbody = document.getElementById('tbody-endpoints');
+  tbody.innerHTML = c.endpoints.map((e, i) => `
+    <tr>
+      <td><code>${escapeHtml(e.rota)}</code></td>
+      <td><span class="badge blue">${escapeHtml(e.metodo)}</span></td>
+      <td><input class="inline-input" value="${escapeHtml(e.auth)}" onchange="atualizarEndpoint(${i}, 'auth', this.value)"></td>
+      <td><input type="checkbox" ${e.verificado ? 'checked' : ''} onchange="atualizarEndpoint(${i}, 'verificado', this.checked)"></td>
+      <td>${e.metodo === 'GET'
+        ? `<button class="btn-action secondary" onclick="testarEndpoint(${i})"><i class="ph ph-pulse"></i> Testar</button> <span id="teste-${i}" class="teste-res">${escapeHtml(resultadosTeste[i] || '')}</span>`
+        : '<span class="mini-sem-link">só GET</span>'}</td>
+    </tr>`).join('');
+}
+
+function salvarConfig() {
+  const base = document.getElementById('cfg-apibase').value.trim().replace(/\/+$/, '');
+  const path = document.getElementById('cfg-treinopath').value.trim();
+  if (!apiBaseValida(base)) {
+    alert('Use uma URL https:// (ou http://localhost para testes).');
+    document.getElementById('cfg-apibase').value = appData.config.apiBase || '';
+    return;
+  }
+  appData.config.apiBase = base;
+  appData.config.treinoPath = path.startsWith('/') || !path ? path : '/' + path;
+  persistData();
+  renderApi();
+}
+
+function atualizarEndpoint(i, campo, valor) {
+  const e = appData.config.endpoints[i];
+  if (!e) return;
+  e[campo] = valor;
+  persistData();
+}
+
+// Só GET, sem enviar dados: serve para ver se a API responde.
+async function testarEndpoint(i) {
+  const e = appData.config.endpoints[i];
+  const out = document.getElementById(`teste-${i}`);
+  if (!e || e.metodo !== 'GET') return;
+  if (!appData.config.apiBase) { alert('Configure a URL base da API primeiro.'); return; }
+  out.textContent = '...';
+  const t0 = performance.now();
+  try {
+    const res = await fetch(appData.config.apiBase + e.rota, { method: 'GET', cache: 'no-store' });
+    resultadosTeste[i] = `HTTP ${res.status} · ${Math.round(performance.now() - t0)} ms`;
+  } catch (err) {
+    resultadosTeste[i] = navigator.onLine ? 'sem resposta (rede ou CORS)' : 'sem internet';
+  }
+  out.textContent = resultadosTeste[i];
+}
+
+function cadastrarTokenNoCofre() {
+  abrirTela('tela-senhas');
+  abrirModalForm('senhas');
+  document.getElementById('form-servico').value = 'Turing API token';
+  document.getElementById('form-cat').value = 'API';
+}
+
+/* ---------- Treinamento do Turing (fila local + envio protegido) ---------- */
+
+const treinoRestrito = t => TREINO_ORIGENS_RESTRITAS.includes(t.origem);
+const treinoElegiveis = () => appData.treino.filter(t => !t.enviado && (!treinoRestrito(t) || t.autorizado));
+const treinoRetidos = () => appData.treino.filter(t => !t.enviado && treinoRestrito(t) && !t.autorizado);
+const endpointTreino = () => appData.config.endpoints.find(e => e.rota === appData.config.treinoPath);
+
+function checksEnvio() {
+  const c = appData.config;
+  const ep = endpointTreino();
+  const el = treinoElegiveis().length;
+  const ret = treinoRetidos().length;
+  return [
+    { ok: !!c.apiBase && apiBaseValida(c.apiBase), texto: 'URL base da API configurada (https)' },
+    { ok: !!ep, texto: 'Rota de envio cadastrada nos endpoints' },
+    { ok: !!ep && !!ep.verificado, texto: 'Autenticação da rota verificada' },
+    { ok: !!tokenDoCofre(), texto: 'Token "Turing API token" no cofre' },
+    { ok: navigator.onLine, texto: 'Conectado à internet' },
+    { ok: el > 0, texto: `${el} exemplo(s) pronto(s) para envio` + (ret ? ` · ${ret} retido(s) sem autorização` : '') }
+  ];
+}
+
+function renderTreino() {
+  const tbody = document.getElementById('tbody-treino');
+  if (!tbody) return;
+  if (!appData.treino.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="mini-sem-link">Nenhum exemplo na fila. Use "Novo exemplo".</td></tr>`;
+  } else {
+    tbody.innerHTML = appData.treino.map(t => {
+      const restrito = treinoRestrito(t);
+      const envio = t.enviado ? '<span class="badge green">Enviado</span>'
+        : (restrito && !t.autorizado ? '<span class="badge red">Retido</span>' : '<span class="badge orange">Na fila</span>');
+      const texto = t.texto.length > 90 ? t.texto.slice(0, 90) + '…' : t.texto;
+      return `
+        <tr>
+          <td>${escapeHtml(texto)}</td>
+          <td>${escapeHtml(t.rotulo || '—')}</td>
+          <td><span class="badge ${restrito ? 'red' : 'blue'}">${escapeHtml(t.origem)}</span></td>
+          <td><input type="checkbox" ${t.autorizado ? 'checked' : ''} onchange="autorizarTreino(${t.id}, this.checked)"></td>
+          <td>${envio}</td>
+          <td class="action-btns">
+            <button class="btn-icon" title="Editar" onclick="editarItem('treino', ${t.id})"><i class="ph ph-pencil"></i></button>
+            <button class="btn-icon" title="Excluir" onclick="confirmarExcluir('treino', ${t.id})"><i class="ph ph-trash"></i></button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  const checks = checksEnvio();
+  document.getElementById('treino-checks').innerHTML = checks.map(c =>
+    `<div class="check-item ${c.ok ? 'ok' : 'pendente'}"><i class="ph ${c.ok ? 'ph-check-circle' : 'ph-x-circle'}"></i> ${escapeHtml(c.texto)}</div>`
+  ).join('');
+  const btn = document.getElementById('btn-enviar-treino');
+  btn.disabled = !checks.every(c => c.ok);
+}
+
+function autorizarTreino(id, valor) {
+  const t = appData.treino.find(x => x.id === id);
+  if (!t) return;
+  t.autorizado = !!valor;
+  persistData();
+  renderTreino();
+}
+
+function montarPayloadTreino() {
+  return {
+    origem_painel: 'GPS.dev Console',
+    gerado_em: new Date().toISOString(),
+    exemplos: treinoElegiveis().map(t => ({ id: t.id, texto: t.texto, rotulo: t.rotulo, origem: t.origem }))
+  };
+}
+
+function exportarTreino() {
+  const p = montarPayloadTreino();
+  if (!p.exemplos.length) { alert('Nenhum exemplo pronto para exportar.'); return; }
+  baixarJSON(`turing-lote-${new Date().toISOString().slice(0, 10)}.json`, p);
+}
+
+function previewTreino() {
+  activeModalType = 'preview';
+  editingId = null;
+  document.getElementById('modal-container').classList.add('active');
+  document.getElementById('modal-titulo').innerText = 'Pré-visualização do lote';
+  const p = montarPayloadTreino();
+  const ret = treinoRetidos().length;
+  document.getElementById('modal-body').innerHTML = `
+    <p class="vault-hint"><i class="ph ph-info"></i> Este é o corpo (JSON) que seria enviado para ${escapeHtml((appData.config.apiBase || '(API não configurada)') + (appData.config.treinoPath || ''))}. Confira o formato com o contrato da rota antes de enviar.${ret ? ` ${ret} exemplo(s) retido(s) por falta de autorização não entram.` : ''}</p>
+    <textarea class="form-control" readonly style="min-height: 220px; font-family: monospace; font-size: 12px;">${escapeHtml(JSON.stringify(p, null, 2))}</textarea>`;
+}
+
+async function enviarTreino() {
+  const checks = checksEnvio();
+  if (!checks.every(c => c.ok)) { renderTreino(); return; }
+  const ep = endpointTreino();
+  const lote = treinoElegiveis();
+  const url = appData.config.apiBase + appData.config.treinoPath;
+  if (!confirm(`Enviar ${lote.length} exemplo(s) para ${url}?`)) return;
+  const btn = document.getElementById('btn-enviar-treino');
+  btn.disabled = true;
+  try {
+    const res = await fetch(url, {
+      method: ep && ep.metodo !== '*' ? ep.metodo : 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tokenDoCofre() },
+      body: JSON.stringify(montarPayloadTreino())
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const ids = new Set(lote.map(t => t.id));
+    appData.treino.forEach(t => { if (ids.has(t.id)) t.enviado = true; });
+    persistData();
+    alert(`Lote enviado (${lote.length}).`);
+  } catch (err) {
+    alert('Não foi possível enviar: ' + err.message + '. Nada foi marcado como enviado.');
+  }
+  renderTreino();
+}
+
+/* ---------- Backup ---------- */
+
+function exportarBackup() {
+  const { financeiro, clientes, posts, projetos, minis, vendas, treino, config } = appData;
+  baixarJSON(`gps-console-backup-${new Date().toISOString().slice(0, 10)}.json`,
+    { versao: 5, exportado_em: new Date().toISOString(), financeiro, clientes, posts, projetos, minis, vendas, treino, config });
+}
+
+function importarBackup(ev) {
+  const arq = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!arq) return;
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    try {
+      const d = JSON.parse(leitor.result);
+      if (!d || typeof d !== 'object' || Array.isArray(d)) throw new Error('formato inválido');
+      if (!confirm('Importar este backup substitui os dados atuais do painel (o cofre de senhas não é alterado). Continuar?')) return;
+      ['financeiro', 'clientes', 'posts', 'vendas', 'treino'].forEach(k => { if (Array.isArray(d[k])) appData[k] = d[k]; });
+      if (Array.isArray(d.minis)) appData.minis = migrarMinis(d.minis, SEED_VERSION);
+      if (d.projetos && typeof d.projetos === 'object') appData.projetos = d.projetos;
+      if (d.config && typeof d.config === 'object') appData.config = normalizarConfig(d.config);
+      persistData();
+      renderCurrentView();
+      alert('Backup importado.');
+    } catch (e) {
+      alert('Arquivo de backup inválido: ' + e.message);
+    }
+  };
+  leitor.readAsText(arq);
+}
+
+/* ---------- Tema e offline ---------- */
+
+const STORAGE_TEMA = 'gps_console_tema_v1';
+
+function lerTema() {
+  try { return localStorage.getItem(STORAGE_TEMA) === 'verde' ? 'verde' : 'laranja'; } catch (e) { return 'laranja'; }
+}
+
+function aplicarTema(t) {
+  document.documentElement.setAttribute('data-tema', t);
+  try { localStorage.setItem(STORAGE_TEMA, t); } catch (e) { /* ignora */ }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', t === 'verde' ? '#07161a' : '#0f0f0f');
+}
+
+function alternarTema() {
+  aplicarTema(lerTema() === 'verde' ? 'laranja' : 'verde');
+}
+
+function atualizarOnline() {
+  const b = document.getElementById('offline-badge');
+  if (b) b.hidden = navigator.onLine;
+  if (currentView === 'tela-treino') renderTreino();
+  if (currentView === 'tela-posts') renderMetricasHome();
+}
+
 /* ---------------- Boot ---------------- */
 
+window.addEventListener('online', atualizarOnline);
+window.addEventListener('offline', atualizarOnline);
+
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service Worker não registrado:', err));
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  aplicarTema(lerTema());
+  atualizarOnline();
   if (!window.crypto || !window.crypto.subtle) {
     document.getElementById('login-erro').textContent =
       'Este navegador/contexto não suporta criptografia (Web Crypto). Acesse via HTTPS.';
