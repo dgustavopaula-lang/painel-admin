@@ -25,21 +25,47 @@ let appData = {
 };
 
 const MINI_STATUS = ['Publicado', 'Em desenvolvimento', 'Rascunho', 'Pausado'];
+const MINI_CATEGORIAS = ['GPS.dev', 'Turing', 'Nexa Tech', 'Sistema Raiz', 'Agro', 'Outros'];
 
 // Produtos citados nas suas notas. Links e descrições ficam em branco de propósito:
 // preencha direto nos cards do painel.
 const SEED_MINIS = [
-  { id: 1, nome: 'Conecta (hub GPS.dev)', desc: 'Hub oficial para organizar, apresentar e localizar projetos e mini-softwares.', url: 'https://github.com/dgustavopaula-lang/conecta', status: 'Em desenvolvimento' },
-  { id: 2, nome: 'Curral Ágil', desc: 'PWA offline-first para gestão de gado leiteiro da agricultura familiar.', url: '', status: 'Rascunho' },
-  { id: 3, nome: 'Rural Leite', desc: '', url: '', status: 'Rascunho' },
-  { id: 4, nome: 'Aves', desc: '', url: '', status: 'Rascunho' },
-  { id: 5, nome: 'Super Gut / Microbioma', desc: '', url: '', status: 'Rascunho' },
-  { id: 6, nome: 'Sistema Raiz Clínica', desc: '', url: '', status: 'Rascunho' },
-  { id: 7, nome: 'Mini Mercado', desc: '', url: '', status: 'Rascunho' },
-  { id: 8, nome: 'Farmácia', desc: '', url: '', status: 'Rascunho' },
-  { id: 9, nome: 'Raiz Energia', desc: '', url: '', status: 'Rascunho' },
-  { id: 10, nome: 'Raiz Comercial', desc: '', url: '', status: 'Rascunho' }
+  { id: 1, nome: 'Conecta (hub GPS.dev)', categoria: 'GPS.dev', desc: 'Hub oficial para organizar, apresentar e localizar projetos e mini-softwares.', url: 'https://github.com/dgustavopaula-lang/conecta', status: 'Em desenvolvimento' },
+  { id: 2, nome: 'Curral Ágil', categoria: 'Agro', desc: 'PWA offline-first para gestão de gado leiteiro da agricultura familiar.', url: '', status: 'Rascunho' },
+  { id: 3, nome: 'Rural Leite', categoria: 'Nexa Tech', desc: '', url: '', status: 'Rascunho' },
+  { id: 4, nome: 'Aves', categoria: 'Nexa Tech', desc: '', url: '', status: 'Rascunho' },
+  { id: 5, nome: 'Super Gut / Microbioma', categoria: 'Nexa Tech', desc: '', url: '', status: 'Rascunho' },
+  { id: 6, nome: 'Sistema Raiz Clínica', categoria: 'Sistema Raiz', desc: '', url: '', status: 'Rascunho' },
+  { id: 7, nome: 'Mini Mercado', categoria: 'Sistema Raiz', desc: '', url: '', status: 'Rascunho' },
+  { id: 8, nome: 'Farmácia', categoria: 'Sistema Raiz', desc: '', url: '', status: 'Rascunho' },
+  { id: 9, nome: 'Raiz Energia', categoria: 'Sistema Raiz', desc: '', url: '', status: 'Rascunho' },
+  { id: 10, nome: 'Raiz Comercial', categoria: 'Sistema Raiz', desc: '', url: '', status: 'Rascunho' },
+  { id: 11, nome: 'IA API', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' },
+  { id: 12, nome: 'Console do Turing', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' },
+  { id: 13, nome: 'Turing Cell', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' },
+  { id: 14, nome: 'Search and Optimization', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' }
 ];
+
+const SEED_VERSION = 2;
+
+// Completa o catálogo salvo sem apagar nada: adiciona os itens do seed que ainda não existem
+// (pelo nome) e preenche a categoria dos itens antigos.
+function migrarMinis(minis, seedVersion) {
+  const lista = Array.isArray(minis) ? minis : [];
+  lista.forEach(m => {
+    if (!m.categoria) {
+      const ref = SEED_MINIS.find(s => s.nome === m.nome);
+      m.categoria = ref ? ref.categoria : 'Outros';
+    }
+  });
+  if ((seedVersion || 0) < SEED_VERSION) {
+    const nomes = new Set(lista.map(m => m.nome));
+    SEED_MINIS.forEach(s => {
+      if (!nomes.has(s.nome)) lista.push(JSON.parse(JSON.stringify(s)));
+    });
+  }
+  return lista;
+}
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -103,7 +129,7 @@ async function decryptJSON(key, record) {
 
 function persistData() {
   const { financeiro, clientes, posts, projetos, minis } = appData;
-  localStorage.setItem(STORAGE_DATA, JSON.stringify({ financeiro, clientes, posts, projetos, minis }));
+  localStorage.setItem(STORAGE_DATA, JSON.stringify({ financeiro, clientes, posts, projetos, minis, seedVersion: SEED_VERSION }));
 }
 
 function loadPlainData() {
@@ -115,7 +141,8 @@ function loadPlainData() {
       appData.clientes = parsed.clientes || [];
       appData.posts = parsed.posts || [];
       appData.projetos = parsed.projetos || {};
-      appData.minis = parsed.minis || JSON.parse(JSON.stringify(SEED_MINIS));
+      appData.minis = migrarMinis(parsed.minis || JSON.parse(JSON.stringify(SEED_MINIS)), parsed.seedVersion);
+      persistData();
       return;
     } catch (e) { /* cai no default abaixo */ }
   }
@@ -401,23 +428,41 @@ function copiarTexto(id) {
 /* ---------------- Catálogo de mini-softwares ---------------- */
 
 function renderCatalogo() {
-  const grid = document.getElementById('grid-catalogo');
-  if (!grid) return;
-  grid.innerHTML = '';
+  const root = document.getElementById('grid-catalogo');
+  if (!root) return;
+  root.innerHTML = '';
 
   if (!appData.minis.length) {
-    grid.innerHTML = `<p class="catalogo-vazio">Nenhum mini-software cadastrado. Clique em "Novo Mini-software".</p>`;
+    root.innerHTML = `<p class="catalogo-vazio">Nenhum mini-software cadastrado. Clique em "Novo Mini-software".</p>`;
     return;
   }
 
-  appData.minis.forEach((m, index) => {
+  const categoriasUsadas = [...new Set([...MINI_CATEGORIAS, ...appData.minis.map(m => m.categoria)])];
+  categoriasUsadas.forEach(cat => {
+    const itens = appData.minis.filter(m => m.categoria === cat);
+    if (!itens.length) return;
+    const section = document.createElement('section');
+    section.className = 'catalogo-secao';
+    section.innerHTML = `<h2 class="catalogo-secao-titulo">${escapeHtml(cat)} <span>${itens.length}</span></h2><div class="catalogo-grid"></div>`;
+    const grid = section.querySelector('.catalogo-grid');
+    itens.forEach((m, index) => {
+      grid.insertAdjacentHTML('beforeend', renderMiniCard(m, index, itens.length));
+    });
+    root.appendChild(section);
+  });
+}
+
+function renderMiniCard(m, index, total) {
     const href = urlSegura(m.url);
     const statusOpts = MINI_STATUS.map(s =>
       `<option ${s === m.status ? 'selected' : ''}>${escapeHtml(s)}</option>`
     ).join('');
+    const catOpts = MINI_CATEGORIAS.map(c =>
+      `<option ${c === m.categoria ? 'selected' : ''}>${escapeHtml(c)}</option>`
+    ).join('');
     const statusClass = m.status === 'Publicado' ? 'green' : (m.status === 'Pausado' ? 'red' : 'orange');
 
-    grid.innerHTML += `
+    return `
       <article class="mini-card">
         <div class="mini-card-top">
           <input class="inline-input mini-nome" value="${escapeHtml(m.nome)}"
@@ -441,16 +486,16 @@ function renderCatalogo() {
         </div>
 
         <div class="mini-card-footer">
-          <select class="form-control mini-status" onchange="editarMini(${m.id}, 'status', this.value)">${statusOpts}</select>
+          <select class="form-control mini-status" title="Status" onchange="editarMini(${m.id}, 'status', this.value)">${statusOpts}</select>
+          <select class="form-control mini-status" title="Categoria" onchange="editarMini(${m.id}, 'categoria', this.value)">${catOpts}</select>
           <div class="action-btns">
             <button class="btn-icon" title="Subir" onclick="moverMini(${m.id}, -1)" ${index === 0 ? 'disabled' : ''}><i class="ph ph-arrow-up"></i></button>
-            <button class="btn-icon" title="Descer" onclick="moverMini(${m.id}, 1)" ${index === appData.minis.length - 1 ? 'disabled' : ''}><i class="ph ph-arrow-down"></i></button>
+            <button class="btn-icon" title="Descer" onclick="moverMini(${m.id}, 1)" ${index === total - 1 ? 'disabled' : ''}><i class="ph ph-arrow-down"></i></button>
             <button class="btn-icon" title="Excluir" onclick="deletarMini(${m.id})"><i class="ph ph-trash"></i></button>
           </div>
         </div>
       </article>
     `;
-  });
 }
 
 function editarMini(id, campo, valor) {
@@ -462,17 +507,23 @@ function editarMini(id, campo, valor) {
 }
 
 function adicionarMini() {
-  appData.minis.unshift({ id: Date.now(), nome: 'Novo mini-software', desc: '', url: '', status: 'Rascunho' });
+  appData.minis.unshift({ id: Date.now(), nome: 'Novo mini-software', categoria: 'Outros', desc: '', url: '', status: 'Rascunho' });
   persistData();
   if (currentView !== 'tela-catalogo') abrirTela('tela-catalogo');
   renderCatalogo();
 }
 
+// Reordena apenas dentro da categoria do item (vizinho do mesmo grupo).
 function moverMini(id, direcao) {
-  const idx = appData.minis.findIndex(x => x.id === id);
-  const novo = idx + direcao;
-  if (idx < 0 || novo < 0 || novo >= appData.minis.length) return;
-  [appData.minis[idx], appData.minis[novo]] = [appData.minis[novo], appData.minis[idx]];
+  const item = appData.minis.find(x => x.id === id);
+  if (!item) return;
+  const grupo = appData.minis.filter(x => x.categoria === item.categoria);
+  const pos = grupo.indexOf(item);
+  const vizinho = grupo[pos + direcao];
+  if (!vizinho) return;
+  const i = appData.minis.indexOf(item);
+  const j = appData.minis.indexOf(vizinho);
+  [appData.minis[i], appData.minis[j]] = [appData.minis[j], appData.minis[i]];
   persistData();
   renderCatalogo();
 }
