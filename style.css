@@ -116,6 +116,39 @@ body {
 }
 .vault-hint i { color: var(--success-green); font-size: 16px; }
 
+/* ---------- Catálogo de mini-softwares (estilo leitura) ---------- */
+.catalogo-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; margin-top: 10px;
+}
+.catalogo-vazio { color: var(--text-secondary); font-size: 14px; }
+.mini-card {
+  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px;
+  padding: 20px; display: flex; flex-direction: column; gap: 12px; transition: border-color 0.15s ease;
+}
+.mini-card:hover { border-color: #3a3a3a; }
+.mini-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.mini-card-top .inline-input { font-size: 17px; font-weight: 700; }
+
+.inline-input {
+  width: 100%; background: transparent; border: 1px solid transparent; border-radius: 6px;
+  color: var(--text-primary); font-family: inherit; font-size: 14px; padding: 6px 8px; outline: none;
+  resize: vertical;
+}
+.inline-input:hover { border-color: var(--border-color); }
+.inline-input:focus { border-color: var(--accent-orange); background: #111; }
+.inline-input::placeholder { color: #555; }
+.mini-desc { color: #bdbdbd; line-height: 1.5; min-height: 52px; }
+
+.mini-link-row { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+.mini-link-row .inline-input { flex: 1; font-size: 13px; color: var(--accent-orange); }
+.mini-abrir { text-decoration: none; padding: 7px 12px; font-size: 12px; white-space: nowrap; }
+.mini-sem-link { font-size: 12px; color: #555; white-space: nowrap; }
+
+.mini-card-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: auto; }
+.mini-status { width: auto; padding: 6px 10px; font-size: 13px; }
+.btn-icon:disabled { opacity: 0.3; cursor: default; }
+.btn-icon:disabled:hover { background: none; color: var(--text-secondary); }
+
 .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 25px; }
 .metric-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; }
 .metric-card span { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }

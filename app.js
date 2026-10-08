@@ -20,8 +20,44 @@ let appData = {
   clientes: [],
   posts: [],
   projetos: {},
+  minis: [],
   senhas: []
 };
+
+const MINI_STATUS = ['Publicado', 'Em desenvolvimento', 'Rascunho', 'Pausado'];
+
+// Produtos citados nas suas notas. Links e descrições ficam em branco de propósito:
+// preencha direto nos cards do painel.
+const SEED_MINIS = [
+  { id: 1, nome: 'Conecta (hub GPS.dev)', desc: 'Hub oficial para organizar, apresentar e localizar projetos e mini-softwares.', url: 'https://github.com/dgustavopaula-lang/conecta', status: 'Em desenvolvimento' },
+  { id: 2, nome: 'Curral Ágil', desc: 'PWA offline-first para gestão de gado leiteiro da agricultura familiar.', url: '', status: 'Rascunho' },
+  { id: 3, nome: 'Rural Leite', desc: '', url: '', status: 'Rascunho' },
+  { id: 4, nome: 'Aves', desc: '', url: '', status: 'Rascunho' },
+  { id: 5, nome: 'Super Gut / Microbioma', desc: '', url: '', status: 'Rascunho' },
+  { id: 6, nome: 'Sistema Raiz Clínica', desc: '', url: '', status: 'Rascunho' },
+  { id: 7, nome: 'Mini Mercado', desc: '', url: '', status: 'Rascunho' },
+  { id: 8, nome: 'Farmácia', desc: '', url: '', status: 'Rascunho' },
+  { id: 9, nome: 'Raiz Energia', desc: '', url: '', status: 'Rascunho' },
+  { id: 10, nome: 'Raiz Comercial', desc: '', url: '', status: 'Rascunho' }
+];
+
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function urlSegura(url) {
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
+  } catch (e) {
+    return '';
+  }
+}
 
 let vaultKey = null; // CryptoKey — só existe em memória, nunca é salva
 let currentView = 'tela-posts';
@@ -66,8 +102,8 @@ async function decryptJSON(key, record) {
 /* ---------------- Persistência ---------------- */
 
 function persistData() {
-  const { financeiro, clientes, posts, projetos } = appData;
-  localStorage.setItem(STORAGE_DATA, JSON.stringify({ financeiro, clientes, posts, projetos }));
+  const { financeiro, clientes, posts, projetos, minis } = appData;
+  localStorage.setItem(STORAGE_DATA, JSON.stringify({ financeiro, clientes, posts, projetos, minis }));
 }
 
 function loadPlainData() {
@@ -79,9 +115,11 @@ function loadPlainData() {
       appData.clientes = parsed.clientes || [];
       appData.posts = parsed.posts || [];
       appData.projetos = parsed.projetos || {};
+      appData.minis = parsed.minis || JSON.parse(JSON.stringify(SEED_MINIS));
       return;
     } catch (e) { /* cai no default abaixo */ }
   }
+  appData.minis = JSON.parse(JSON.stringify(SEED_MINIS));
   appData.financeiro = [
     { id: 1, desc: 'Desenvolvimento do Console', tipo: 'Receita', cat: 'Projetos', valor: 5000, data: new Date().toISOString().split('T')[0] }
   ];
@@ -208,7 +246,8 @@ function abrirTela(idTela) {
   const navMap = {
     'tela-posts': 'nav-home', 'tela-videos': 'nav-videos', 'tela-podcast': 'nav-podcast',
     'tela-financeiro': 'nav-financeiro', 'tela-clientes': 'nav-clientes', 'tela-senhas': 'nav-senhas',
-    'tela-agro': 'nav-agro', 'tela-nexus': 'nav-nexus', 'tela-turin': 'nav-turin'
+    'tela-agro': 'nav-agro', 'tela-nexus': 'nav-nexus', 'tela-turin': 'nav-turin',
+    'tela-catalogo': 'nav-catalogo'
   };
   const navEl = document.getElementById(navMap[idTela]);
   if (navEl) navEl.classList.add('active-menu');
@@ -218,6 +257,7 @@ function abrirTela(idTela) {
     'tela-financeiro': 'Administração Financeira',
     'tela-clientes': 'Base de Clientes',
     'tela-senhas': 'Cofre de Senhas & Acessos',
+    'tela-catalogo': 'Mini-softwares',
     'tela-agro': 'Projeto: Agro Digital',
     'tela-nexus': 'Projeto: NexoTerraCore',
     'tela-turin': 'Projeto: Turim (IA)',
@@ -238,6 +278,8 @@ function renderHeaderActions(idTela) {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('clientes')"><i class="ph ph-user-plus"></i> Novo Cliente</button>`;
   } else if (idTela === 'tela-senhas') {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('senhas')"><i class="ph ph-key"></i> Nova Credencial</button>`;
+  } else if (idTela === 'tela-catalogo') {
+    container.innerHTML = `<button class="btn-action" onclick="adicionarMini()"><i class="ph ph-plus"></i> Novo Mini-software</button>`;
   } else if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(idTela)) {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('posts')"><i class="ph ph-plus"></i> Novo Item / Post</button>`;
   } else {
@@ -249,6 +291,7 @@ function renderCurrentView() {
   if (currentView === 'tela-financeiro') renderFinanceiro();
   if (currentView === 'tela-clientes') renderClientes();
   if (currentView === 'tela-senhas') renderSenhas();
+  if (currentView === 'tela-catalogo') renderCatalogo();
   if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
   if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
 }
@@ -353,6 +396,94 @@ function copiarTexto(id) {
   } else {
     fallback();
   }
+}
+
+/* ---------------- Catálogo de mini-softwares ---------------- */
+
+function renderCatalogo() {
+  const grid = document.getElementById('grid-catalogo');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  if (!appData.minis.length) {
+    grid.innerHTML = `<p class="catalogo-vazio">Nenhum mini-software cadastrado. Clique em "Novo Mini-software".</p>`;
+    return;
+  }
+
+  appData.minis.forEach((m, index) => {
+    const href = urlSegura(m.url);
+    const statusOpts = MINI_STATUS.map(s =>
+      `<option ${s === m.status ? 'selected' : ''}>${escapeHtml(s)}</option>`
+    ).join('');
+    const statusClass = m.status === 'Publicado' ? 'green' : (m.status === 'Pausado' ? 'red' : 'orange');
+
+    grid.innerHTML += `
+      <article class="mini-card">
+        <div class="mini-card-top">
+          <input class="inline-input mini-nome" value="${escapeHtml(m.nome)}"
+                 placeholder="Nome do mini-software"
+                 onchange="editarMini(${m.id}, 'nome', this.value)">
+          <span class="badge ${statusClass}">${escapeHtml(m.status)}</span>
+        </div>
+
+        <textarea class="inline-input mini-desc" rows="2"
+                  placeholder="Descrição curta (uma ou duas frases)"
+                  onchange="editarMini(${m.id}, 'desc', this.value)">${escapeHtml(m.desc)}</textarea>
+
+        <div class="mini-link-row">
+          <i class="ph ph-link"></i>
+          <input class="inline-input" value="${escapeHtml(m.url)}"
+                 placeholder="https://..."
+                 onchange="editarMini(${m.id}, 'url', this.value)">
+          ${href
+            ? `<a class="btn-action secondary mini-abrir" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"><i class="ph ph-arrow-square-out"></i> Abrir</a>`
+            : `<span class="mini-sem-link">sem link</span>`}
+        </div>
+
+        <div class="mini-card-footer">
+          <select class="form-control mini-status" onchange="editarMini(${m.id}, 'status', this.value)">${statusOpts}</select>
+          <div class="action-btns">
+            <button class="btn-icon" title="Subir" onclick="moverMini(${m.id}, -1)" ${index === 0 ? 'disabled' : ''}><i class="ph ph-arrow-up"></i></button>
+            <button class="btn-icon" title="Descer" onclick="moverMini(${m.id}, 1)" ${index === appData.minis.length - 1 ? 'disabled' : ''}><i class="ph ph-arrow-down"></i></button>
+            <button class="btn-icon" title="Excluir" onclick="deletarMini(${m.id})"><i class="ph ph-trash"></i></button>
+          </div>
+        </div>
+      </article>
+    `;
+  });
+}
+
+function editarMini(id, campo, valor) {
+  const item = appData.minis.find(x => x.id === id);
+  if (!item) return;
+  item[campo] = valor.trim();
+  persistData();
+  renderCatalogo();
+}
+
+function adicionarMini() {
+  appData.minis.unshift({ id: Date.now(), nome: 'Novo mini-software', desc: '', url: '', status: 'Rascunho' });
+  persistData();
+  if (currentView !== 'tela-catalogo') abrirTela('tela-catalogo');
+  renderCatalogo();
+}
+
+function moverMini(id, direcao) {
+  const idx = appData.minis.findIndex(x => x.id === id);
+  const novo = idx + direcao;
+  if (idx < 0 || novo < 0 || novo >= appData.minis.length) return;
+  [appData.minis[idx], appData.minis[novo]] = [appData.minis[novo], appData.minis[idx]];
+  persistData();
+  renderCatalogo();
+}
+
+function deletarMini(id) {
+  const item = appData.minis.find(x => x.id === id);
+  if (!item) return;
+  if (!confirm(`Excluir "${item.nome}" do catálogo?`)) return;
+  appData.minis = appData.minis.filter(x => x.id !== id);
+  persistData();
+  renderCatalogo();
 }
 
 function renderPosts() {

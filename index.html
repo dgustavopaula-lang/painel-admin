@@ -54,6 +54,11 @@
         <button onclick="abrirTela('tela-turin')" class="nav-item" id="nav-turin"><i class="ph ph-robot"></i> Projeto Turim (IA)</button>
       </nav>
 
+      <div class="nav-section-title">Produtos</div>
+      <nav class="secondary-nav">
+        <button onclick="abrirTela('tela-catalogo')" class="nav-item" id="nav-catalogo"><i class="ph ph-squares-four"></i> Mini-softwares</button>
+      </nav>
+
       <div class="nav-section-title">Gestão</div>
       <nav class="secondary-nav">
         <button onclick="abrirTela('tela-financeiro')" class="nav-item" id="nav-financeiro"><i class="ph ph-currency-dollar"></i> Financeiro</button>
@@ -122,6 +127,11 @@
             <tbody id="tbody-senhas"></tbody>
           </table>
         </div>
+      </div>
+
+      <div id="tela-catalogo" class="tela-interna">
+        <p class="vault-hint"><i class="ph ph-info"></i> Clique em qualquer campo para editar. As alterações são salvas ao sair do campo.</p>
+        <div id="grid-catalogo" class="catalogo-grid"></div>
       </div>
 
       <div id="tela-agro" class="tela-interna">
