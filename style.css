@@ -223,3 +223,10 @@ tr:hover td { background: var(--hover-bg); }
 }
 .form-control:focus { border-color: var(--accent-orange); }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* Painéis informativos da revisão: sem chamadas de API */
+.review-panel {background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:28px;max-width:900px;margin:24px;line-height:1.65}
+.review-panel h2 {color:var(--accent-orange);margin-bottom:14px}
+.review-panel p {color:var(--text-secondary);margin:12px 0}
+.review-actions a {color:var(--accent-orange);text-decoration:underline}
+.review-panel .review-note {font-size:.9rem;margin-top:24px}
