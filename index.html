@@ -1,816 +1,235 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPS.dev - Admin Console</title>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <style>
-        :root {
-            --bg-main: #141414;        
-            --bg-sidebar: #0f0f0f;     
-            --bg-card: #1a1a1a;        
-            --border-color: #2a2a2a;   
-            --text-primary: #ffffff;   
-            --text-secondary: #888888; 
-            --accent-orange: #ff5500;  
-            --accent-hover: #ff7733;   
-            --hover-bg: #222222;       
-            --danger-red: #ef4444;
-            --success-green: #22c55e;
-            --info-blue: #3b82f6;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background-color: var(--bg-main); color: var(--text-primary); font-family: var(--font-family);
-            display: flex; height: 100vh; width: 100vw; overflow: hidden;
-        }
-
-        /* */
-        .sidebar {
-            width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; padding: 20px; overflow-y: auto; flex-shrink: 0;
-        }
-
-        .sidebar::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-thumb { background-color: #333; border-radius: 4px; }
-
-        .user-profile {
-            display: flex; align-items: center; gap: 12px;
-            margin-bottom: 25px; padding: 10px; border-radius: 8px; cursor: pointer;
-        }
-        .user-profile:hover { background-color: var(--hover-bg); }
-        .user-profile img { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-color); }
-        .user-name { font-weight: 600; font-size: 15px; }
-
-        .nav-item {
-            display: flex; align-items: center; gap: 12px; color: var(--text-primary); text-decoration: none;
-            padding: 10px 12px; border-radius: 6px; font-size: 14px; margin-bottom: 3px; cursor: pointer; 
-            border: none; background: none; width: 100%; text-align: left; transition: background 0.15s ease;
-        }
-        .nav-item:hover, .nav-item.active-menu { background-color: var(--hover-bg); }
-        .nav-item.active-menu { border-left: 3px solid var(--accent-orange); color: #fff; }
-        .nav-item i { font-size: 18px; color: var(--text-secondary); }
-        .nav-item.active-menu i { color: var(--accent-orange); }
-        .external-icon { margin-left: auto; font-size: 14px !important; }
-
-        .nav-section-title {
-            color: var(--text-secondary); font-size: 11px; text-transform: uppercase; 
-            margin: 20px 0 6px 10px; font-weight: 700; letter-spacing: 1px;
-        }
-
-        .btn-create {
-            background-color: var(--accent-orange); color: white; border: none; padding: 12px; border-radius: 6px;
-            font-size: 14px; font-weight: 600; display: flex; justify-content: center; text-decoration: none;
-            align-items: center; gap: 8px; cursor: pointer; margin: 15px 0; transition: background 0.2s; width: 100%;
-        }
-        .btn-create:hover { background-color: var(--accent-hover); }
-
-        /* */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
-
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 25px 40px 15px; border-bottom: 1px solid var(--border-color); }
-        .top-header h1 { font-size: 26px; font-weight: 700; margin: 0; line-height: 1; }
-        .header-actions { display: flex; align-items: center; gap: 12px; }
-
-        .btn-action {
-            background-color: var(--accent-orange); color: white; border: none; padding: 9px 16px;
-            border-radius: 6px; font-size: 13px; font-weight: 600; display: flex; align-items: center;
-            gap: 6px; cursor: pointer; transition: 0.2s;
-        }
-        .btn-action:hover { background-color: var(--accent-hover); }
-        .btn-action.secondary { background-color: #262626; color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn-action.secondary:hover { background-color: #333; }
-
-        .tela-interna { display: none; padding: 30px 40px 40px; animation: fadeIn 0.2s ease; }
-        .tela-interna.ativa { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 25px; }
-        .metric-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; }
-        .metric-card span { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
-        .metric-card h3 { font-size: 24px; margin-top: 6px; color: var(--text-primary); }
-
-        .data-table-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th { background: #111; color: var(--text-secondary); padding: 14px 18px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
-        td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: var(--hover-bg); }
-
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block; }
-        .badge.green { background: rgba(34, 197, 94, 0.15); color: var(--success-green); }
-        .badge.red { background: rgba(239, 68, 68, 0.15); color: var(--danger-red); }
-        .badge.orange { background: rgba(255, 85, 0, 0.15); color: var(--accent-orange); }
-        .badge.blue { background: rgba(59, 130, 246, 0.15); color: var(--info-blue); }
-
-        .action-btns { display: flex; gap: 8px; }
-        .btn-icon { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; }
-        .btn-icon:hover { color: var(--text-primary); background: var(--hover-bg); }
-
-        /* */
-        .project-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-        @media(max-width: 1024px) { .project-grid { grid-template-columns: 1fr; } }
-
-        .project-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; margin-bottom: 20px; }
-        .project-section h3 { font-size: 17px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-
-        .editable-area {
-            width: 100%; min-height: 140px; background: #111; border: 1px solid var(--border-color);
-            border-radius: 6px; padding: 15px; color: var(--text-primary); font-family: inherit; font-size: 14px;
-            resize: vertical; outline: none; margin-bottom: 15px; line-height: 1.5;
-        }
-        .editable-area:focus { border-color: var(--accent-orange); }
-
-        .task-list { list-style: none; margin-top: 10px; }
-        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
-        .task-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-orange); cursor: pointer; }
-        .task-item input[type="text"] { background: none; border: none; color: var(--text-primary); font-size: 14px; flex: 1; outline: none; }
-        .task-item input[type="text"]:focus { border-bottom: 1px solid var(--accent-orange); }
-
-        .link-list { list-style: none; margin-top: 10px; }
-        .link-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
-        .link-item a { color: var(--accent-orange); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; }
-        .link-item a:hover { text-decoration: underline; }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 10000;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-box {
-            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px;
-            width: 90%; max-width: 520px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .modal-box h3 { margin-bottom: 20px; font-size: 18px; color: var(--text-primary); }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; }
-        .form-control {
-            width: 100%; background: #111; border: 1px solid var(--border-color); color: var(--text-primary);
-            padding: 10px; border-radius: 6px; outline: none; font-size: 14px;
-        }
-        .form-control:focus { border-color: var(--accent-orange); }
-        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GPS.dev — Admin Console</title>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+  <!-- TELA DE ACESSO: gate local com cofre criptografado. Não é um login de servidor — veja o README. -->
+  <div id="tela-login" class="login-overlay">
+    <form id="form-login" class="login-box">
+      <h1>GPS.dev</h1>
+      <p class="login-subtitle" id="login-subtitle">Admin Console</p>
+      <div id="login-campos"></div>
+      <button type="submit" class="btn-action" style="width:100%; justify-content:center; margin-top:12px;">Entrar</button>
+      <p id="login-erro" class="login-erro"></p>
+      <p id="login-aviso" class="login-aviso" hidden>
+        <strong>Importante:</strong> esta senha criptografa o cofre de "Senhas e Acessos" no seu navegador.
+        Se você esquecê-la, não existe recuperação — o conteúdo do cofre fica irrecuperável.
+      </p>
+    </form>
+  </div>
+
+  <div id="app-root" class="app-root" hidden>
     <aside class="sidebar">
-        <div class="user-profile">
-            <img src="https://ui-avatars.com/api/?name=GPS.dev&background=333&color=fff" alt="User">
-            <span class="user-name">GPS.dev</span>
-        </div>
+      <div class="user-profile">
+        <img src="https://ui-avatars.com/api/?name=GPS.dev&background=333&color=fff" alt="GPS.dev" />
+        <span class="user-name">GPS.dev</span>
+      </div>
 
-        <nav class="main-nav">
-            <button onclick="abrirTela('tela-posts')" class="nav-item active-menu" id="nav-home"><i class="ph ph-house"></i> Home</button>
-            <a href="https://gustavopaulasantos.com.br" target="_blank" class="nav-item"><i class="ph ph-browser"></i> Website <i class="ph ph-arrow-up-right external-icon"></i></a>
-        </nav>
+      <nav class="main-nav">
+        <button onclick="abrirTela('tela-posts')" class="nav-item active-menu" id="nav-home"><i class="ph ph-house"></i> Home</button>
+        <a href="https://gustavopaulasantos.com.br" target="_blank" rel="noopener" class="nav-item"><i class="ph ph-browser"></i> Website <i class="ph ph-arrow-up-right external-icon"></i></a>
+      </nav>
 
-        <button class="btn-create" onclick="abrirModalQuickAdd()">
-            <i class="ph ph-plus-circle"></i> Novo Cadastro
-        </button>
+      <button class="btn-create" onclick="abrirModalForm('financeiro')">
+        <i class="ph ph-plus-circle"></i> Novo Cadastro
+      </button>
 
-        <div class="nav-section-title">Conteúdo</div>
-        <nav class="secondary-nav">
-            <button onclick="abrirTela('tela-posts')" class="nav-item" id="nav-articles"><i class="ph ph-file-text"></i> Articles</button>
-            <button onclick="abrirTela('tela-videos')" class="nav-item" id="nav-videos"><i class="ph ph-video-camera"></i> Video</button>
-            <button onclick="abrirTela('tela-podcast')" class="nav-item" id="nav-podcast"><i class="ph ph-microphone-stage"></i> Podcast</button>
-        </nav>
+      <div class="nav-section-title">Conteúdo</div>
+      <nav class="secondary-nav">
+        <button onclick="abrirTela('tela-posts')" class="nav-item" id="nav-articles"><i class="ph ph-file-text"></i> Articles</button>
+        <button onclick="abrirTela('tela-videos')" class="nav-item" id="nav-videos"><i class="ph ph-video-camera"></i> Video</button>
+        <button onclick="abrirTela('tela-podcast')" class="nav-item" id="nav-podcast"><i class="ph ph-microphone-stage"></i> Podcast</button>
+      </nav>
 
-        <div class="nav-section-title">Meus Projetos</div>
-        <nav class="secondary-nav">
-            <button onclick="abrirTela('tela-agro')" class="nav-item" id="nav-agro"><i class="ph ph-leaf"></i> Agro Digital</button>
-            <button onclick="abrirTela('tela-nexus')" class="nav-item" id="nav-nexus"><i class="ph ph-planet"></i> NexoTerraCore</button>
-            <button onclick="abrirTela('tela-turin')" class="nav-item" id="nav-turin"><i class="ph ph-robot"></i> Projeto Turim (IA)</button>
-        </nav>
+      <div class="nav-section-title">Meus Projetos</div>
+      <nav class="secondary-nav">
+        <button onclick="abrirTela('tela-agro')" class="nav-item" id="nav-agro"><i class="ph ph-leaf"></i> Agro Digital</button>
+        <button onclick="abrirTela('tela-nexus')" class="nav-item" id="nav-nexus"><i class="ph ph-planet"></i> NexoTerraCore</button>
+        <button onclick="abrirTela('tela-turin')" class="nav-item" id="nav-turin"><i class="ph ph-robot"></i> Projeto Turim (IA)</button>
+      </nav>
 
-        <div class="nav-section-title">Gestão</div>
-        <nav class="secondary-nav">
-            <button onclick="abrirTela('tela-financeiro')" class="nav-item" id="nav-financeiro"><i class="ph ph-currency-dollar"></i> Financeiro</button>
-            <button onclick="abrirTela('tela-clientes')" class="nav-item" id="nav-clientes"><i class="ph ph-users"></i> Clientes</button>
-            <button onclick="abrirTela('tela-senhas')" class="nav-item" id="nav-senhas"><i class="ph ph-lock-key"></i> Senhas e Acessos</button>
-        </nav>
+      <div class="nav-section-title">Gestão</div>
+      <nav class="secondary-nav">
+        <button onclick="abrirTela('tela-financeiro')" class="nav-item" id="nav-financeiro"><i class="ph ph-currency-dollar"></i> Financeiro</button>
+        <button onclick="abrirTela('tela-clientes')" class="nav-item" id="nav-clientes"><i class="ph ph-users"></i> Clientes</button>
+        <button onclick="abrirTela('tela-senhas')" class="nav-item" id="nav-senhas"><i class="ph ph-lock-key"></i> Senhas e Acessos</button>
+      </nav>
+
+      <button class="nav-item" style="margin-top: auto; color: var(--text-secondary);" onclick="sair()">
+        <i class="ph ph-sign-out"></i> Sair
+      </button>
     </aside>
 
     <main class="main-content">
-        <header class="top-header">
-            <h1 id="titulo-pagina">Home / Conteúdo</h1>
-            <div class="header-actions" id="header-actions"></div>
-        </header>
+      <header class="top-header">
+        <h1 id="titulo-pagina">Home / Conteúdo</h1>
+        <div class="header-actions" id="header-actions"></div>
+      </header>
 
-        <!-- VIEW 1: HOME & POSTS -->
-        <div id="tela-posts" class="tela-interna ativa">
-            <div id="container-posts"></div>
+      <div id="tela-posts" class="tela-interna ativa">
+        <div id="container-posts"></div>
+      </div>
+
+      <div id="tela-financeiro" class="tela-interna">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span>Receitas</span>
+            <h3 id="fin-receita" style="color: var(--success-green)">R$ 0,00</h3>
+          </div>
+          <div class="metric-card">
+            <span>Despesas</span>
+            <h3 id="fin-despesa" style="color: var(--danger-red)">R$ 0,00</h3>
+          </div>
+          <div class="metric-card">
+            <span>Saldo Total</span>
+            <h3 id="fin-saldo">R$ 0,00</h3>
+          </div>
         </div>
-
-        <!-- VIEW 2: FINANCEIRO -->
-        <div id="tela-financeiro" class="tela-interna">
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <span>Receitas</span>
-                    <h3 id="fin-receita" style="color: var(--success-green)">R$ 0,00</h3>
-                </div>
-                <div class="metric-card">
-                    <span>Despesas</span>
-                    <h3 id="fin-despesa" style="color: var(--danger-red)">R$ 0,00</h3>
-                </div>
-                <div class="metric-card">
-                    <span>Saldo Total</span>
-                    <h3 id="fin-saldo">R$ 0,00</h3>
-                </div>
-            </div>
-
-            <div class="data-table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Descrição</th>
-                            <th>Tipo</th>
-                            <th>Categoria</th>
-                            <th>Valor</th>
-                            <th>Data</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-financeiro"></tbody>
-                </table>
-            </div>
+        <div class="data-table-container">
+          <table>
+            <thead>
+              <tr><th>Descrição</th><th>Tipo</th><th>Categoria</th><th>Valor</th><th>Data</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-financeiro"></tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- VIEW 3: CLIENTES -->
-        <div id="tela-clientes" class="tela-interna">
-            <div class="data-table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Telefone</th>
-                            <th>Status</th>
-                            <th>Notas</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-clientes"></tbody>
-                </table>
-            </div>
+      <div id="tela-clientes" class="tela-interna">
+        <div class="data-table-container">
+          <table>
+            <thead>
+              <tr><th>Nome</th><th>Email</th><th>Telefone</th><th>Status</th><th>Notas</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-clientes"></tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- VIEW 4: SENHAS & ACESSOS -->
-        <div id="tela-senhas" class="tela-interna">
-            <div class="data-table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Serviço / Aplicação</th>
-                            <th>Usuário / Chave</th>
-                            <th>Senha / Key</th>
-                            <th>Categoria</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-senhas"></tbody>
-                </table>
-            </div>
+      <div id="tela-senhas" class="tela-interna">
+        <p class="vault-hint"><i class="ph ph-shield-check"></i> Cofre criptografado com a sua senha de acesso (AES-GCM). Veja o README para entender o que isso protege e o que não protege.</p>
+        <div class="data-table-container">
+          <table>
+            <thead>
+              <tr><th>Serviço / Aplicação</th><th>Usuário / Chave</th><th>Senha / Key</th><th>Categoria</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-senhas"></tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- VIEW 5: AGRO DIGITAL -->
-        <div id="tela-agro" class="tela-interna">
-            <div class="project-grid">
-                <div>
-                    <div class="project-section">
-                        <h3><i class="ph ph-leaf"></i> Visão Geral & Documentação do Projeto</h3>
-                        <textarea class="editable-area" id="agro-notas" placeholder="Digite as especificações técnicas, visão geral e requisitos do Agro Digital..." oninput="salvarProjeto('agro')"></textarea>
-                    </div>
-                    <div class="project-section">
-                        <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('agro')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-                        <div id="tasks-agro" class="task-list"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="project-section">
-                        <h3>Status do Projeto</h3>
-                        <select id="agro-status" class="form-control" onchange="salvarProjeto('agro')">
-                            <option value="Em Planejamento">Em Planejamento</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Concluído">Concluído</option>
-                            <option value="Pausado">Pausado</option>
-                        </select>
-                    </div>
-                    <div class="project-section">
-                        <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('agro')"><i class="ph ph-plus"></i> Link</button></h3>
-                        <div id="links-agro" class="link-list"></div>
-                    </div>
-                </div>
+      <div id="tela-agro" class="tela-interna">
+        <div class="project-grid">
+          <div>
+            <div class="project-section">
+              <h3><i class="ph ph-leaf"></i> Visão Geral & Documentação do Projeto</h3>
+              <textarea class="editable-area" id="agro-notas" placeholder="Especificações técnicas, visão geral e requisitos do Agro Digital..." oninput="salvarProjeto('agro')"></textarea>
             </div>
-        </div>
-
-        <!-- VIEW 6: NEXOTERRACORE -->
-        <div id="tela-nexus" class="tela-interna">
-            <div class="project-grid">
-                <div>
-                    <div class="project-section">
-                        <h3><i class="ph ph-planet"></i> Visão Geral & Arquitetura NexoTerraCore</h3>
-                        <textarea class="editable-area" id="nexus-notas" placeholder="Digite aqui os detalhes e especificações do NexoTerraCore..." oninput="salvarProjeto('nexus')"></textarea>
-                    </div>
-                    <div class="project-section">
-                        <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('nexus')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-                        <div id="tasks-nexus" class="task-list"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="project-section">
-                        <h3>Status do Projeto</h3>
-                        <select id="nexus-status" class="form-control" onchange="salvarProjeto('nexus')">
-                            <option value="Em Planejamento">Em Planejamento</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Concluído">Concluído</option>
-                            <option value="Pausado">Pausado</option>
-                        </select>
-                    </div>
-                    <div class="project-section">
-                        <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('nexus')"><i class="ph ph-plus"></i> Link</button></h3>
-                        <div id="links-nexus" class="link-list"></div>
-                    </div>
-                </div>
+            <div class="project-section">
+              <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('agro')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+              <div id="tasks-agro" class="task-list"></div>
             </div>
-        </div>
-
-        <!-- VIEW 7: PROJETO TURIM (IA) -->
-        <div id="tela-turin" class="tela-interna">
-            <div class="project-grid">
-                <div>
-                    <div class="project-section">
-                        <h3><i class="ph ph-robot"></i> Prompts & Arquitetura da IA Turim</h3>
-                        <textarea class="editable-area" id="turin-notas" placeholder="Digite aqui as instruções do sistema, prompts e especificações da IA Turim..." oninput="salvarProjeto('turin')"></textarea>
-                    </div>
-                    <div class="project-section">
-                        <h3>Checklist de Desenvolvimento <button class="btn-action" onclick="adicionarTask('turin')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-                        <div id="tasks-turin" class="task-list"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="project-section">
-                        <h3>Status do Projeto</h3>
-                        <select id="turin-status" class="form-control" onchange="salvarProjeto('turin')">
-                            <option value="Em Planejamento">Em Planejamento</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Concluído">Concluído</option>
-                            <option value="Pausado">Pausado</option>
-                        </select>
-                    </div>
-                    <div class="project-section">
-                        <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('turin')"><i class="ph ph-plus"></i> Link</button></h3>
-                        <div id="links-turin" class="link-list"></div>
-                    </div>
-                </div>
+          </div>
+          <div>
+            <div class="project-section">
+              <h3>Status do Projeto</h3>
+              <select id="agro-status" class="form-control" onchange="salvarProjeto('agro')">
+                <option value="Em Planejamento">Em Planejamento</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Concluído">Concluído</option>
+                <option value="Pausado">Pausado</option>
+              </select>
             </div>
+            <div class="project-section">
+              <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('agro')"><i class="ph ph-plus"></i> Link</button></h3>
+              <div id="links-agro" class="link-list"></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- VIEW 8, 9: VIDEOS & PODCAST -->
-        <div id="tela-videos" class="tela-interna"><div id="container-videos"></div></div>
-        <div id="tela-podcast" class="tela-interna"><div id="container-podcast"></div></div>
+      <div id="tela-nexus" class="tela-interna">
+        <div class="project-grid">
+          <div>
+            <div class="project-section">
+              <h3><i class="ph ph-planet"></i> Visão Geral & Arquitetura NexoTerraCore</h3>
+              <textarea class="editable-area" id="nexus-notas" placeholder="Detalhes e especificações do NexoTerraCore..." oninput="salvarProjeto('nexus')"></textarea>
+            </div>
+            <div class="project-section">
+              <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('nexus')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+              <div id="tasks-nexus" class="task-list"></div>
+            </div>
+          </div>
+          <div>
+            <div class="project-section">
+              <h3>Status do Projeto</h3>
+              <select id="nexus-status" class="form-control" onchange="salvarProjeto('nexus')">
+                <option value="Em Planejamento">Em Planejamento</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Concluído">Concluído</option>
+                <option value="Pausado">Pausado</option>
+              </select>
+            </div>
+            <div class="project-section">
+              <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('nexus')"><i class="ph ph-plus"></i> Link</button></h3>
+              <div id="links-nexus" class="link-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tela-turin" class="tela-interna">
+        <div class="project-grid">
+          <div>
+            <div class="project-section">
+              <h3><i class="ph ph-robot"></i> Prompts & Arquitetura da IA Turim</h3>
+              <textarea class="editable-area" id="turin-notas" placeholder="Instruções de sistema, prompts e especificações da IA Turim..." oninput="salvarProjeto('turin')"></textarea>
+            </div>
+            <div class="project-section">
+              <h3>Checklist de Desenvolvimento <button class="btn-action" onclick="adicionarTask('turin')"><i class="ph ph-plus"></i> Tarefa</button></h3>
+              <div id="tasks-turin" class="task-list"></div>
+            </div>
+          </div>
+          <div>
+            <div class="project-section">
+              <h3>Status do Projeto</h3>
+              <select id="turin-status" class="form-control" onchange="salvarProjeto('turin')">
+                <option value="Em Planejamento">Em Planejamento</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Concluído">Concluído</option>
+                <option value="Pausado">Pausado</option>
+              </select>
+            </div>
+            <div class="project-section">
+              <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('turin')"><i class="ph ph-plus"></i> Link</button></h3>
+              <div id="links-turin" class="link-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tela-videos" class="tela-interna"><div id="container-videos"></div></div>
+      <div id="tela-podcast" class="tela-interna"><div id="container-podcast"></div></div>
     </main>
 
     <div id="modal-container" class="modal-overlay">
-        <div class="modal-box">
-            <h3 id="modal-titulo">Adicionar Registro</h3>
-            <div id="modal-body"></div>
-            <div class="modal-footer">
-                <button class="btn-action secondary" onclick="fecharModal()">Cancelar</button>
-                <button class="btn-action" onclick="salvarModal()">Salvar Dados</button>
-            </div>
+      <div class="modal-box">
+        <h3 id="modal-titulo">Adicionar Registro</h3>
+        <div id="modal-body"></div>
+        <div class="modal-footer">
+          <button class="btn-action secondary" onclick="fecharModal()">Cancelar</button>
+          <button class="btn-action" onclick="salvarModal()">Salvar Dados</button>
         </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // Data Store Persistence initialized from LocalStorage
-        let appData = JSON.parse(localStorage.getItem('gps_console_v3')) || {
-            financeiro: [
-                { id: 1, desc: 'Desenvolvimento do Console', tipo: 'Receita', cat: 'Projetos', valor: 5000, data: '2026-09-18' }
-            ],
-            clientes: [
-                { id: 1, nome: 'Cliente Exemplo', email: 'contato@cliente.com', tel: '(11) 99999-8888', status: 'Ativo', notas: 'Projeto NexoTerraCore' }
-            ],
-            senhas: [
-                { id: 1, servico: 'GitHub Deployment', user: 'dgustavopaula-lang', pass: 'sk_live_console_pass', cat: 'Infra' }
-            ],
-            posts: [
-                { id: 1, titulo: 'Why you need to learn about AI?', tipo: 'Articles', data: '18 Sep 2026', desc: 'Introdução ao aprendizado prático de IA e automação.' }
-            ],
-            projetos: {
-                agro: {
-                    notas: 'Sistema de monitoramento e gestão para agronegócio inteligente.',
-                    status: 'Em Andamento',
-                    tasks: [{ id: 1, texto: 'Modelagem de API e sensores', feito: true }],
-                    links: [{ id: 1, nome: 'Repositório GitHub', url: 'https://github.com' }]
-                },
-                nexus: {
-                    notas: 'Plataforma integrada de inteligência territorial NexoTerraCore.',
-                    status: 'Em Planejamento',
-                    tasks: [{ id: 1, texto: 'Definição da estrutura do banco de dados', feito: false }],
-                    links: []
-                },
-                turin: {
-                    notas: 'Assistente pessoal e agente especializado com IA.',
-                    status: 'Em Andamento',
-                    tasks: [{ id: 1, texto: 'Ajuste de prompts e contextos de sistema', feito: true }],
-                    links: []
-                }
-            }
-        };
-
-        let currentView = 'tela-posts';
-        let activeModalType = '';
-        let editingId = null;
-        let activeProjectLinkKey = null;
-
-        function persistData() {
-            localStorage.setItem('gps_console_v3', JSON.stringify(appData));
-        }
-
-        function abrirTela(idTela) {
-            currentView = idTela;
-            document.querySelectorAll('.tela-interna').forEach(el => el.classList.remove('ativa'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active-menu'));
-
-            const target = document.getElementById(idTela);
-            if(target) target.classList.add('ativa');
-
-            const titleMap = {
-                'tela-posts': 'Home / Conteúdo',
-                'tela-financeiro': 'Administração Financeira',
-                'tela-clientes': 'Base de Clientes',
-                'tela-senhas': 'Cofre de Senhas & Acessos',
-                'tela-agro': 'Projeto: Agro Digital',
-                'tela-nexus': 'Projeto: NexoTerraCore',
-                'tela-turin': 'Projeto: Turim (IA)',
-                'tela-videos': 'Gerenciador de Vídeos',
-                'tela-podcast': 'Gerenciador de Podcasts'
-            };
-
-            document.getElementById('titulo-pagina').innerText = titleMap[idTela] || 'Console';
-            renderHeaderActions(idTela);
-            renderCurrentView();
-        }
-
-        function renderHeaderActions(idTela) {
-            const container = document.getElementById('header-actions');
-            if (idTela === 'tela-financeiro') {
-                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('financeiro')"><i class="ph ph-plus"></i> Nova Transação</button>`;
-            } else if (idTela === 'tela-clientes') {
-                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('clientes')"><i class="ph ph-user-plus"></i> Novo Cliente</button>`;
-            } else if (idTela === 'tela-senhas') {
-                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('senhas')"><i class="ph ph-key"></i> Nova Credencial</button>`;
-            } else if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(idTela)) {
-                container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('posts')"><i class="ph ph-plus"></i> Novo Item / Post</button>`;
-            } else {
-                container.innerHTML = ``;
-            }
-        }
-
-        function renderCurrentView() {
-            if (currentView === 'tela-financeiro') renderFinanceiro();
-            if (currentView === 'tela-clientes') renderClientes();
-            if (currentView === 'tela-senhas') renderSenhas();
-            if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
-            if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
-        }
-
-        function renderFinanceiro() {
-            const tbody = document.getElementById('tbody-financeiro');
-            tbody.innerHTML = '';
-            let rec = 0, des = 0;
-
-            appData.financeiro.forEach(item => {
-                const val = parseFloat(item.valor);
-                if (item.tipo === 'Receita') rec += val; else des += val;
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${item.desc}</strong></td>
-                        <td><span class="badge ${item.tipo === 'Receita' ? 'green' : 'red'}">${item.tipo}</span></td>
-                        <td>${item.cat}</td>
-                        <td>R$ ${val.toFixed(2)}</td>
-                        <td>${item.data}</td>
-                        <td class="action-btns">
-                            <button class="btn-icon" onclick="editarItem('financeiro', ${item.id})"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-icon" onclick="deletarItem('financeiro', ${item.id})"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById('fin-receita').innerText = `R$ ${rec.toFixed(2)}`;
-            document.getElementById('fin-despesa').innerText = `R$ ${des.toFixed(2)}`;
-            const saldo = rec - des;
-            const elSaldo = document.getElementById('fin-saldo');
-            elSaldo.innerText = `R$ ${saldo.toFixed(2)}`;
-            elSaldo.style.color = saldo >= 0 ? 'var(--success-green)' : 'var(--danger-red)';
-        }
-
-        function renderClientes() {
-            const tbody = document.getElementById('tbody-clientes');
-            tbody.innerHTML = '';
-            appData.clientes.forEach(item => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${item.nome}</strong></td>
-                        <td>${item.email}</td>
-                        <td>${item.tel}</td>
-                        <td><span class="badge orange">${item.status}</span></td>
-                        <td>${item.notas}</td>
-                        <td class="action-btns">
-                            <button class="btn-icon" onclick="editarItem('clientes', ${item.id})"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-icon" onclick="deletarItem('clientes', ${item.id})"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderSenhas() {
-            const tbody = document.getElementById('tbody-senhas');
-            tbody.innerHTML = '';
-            appData.senhas.forEach(item => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${item.servico}</strong></td>
-                        <td>${item.user}</td>
-                        <td>
-                            <span id="pass-${item.id}">••••••••</span>
-                            <button class="btn-icon" onclick="togglePass(${item.id}, '${item.pass}')"><i class="ph ph-eye"></i></button>
-                        </td>
-                        <td><span class="badge orange">${item.cat}</span></td>
-                        <td class="action-btns">
-                            <button class="btn-icon" onclick="copiarTexto('${item.pass}')"><i class="ph ph-copy"></i></button>
-                            <button class="btn-icon" onclick="editarItem('senhas', ${item.id})"><i class="ph ph-pencil"></i></button>
-                            <button class="btn-icon" onclick="deletarItem('senhas', ${item.id})"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function togglePass(id, val) {
-            const el = document.getElementById(`pass-${id}`);
-            el.innerText = el.innerText === '••••••••' ? val : '••••••••';
-        }
-
-        function copiarTexto(txt) {
-            const temp = document.createElement('input');
-            document.body.appendChild(temp);
-            temp.value = txt;
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            alert('Copiado para a área de transferência!');
-        }
-
-        function renderPosts() {
-            const container = document.getElementById(currentView === 'tela-posts' ? 'container-posts' : (currentView === 'tela-videos' ? 'container-videos' : 'container-podcast'));
-            if (!container) return;
-            container.innerHTML = '';
-
-            appData.posts.forEach(item => {
-                container.innerHTML += `
-                    <div class="project-section" style="margin-bottom: 15px;">
-                        <h3>${item.titulo} 
-                            <span>
-                                <button class="btn-icon" onclick="editarItem('posts', ${item.id})"><i class="ph ph-pencil"></i></button>
-                                <button class="btn-icon" onclick="deletarItem('posts', ${item.id})"><i class="ph ph-trash"></i></button>
-                            </span>
-                        </h3>
-                        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">${item.data} • <span class="badge blue">${item.tipo}</span></p>
-                        <p style="line-height: 1.5;">${item.desc}</p>
-                    </div>
-                `;
-            });
-        }
-
-        function renderProjeto(key) {
-            const proj = appData.projetos[key] || { notas: '', status: 'Em Planejamento', tasks: [], links: [] };
-            document.getElementById(`${key}-notas`).value = proj.notas || '';
-            document.getElementById(`${key}-status`).value = proj.status || 'Em Planejamento';
-            
-            const taskList = document.getElementById(`tasks-${key}`);
-            taskList.innerHTML = '';
-            (proj.tasks || []).forEach((t, index) => {
-                taskList.innerHTML += `
-                    <div class="task-item">
-                        <input type="checkbox" ${t.feito ? 'checked' : ''} onchange="toggleTask('${key}', ${index})">
-                        <input type="text" value="${t.texto}" onchange="atualizarTaskText('${key}', ${index}, this.value)">
-                        <button class="btn-icon" onclick="deletarTask('${key}', ${index})"><i class="ph ph-trash"></i></button>
-                    </div>
-                `;
-            });
-
-            const linkList = document.getElementById(`links-${key}`);
-            linkList.innerHTML = '';
-            (proj.links || []).forEach((l, index) => {
-                linkList.innerHTML += `
-                    <div class="link-item">
-                        <a href="${l.url}" target="_blank"><i class="ph ph-link"></i> ${l.nome}</a>
-                        <button class="btn-icon" onclick="deletarLink('${key}', ${index})"><i class="ph ph-trash"></i></button>
-                    </div>
-                `;
-            });
-        }
-
-        function salvarProjeto(key) {
-            if(!appData.projetos[key]) appData.projetos[key] = { tasks: [], links: [] };
-            appData.projetos[key].notas = document.getElementById(`${key}-notas`).value;
-            appData.projetos[key].status = document.getElementById(`${key}-status`).value;
-            persistData();
-        }
-
-        function adicionarTask(key) {
-            if(!appData.projetos[key].tasks) appData.projetos[key].tasks = [];
-            appData.projetos[key].tasks.push({ id: Date.now(), texto: 'Nova Tarefa', feito: false });
-            persistData();
-            renderProjeto(key);
-        }
-
-        function toggleTask(key, idx) {
-            appData.projetos[key].tasks[idx].feito = !appData.projetos[key].tasks[idx].feito;
-            persistData();
-        }
-
-        function atualizarTaskText(key, idx, txt) {
-            appData.projetos[key].tasks[idx].texto = txt;
-            persistData();
-        }
-
-        function deletarTask(key, idx) {
-            appData.projetos[key].tasks.splice(idx, 1);
-            persistData();
-            renderProjeto(key);
-        }
-
-        function abrirModalLink(key) {
-            activeProjectLinkKey = key;
-            activeModalType = 'link';
-            const overlay = document.getElementById('modal-container');
-            const body = document.getElementById('modal-body');
-            const titulo = document.getElementById('modal-titulo');
-
-            overlay.classList.add('active');
-            titulo.innerText = 'Novo Link do Projeto';
-            body.innerHTML = `
-                <div class="form-group"><label>Nome do Link</label><input id="form-link-nome" class="form-control" placeholder="ex: Documentação, Repositório"></div>
-                <div class="form-group"><label>URL</label><input id="form-link-url" class="form-control" placeholder="https://..."></div>
-            `;
-        }
-
-        function deletarLink(key, idx) {
-            appData.projetos[key].links.splice(idx, 1);
-            persistData();
-            renderProjeto(key);
-        }
-
-        function abrirModalQuickAdd() {
-            abrirModalForm('financeiro');
-        }
-
-        function abrirModalForm(tipo, id = null) {
-            activeModalType = tipo;
-            editingId = id;
-            const overlay = document.getElementById('modal-container');
-            const body = document.getElementById('modal-body');
-            const titulo = document.getElementById('modal-titulo');
-
-            overlay.classList.add('active');
-            let item = id ? appData[tipo].find(x => x.id === id) : {};
-
-            if (tipo === 'financeiro') {
-                titulo.innerText = id ? 'Editar Transação' : 'Nova Transação';
-                body.innerHTML = `
-                    <div class="form-group"><label>Descrição</label><input id="form-desc" class="form-control" value="${item.desc || ''}"></div>
-                    <div class="form-group"><label>Tipo</label><select id="form-tipo" class="form-control"><option ${item.tipo === 'Receita' ? 'selected' : ''}>Receita</option><option ${item.tipo === 'Despesa' ? 'selected' : ''}>Despesa</option></select></div>
-                    <div class="form-group"><label>Categoria</label><input id="form-cat" class="form-control" value="${item.cat || 'Geral'}"></div>
-                    <div class="form-group"><label>Valor (R$)</label><input id="form-valor" type="number" class="form-control" value="${item.valor || ''}"></div>
-                    <div class="form-group"><label>Data</label><input id="form-data" type="date" class="form-control" value="${item.data || new Date().toISOString().split('T')[0]}"></div>
-                `;
-            } else if (tipo === 'clientes') {
-                titulo.innerText = id ? 'Editar Cliente' : 'Novo Cliente';
-                body.innerHTML = `
-                    <div class="form-group"><label>Nome</label><input id="form-nome" class="form-control" value="${item.nome || ''}"></div>
-                    <div class="form-group"><label>Email</label><input id="form-email" class="form-control" value="${item.email || ''}"></div>
-                    <div class="form-group"><label>Telefone</label><input id="form-tel" class="form-control" value="${item.tel || ''}"></div>
-                    <div class="form-group"><label>Status</label><input id="form-status" class="form-control" value="${item.status || 'Ativo'}"></div>
-                    <div class="form-group"><label>Notas</label><input id="form-notas" class="form-control" value="${item.notas || ''}"></div>
-                `;
-            } else if (tipo === 'senhas') {
-                titulo.innerText = id ? 'Editar Credencial' : 'Nova Credencial';
-                body.innerHTML = `
-                    <div class="form-group"><label>Serviço</label><input id="form-servico" class="form-control" value="${item.servico || ''}"></div>
-                    <div class="form-group"><label>Usuário / Email</label><input id="form-user" class="form-control" value="${item.user || ''}"></div>
-                    <div class="form-group"><label>Senha / Key</label><input id="form-pass" class="form-control" value="${item.pass || ''}"></div>
-                    <div class="form-group"><label>Categoria</label><input id="form-cat" class="form-control" value="${item.cat || 'Geral'}"></div>
-                `;
-            } else if (tipo === 'posts') {
-                titulo.innerText = id ? 'Editar Item / Post' : 'Novo Item / Post';
-                body.innerHTML = `
-                    <div class="form-group"><label>Título</label><input id="form-titulo" class="form-control" value="${item.titulo || ''}"></div>
-                    <div class="form-group"><label>Tipo</label><select id="form-tipo" class="form-control"><option ${item.tipo === 'Articles' ? 'selected' : ''}>Articles</option><option ${item.tipo === 'Video' ? 'selected' : ''}>Video</option><option ${item.tipo === 'Podcast' ? 'selected' : ''}>Podcast</option></select></div>
-                    <div class="form-group"><label>Descrição / Conteúdo</label><textarea id="form-desc" class="form-control" style="min-height: 90px;">${item.desc || ''}</textarea></div>
-                `;
-            }
-        }
-
-        function salvarModal() {
-            if (activeModalType === 'link') {
-                const nome = document.getElementById('form-link-nome').value;
-                const url = document.getElementById('form-link-url').value;
-                if (nome && url && activeProjectLinkKey) {
-                    if(!appData.projetos[activeProjectLinkKey].links) appData.projetos[activeProjectLinkKey].links = [];
-                    appData.projetos[activeProjectLinkKey].links.push({ id: Date.now(), nome, url });
-                }
-            } else if (activeModalType === 'financeiro') {
-                const newItem = {
-                    id: editingId || Date.now(),
-                    desc: document.getElementById('form-desc').value,
-                    tipo: document.getElementById('form-tipo').value,
-                    cat: document.getElementById('form-cat').value,
-                    valor: parseFloat(document.getElementById('form-valor').value) || 0,
-                    data: document.getElementById('form-data').value
-                };
-                if (editingId) {
-                    const idx = appData.financeiro.findIndex(x => x.id === editingId);
-                    appData.financeiro[idx] = newItem;
-                } else {
-                    appData.financeiro.push(newItem);
-                }
-            } else if (activeModalType === 'clientes') {
-                const newItem = {
-                    id: editingId || Date.now(),
-                    nome: document.getElementById('form-nome').value,
-                    email: document.getElementById('form-email').value,
-                    tel: document.getElementById('form-tel').value,
-                    status: document.getElementById('form-status').value,
-                    notas: document.getElementById('form-notas').value
-                };
-                if (editingId) {
-                    const idx = appData.clientes.findIndex(x => x.id === editingId);
-                    appData.clientes[idx] = newItem;
-                } else {
-                    appData.clientes.push(newItem);
-                }
-            } else if (activeModalType === 'senhas') {
-                const newItem = {
-                    id: editingId || Date.now(),
-                    servico: document.getElementById('form-servico').value,
-                    user: document.getElementById('form-user').value,
-                    pass: document.getElementById('form-pass').value,
-                    cat: document.getElementById('form-cat').value
-                };
-                if (editingId) {
-                    const idx = appData.senhas.findIndex(x => x.id === editingId);
-                    appData.senhas[idx] = newItem;
-                } else {
-                    appData.senhas.push(newItem);
-                }
-            } else if (activeModalType === 'posts') {
-                const newItem = {
-                    id: editingId || Date.now(),
-                    titulo: document.getElementById('form-titulo').value,
-                    tipo: document.getElementById('form-tipo').value,
-                    data: new Date().toLocaleDateString('pt-BR'),
-                    desc: document.getElementById('form-desc').value
-                };
-                if (editingId) {
-                    const idx = appData.posts.findIndex(x => x.id === editingId);
-                    appData.posts[idx] = newItem;
-                } else {
-                    appData.posts.push(newItem);
-                }
-            }
-
-            persistData();
-            fecharModal();
-            renderCurrentView();
-        }
-
-        function fecharModal() {
-            document.getElementById('modal-container').classList.remove('active');
-        }
-
-        function editarItem(tipo, id) {
-            abrirModalForm(tipo, id);
-        }
-
-        function deletarItem(tipo, id) {
-            appData[tipo] = appData[tipo].filter(x => x.id !== id);
-            persistData();
-            renderCurrentView();
-        }
-
-        window.onload = function() {
-            abrirTela('tela-posts');
-        }
-    </script>
+  <script src="app.js"></script>
 </body>
 </html>
