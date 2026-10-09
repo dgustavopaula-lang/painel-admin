@@ -962,15 +962,24 @@ function renderMetricasHome() {
   const noAr = (appData.vendas || []).filter(v => v.status === 'No ar').length;
   const fila = (appData.treino || []).filter(t => !t.enviado).length;
   const est = ESTADOS_API[statusApi.estado] || ESTADOS_API['nao-configurada'];
-  const cards = [
-    ['Mini-softwares', `${minis.length}`, `${publicados} publicado(s) · ${comLink} com link`, 'tela-catalogo'],
-    ['Páginas de venda', `${(appData.vendas || []).length}`, `${noAr} no ar`, 'tela-vendas'],
-    ['Fila do Turing', `${fila}`, 'exemplos aguardando envio', 'tela-treino'],
-    ['API / Turing', est.curto, statusApi.ms != null ? `${statusApi.ms} ms` : est.sub, 'tela-api']
+  // Turing em destaque: primeiro e em largura total no topo
+  const cardsTuring = [
+    ['API / Turing', est.curto, statusApi.ms != null ? `${statusApi.ms} ms` : est.sub, 'tela-api', 'turing'],
+    ['Fila do Turing', `${fila}`, 'exemplos aguardando envio', 'tela-treino', 'turing']
   ];
-  el.innerHTML = cards.map(([rot, val, sub, alvo]) =>
-    `<button type="button" class="metric-card clicavel" onclick="abrirTela('${alvo}')"><span>${escapeHtml(rot)}</span><h3>${escapeHtml(val)}</h3><p class="metric-sub">${escapeHtml(sub)}</p></button>`
-  ).join('');
+  const cardsSecundarios = [
+    ['Mini-softwares', `${minis.length}`, `${publicados} publicado(s) · ${comLink} com link`, 'tela-catalogo', ''],
+    ['Páginas de venda', `${(appData.vendas || []).length}`, `${noAr} no ar`, 'tela-vendas', '']
+  ];
+  el.innerHTML =
+    `<div class="metrics-row-turing">` +
+    cardsTuring.map(([rot, val, sub, alvo]) =>
+      `<button type="button" class="metric-card clicavel metric-turing" onclick="abrirTela('${alvo}')"><span>${escapeHtml(rot)}</span><h3>${escapeHtml(val)}</h3><p class="metric-sub">${escapeHtml(sub)}</p></button>`
+    ).join('') +
+    `</div>` +
+    cardsSecundarios.map(([rot, val, sub, alvo]) =>
+      `<button type="button" class="metric-card clicavel" onclick="abrirTela('${alvo}')"><span>${escapeHtml(rot)}</span><h3>${escapeHtml(val)}</h3><p class="metric-sub">${escapeHtml(sub)}</p></button>`
+    ).join('');
   renderHomeApi();
 }
 
@@ -1021,22 +1030,54 @@ function renderHomeApi() {
   const est = ESTADOS_API[statusApi.estado] || ESTADOS_API['nao-configurada'];
   const fila = (appData.treino || []).filter(t => !t.enviado).length;
   const hora = statusApi.quando ? statusApi.quando.toLocaleTimeString('pt-BR') : '—';
+  const semConfig = statusApi.estado === 'nao-configurada';
+  const statusIcone = statusApi.estado === 'online' ? 'ph-check-circle' :
+                      statusApi.estado === 'verificando' ? 'ph-arrows-clockwise' :
+                      statusApi.estado === 'sem-internet' ? 'ph-wifi-slash' : 'ph-warning';
   el.innerHTML = `
-    <div class="project-section api-painel">
-      <h3>
-        <span><i class="ph ph-brain"></i> API / Turing — status</span>
+    <div class="project-section turing-painel">
+      <div class="turing-painel-header">
+        <div class="turing-identidade">
+          <div class="turing-avatar"><i class="ph ph-robot"></i></div>
+          <div>
+            <div class="turing-nome">Turing <span class="badge orange">Agente de Segurança</span></div>
+            <div class="turing-sub">NexoTerraCore Intelligence Layer</div>
+          </div>
+        </div>
         <span class="btn-row-inline">
-          <button class="btn-action secondary" onclick="checarSaudeApi()"><i class="ph ph-arrows-clockwise"></i> Atualizar status</button>
+          <button class="btn-action secondary" onclick="checarSaudeApi()"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
           <button class="btn-action secondary" onclick="abrirTela('tela-api')"><i class="ph ph-gear"></i> Configurar</button>
+          <button class="btn-action secondary" onclick="abrirTela('tela-treino')"><i class="ph ph-brain"></i> Treinar</button>
         </span>
-      </h3>
-      <div class="api-status-grid">
-        <div class="api-status-item"><span>Core API</span><strong><span class="badge ${est.cls}">${escapeHtml(est.txt)}</span></strong></div>
-        <div class="api-status-item"><span>Latência</span><strong>${statusApi.ms != null ? statusApi.ms + ' ms' : '—'}${statusApi.http ? ' · HTTP ' + statusApi.http : ''}</strong></div>
-        <div class="api-status-item"><span>Última checagem</span><strong>${escapeHtml(hora)}</strong></div>
-        <div class="api-status-item"><span>Fila do Turing</span><strong>${fila} exemplo(s)</strong></div>
       </div>
-      ${statusApi.estado === 'nao-configurada' ? '<p class="regra-texto" style="margin-top:12px;">Preencha a URL base em <strong>Conexão da API</strong> para ver o estado real da API aqui.</p>' : ''}
+      <div class="api-status-grid">
+        <div class="api-status-item">
+          <span>Status</span>
+          <strong><i class="ph ${statusIcone}"></i> <span class="badge ${est.cls}">${escapeHtml(est.txt)}</span></strong>
+        </div>
+        <div class="api-status-item">
+          <span>Função</span>
+          <strong>Segurança</strong>
+        </div>
+        <div class="api-status-item">
+          <span>Proteção</span>
+          <strong>API Core · Sistema · Proprietário</strong>
+        </div>
+        <div class="api-status-item">
+          <span>Latência</span>
+          <strong>${statusApi.ms != null ? statusApi.ms + ' ms' : '—'}${statusApi.http ? ' · HTTP ' + statusApi.http : ''}</strong>
+        </div>
+        <div class="api-status-item">
+          <span>Fila de treino</span>
+          <strong>${fila} exemplo(s) aguardando</strong>
+        </div>
+        <div class="api-status-item">
+          <span>Última checagem</span>
+          <strong>${escapeHtml(hora)}</strong>
+        </div>
+      </div>
+      ${semConfig ? `<div class="turing-aviso"><i class="ph ph-warning"></i> Configure a URL base da API em <button class="link-inline" onclick="abrirTela('tela-api')">Conexão da API</button> para ativar o monitoramento do Turing.</div>` : ''}
+      ${statusApi.estado === 'sem-resposta' ? `<div class="turing-aviso"><i class="ph ph-x-circle"></i> Sem resposta — verifique se a API está online e se o CORS permite <strong>${location.origin}</strong>.</div>` : ''}
     </div>`;
 }
 
