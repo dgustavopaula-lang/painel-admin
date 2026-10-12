@@ -1,0 +1,11 @@
+
+.lab-conhecimento{max-width:850px;margin:0 auto;padding:20px}
+.lab-conhecimento form{display:grid;gap:12px;margin:22px 0}
+.lab-conhecimento label{font-weight:600}
+.lab-conhecimento textarea,.lab-conhecimento select{
+  width:100%;box-sizing:border-box;padding:12px;border-radius:8px;
+  border:1px solid #777;background:#181818;color:#fff;font:inherit
+}
+.lab-conhecimento .lab-aviso{padding:12px;border-left:3px solid #f59e0b}
+.lab-registro{border:1px solid #555;border-radius:10px;padding:14px;margin:12px 0}
+.lab-registro p{overflow-wrap:anywhere}
