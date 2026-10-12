@@ -230,3 +230,187 @@ tr:hover td { background: var(--hover-bg); }
 .review-panel p {color:var(--text-secondary);margin:12px 0}
 .review-actions a {color:var(--accent-orange);text-decoration:underline}
 .review-panel .review-note {font-size:.9rem;margin-top:24px}
+
+
+/* HOME TURING CENTRAL */
+.home-turing-card {
+  margin: 0 0 28px 0;
+  background:
+    radial-gradient(circle at 12% 55%, rgba(255,85,0,.08), transparent 28%),
+    var(--bg-card);
+  border: 1px solid rgba(255,85,0,.55);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.home-turing-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.home-turing-ident {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.home-turing-ident h2 {
+  margin: 0;
+  font-size: 27px;
+}
+
+.home-turing-ident p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+}
+
+.home-turing-face {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--accent-orange);
+  background: rgba(255,85,0,.08);
+  color: var(--accent-orange);
+  font-size: 29px;
+}
+
+.home-turing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 15px;
+  border-radius: 999px;
+  background: rgba(255,85,0,.10);
+  color: var(--accent-orange);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.home-turing-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+  box-shadow: 0 0 14px rgba(255,85,0,.8);
+}
+
+.home-turing-body {
+  display: grid;
+  grid-template-columns: 260px 1fr 330px;
+}
+
+.home-turing-avatar {
+  min-height: 310px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-right: 1px solid var(--border-color);
+}
+
+.home-turing-orbit {
+  width: 135px;
+  height: 135px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--accent-orange);
+  border-radius: 50%;
+  color: var(--accent-orange);
+  font-size: 58px;
+  box-shadow:
+    inset 0 0 35px rgba(255,85,0,.08),
+    0 0 30px rgba(255,85,0,.05);
+}
+
+.home-turing-avatar strong {
+  margin-top: 19px;
+  font-size: 23px;
+  letter-spacing: 3px;
+}
+
+.home-turing-avatar small {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+}
+
+.home-turing-info {
+  padding: 35px 32px;
+  border-right: 1px solid var(--border-color);
+}
+
+.home-turing-row {
+  display: grid;
+  grid-template-columns: 145px 1fr;
+  gap: 18px;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.home-turing-row span {
+  color: var(--text-secondary);
+}
+
+.home-turing-row strong {
+  color: var(--text-primary);
+}
+
+.home-turing-runtime {
+  padding: 35px 28px;
+}
+
+.home-turing-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+}
+
+.home-turing-runtime h3 {
+  margin: 6px 0 25px;
+  font-size: 27px;
+}
+
+.home-turing-runtime-box {
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+}
+
+.home-turing-runtime-box strong,
+.home-turing-runtime-box span {
+  display: block;
+}
+
+.home-turing-runtime-box span {
+  margin-top: 7px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.home-turing-card.api-online {
+  border-color: rgba(255,85,0,.75);
+}
+
+.home-turing-card.api-online .home-turing-badge {
+  color: var(--accent-orange);
+}
+
+@media (max-width: 1050px) {
+  .home-turing-body {
+    grid-template-columns: 1fr;
+  }
+
+  .home-turing-avatar,
+  .home-turing-info {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+}

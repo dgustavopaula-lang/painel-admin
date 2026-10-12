@@ -807,3 +807,121 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+async function atualizarTuringHealth() {
+  const statusEl = document.querySelector('#turing-lab-consolidado .metric-card:nth-child(1) h3');
+  const integEl = document.querySelector('#turing-lab-consolidado .metric-card:nth-child(2) h3');
+
+  try {
+    const inicio = performance.now();
+    const resp = await fetch('https://api.gustavopaulasantos.com.br/api/turing/training/health', {
+      cache: 'no-store'
+    });
+    const fim = performance.now();
+
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    if (statusEl) statusEl.textContent = 'ONLINE';
+    if (integEl) integEl.textContent = `NexoTerraCore API · ${Math.round(fim - inicio)} ms`;
+
+    const badge = document.querySelector('#turing-lab-consolidado .metric-card:nth-child(1) .badge');
+    if (badge) {
+      badge.textContent = 'ATIVO';
+      badge.classList.remove('red', 'orange');
+      badge.classList.add('green');
+    }
+
+  } catch (err) {
+    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+
+    const badge = document.querySelector('#turing-lab-consolidado .metric-card:nth-child(1) .badge');
+
+    if (isLocal) {
+      if (statusEl) statusEl.textContent = 'LOCAL';
+      if (integEl) integEl.textContent = 'Health bloqueado por CORS no localhost';
+
+      if (badge) {
+        badge.textContent = 'LAB';
+        badge.classList.remove('green', 'red');
+        badge.classList.add('orange');
+      }
+    } else {
+      if (statusEl) statusEl.textContent = 'OFFLINE';
+      if (integEl) integEl.textContent = 'API indisponível';
+
+      if (badge) {
+        badge.textContent = 'ERRO';
+        badge.classList.remove('green', 'orange');
+        badge.classList.add('red');
+      }
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  atualizarTuringHealth();
+  setInterval(atualizarTuringHealth, 30000);
+});
+
+
+async function atualizarHomeTuring() {
+  const card = document.getElementById('home-turing-card');
+  if (!card) return;
+
+  const status = document.getElementById('home-turing-status');
+  const api = document.getElementById('home-turing-api');
+  const badge = document.getElementById('home-turing-badge');
+  const health = document.getElementById('home-turing-health');
+  const latency = document.getElementById('home-turing-latency');
+
+  const local = ['localhost', '127.0.0.1'].includes(location.hostname);
+
+  if (local) {
+    status.textContent = 'LOCAL · LAB';
+    api.textContent = 'NexoTerraCore API';
+    badge.innerHTML =
+      '<span class="home-turing-dot"></span> LAB';
+    health.textContent = 'API online · validação local limitada por CORS';
+    latency.textContent = 'produção autorizada';
+    return;
+  }
+
+  try {
+    const inicio = performance.now();
+
+    const resposta = await fetch(
+      'https://api.gustavopaulasantos.com.br/api/turing/training/health',
+      { cache: 'no-store' }
+    );
+
+    const ms = Math.round(performance.now() - inicio);
+
+    if (!resposta.ok) {
+      throw new Error('HTTP ' + resposta.status);
+    }
+
+    const dados = await resposta.json();
+
+    status.textContent = 'ATIVO · PASS';
+    api.textContent = 'NexoTerraCore API · HTTP 200';
+    badge.innerHTML =
+      '<span class="home-turing-dot"></span> ATIVO · PASS';
+    health.textContent =
+      dados.status === 'online'
+        ? 'API Core online'
+        : 'API respondeu';
+    latency.textContent = ms + ' ms';
+
+    card.classList.add('api-online');
+
+  } catch (erro) {
+    status.textContent = 'ERRO';
+    api.textContent = 'API indisponível';
+    badge.innerHTML =
+      '<span class="home-turing-dot"></span> ERRO';
+    health.textContent = 'Falha na verificação';
+    latency.textContent = '';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', atualizarHomeTuring);
