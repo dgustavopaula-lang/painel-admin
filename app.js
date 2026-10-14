@@ -1534,3 +1534,93 @@ async function atualizarHomeTuring() {
 document.addEventListener('DOMContentLoaded', atualizarHomeTuring);
 
 // deploy-refresh: 2026-10-14T07:18:21-03:00
+
+async function carregarDadosReaisApi() {
+  const box = document.getElementById('api-dados-reais');
+  if (!box) return;
+
+  const base =
+    (appData?.config?.apiBase || 'https://api.gustavopaulasantos.com.br')
+      .replace(/\/+$/, '');
+
+  const token =
+    typeof tokenDoCofre === 'function'
+      ? tokenDoCofre()
+      : '';
+
+  box.innerHTML = '<p class="vault-hint">Consultando API real...</p>';
+
+  try {
+    const healthResp = await fetch(base + '/api/health', {
+      cache: 'no-store'
+    });
+
+    const health = await healthResp.json();
+
+    let conhecimentos = null;
+
+    if (token) {
+      const r = await fetch(
+        base + '/api/turing/conhecimento/listar',
+        {
+          headers: {
+            Authorization: 'Bearer ' + token
+          },
+          cache: 'no-store'
+        }
+      );
+
+      conhecimentos = await r.json();
+    }
+
+    const lista =
+      conhecimentos?.ok && Array.isArray(conhecimentos.conhecimentos)
+        ? conhecimentos.conhecimentos
+        : [];
+
+    const aprovados = lista.filter(x => x.status === 'aprovado').length;
+    const rascunhos = lista.filter(x => x.status === 'rascunho').length;
+
+    box.innerHTML = `
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span>API</span>
+          <h3>${health.api || 'indisponível'}</h3>
+        </div>
+
+        <div class="metric-card">
+          <span>Banco</span>
+          <h3>${health.banco || 'indisponível'}</h3>
+        </div>
+
+        <div class="metric-card">
+          <span>Conhecimentos Turing</span>
+          <h3>${lista.length}</h3>
+        </div>
+
+        <div class="metric-card">
+          <span>Aprovados</span>
+          <h3>${aprovados}</h3>
+        </div>
+
+        <div class="metric-card">
+          <span>Rascunhos</span>
+          <h3>${rascunhos}</h3>
+        </div>
+      </div>
+
+      <div class="project-section" style="margin-top:16px">
+        <strong>Fonte:</strong> NexoTerraCore API + PostgreSQL
+        <br>
+        <small>
+          Token: ${token ? 'cofre conectado' : 'não encontrado no cofre'}
+        </small>
+      </div>
+    `;
+  } catch (erro) {
+    box.innerHTML =
+      '<p class="vault-hint">Erro ao consultar API real: ' +
+      escapeHtml(erro.message) +
+      '</p>';
+  }
+}
