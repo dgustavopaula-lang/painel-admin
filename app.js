@@ -54,7 +54,7 @@ const SEED_ENDPOINTS = [
 ];
 
 function configPadrao() {
-  return { apiBase: '', treinoPath: '/api/turing/training/feedback', endpoints: JSON.parse(JSON.stringify(SEED_ENDPOINTS)) };
+  return { apiBase: 'https://api.gustavopaulasantos.com.br', treinoPath: '/api/turing/training/feedback', endpoints: JSON.parse(JSON.stringify(SEED_ENDPOINTS)) };
 }
 
 function normalizarConfig(cfg) {
