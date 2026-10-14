@@ -204,7 +204,7 @@
   <div class="lab-conhecimento">
     <h2>Laboratório Gustavo + Turing</h2>
     <p>Agência de Conhecimento · Edutech Angola · Edutech Brasil · Agro</p>
-    <p class="lab-aviso">Fase 1: rascunhos locais. Ainda não conectados ao treinamento da API.</p>
+    <p class="lab-aviso">API real conectada · conhecimentos enviados ao PostgreSQL para revisão.</p>
     <form id="form-lab-conhecimento">
       <label for="lab-area">Área de conhecimento</label>
       <select id="lab-area" required>
@@ -217,10 +217,10 @@
       <textarea id="lab-pergunta" rows="3" maxlength="2000" required></textarea>
       <label for="lab-orientacao">Sua orientação para o Turing</label>
       <textarea id="lab-orientacao" rows="5" maxlength="5000" required></textarea>
-      <button type="submit" class="btn-action">Salvar rascunho local</button>
+      <button type="submit" class="btn-action" id="lab-enviar">Enviar para API</button>
     </form>
     <p id="lab-mensagem" role="status"></p>
-    <h3>Histórico de rascunhos</h3>
+    <h3>Conhecimentos registrados na API</h3>
     <div id="lab-historico"></div>
   </div>
 </div>
