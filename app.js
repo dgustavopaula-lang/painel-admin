@@ -1532,3 +1532,5 @@ async function atualizarHomeTuring() {
 }
 
 document.addEventListener('DOMContentLoaded', atualizarHomeTuring);
+
+// deploy-refresh: 2026-10-14T07:18:21-03:00
