@@ -9,10 +9,10 @@
   if (!form || !historico || !mensagem) return;
 
   function apiBase() {
-    const base = appData?.config?.apiBase ||
-      "https://api.gustavopaulasantos.com.br";
-
-    return String(base).replace(/\/+$/, "");
+    return String(
+      appData?.config?.apiBase ||
+      "https://api.gustavopaulasantos.com.br"
+    ).replace(/\/+$/, "");
   }
 
   function token() {
@@ -21,10 +21,57 @@
       : "";
   }
 
-  function linha(texto) {
+  function criarLinha(texto) {
     const p = document.createElement("p");
     p.textContent = texto;
     return p;
+  }
+
+  async function revisar(id, status) {
+    const chave = token();
+
+    if (!chave) {
+      mensagem.textContent =
+        'Token "Turing API token" não encontrado no cofre.';
+      return;
+    }
+
+    const acao = status === "aprovado"
+      ? "Aprovando"
+      : "Rejeitando";
+
+    mensagem.textContent = `${acao} conhecimento #${id}...`;
+
+    try {
+      const res = await fetch(
+        `${apiBase()}/api/turing/conhecimento/${id}/revisar`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + chave
+          },
+          body: JSON.stringify({ status })
+        }
+      );
+
+      const dados = await res.json();
+
+      if (!res.ok || !dados.ok) {
+        throw new Error(
+          dados.erro || `HTTP ${res.status}`
+        );
+      }
+
+      mensagem.textContent =
+        `Conhecimento #${id} · status ${dados.conhecimento.status}`;
+
+      await carregarHistorico();
+
+    } catch (erro) {
+      mensagem.textContent =
+        "Falha na revisão: " + erro.message;
+    }
   }
 
   function renderizar(registros) {
@@ -41,30 +88,61 @@
       card.className = "lab-registro";
 
       card.appendChild(
-        linha(`#${item.id} · ${item.area} · status: ${item.status}`)
+        criarLinha(
+          `#${item.id} · ${item.area} · status: ${item.status}`
+        )
       );
 
       card.appendChild(
-        linha(`Pergunta: ${item.pergunta}`)
+        criarLinha("Pergunta: " + item.pergunta)
       );
 
       card.appendChild(
-        linha(`Orientação: ${item.resposta}`)
+        criarLinha("Orientação: " + item.resposta)
       );
 
       if (item.fonte) {
         card.appendChild(
-          linha(`Fonte: ${item.fonte}`)
+          criarLinha("Fonte: " + item.fonte)
         );
       }
 
       if (item.criado_em) {
         card.appendChild(
-          linha(
-            `Criado: ${new Date(item.criado_em)
-              .toLocaleString("pt-BR")}`
+          criarLinha(
+            "Criado: " +
+            new Date(item.criado_em)
+              .toLocaleString("pt-BR")
           )
         );
+      }
+
+      if (item.status === "rascunho") {
+        const acoes = document.createElement("div");
+        acoes.style.display = "flex";
+        acoes.style.gap = "10px";
+        acoes.style.marginTop = "12px";
+
+        const aprovar = document.createElement("button");
+        aprovar.type = "button";
+        aprovar.className = "btn-action";
+        aprovar.textContent = "Aprovar";
+        aprovar.addEventListener(
+          "click",
+          () => revisar(item.id, "aprovado")
+        );
+
+        const rejeitar = document.createElement("button");
+        rejeitar.type = "button";
+        rejeitar.className = "btn-action secondary";
+        rejeitar.textContent = "Rejeitar";
+        rejeitar.addEventListener(
+          "click",
+          () => revisar(item.id, "rejeitado")
+        );
+
+        acoes.append(aprovar, rejeitar);
+        card.appendChild(acoes);
       }
 
       historico.appendChild(card);
@@ -80,7 +158,7 @@
       return;
     }
 
-    historico.textContent = "Carregando API...";
+    historico.textContent = "Carregando conhecimentos da API...";
 
     try {
       const res = await fetch(
@@ -133,7 +211,6 @@
     if (!registro.pergunta || !registro.resposta) return;
 
     mensagem.textContent = "Enviando para API...";
-
     if (botao) botao.disabled = true;
 
     try {
@@ -157,14 +234,11 @@
         );
       }
 
-      const conhecimento = dados.conhecimento || {};
-
       mensagem.textContent =
-        `Enviado para API · ID ${conhecimento.id} · ` +
-        `status ${conhecimento.status}`;
+        `Enviado para API · ID ${dados.conhecimento.id} · ` +
+        `status ${dados.conhecimento.status}`;
 
       form.reset();
-
       await carregarHistorico();
 
     } catch (erro) {
