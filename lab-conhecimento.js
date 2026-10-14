@@ -250,4 +250,24 @@
   });
 
   carregarHistorico();
+
+  // O cofre é descriptografado depois que o painel abre.
+  // Reconsulta automaticamente até o token ficar disponível.
+  let tentativasToken = 0;
+
+  const sincronizarToken = setInterval(() => {
+    tentativasToken++;
+
+    if (token()) {
+      clearInterval(sincronizarToken);
+      carregarHistorico();
+      return;
+    }
+
+    if (tentativasToken >= 20) {
+      clearInterval(sincronizarToken);
+    }
+  }, 250);
+
+  window.carregarHistoricoTuring = carregarHistorico;
 })();
