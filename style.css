@@ -540,3 +540,16 @@ button.metric-card {
 .link-inline {
   background: none; border: none; cursor: pointer; color: var(--accent-orange);
   text-decoration: underline; font-size: inherit; padding: 0;
+
+.login-identidade {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  margin: 12px 0;
+  border: 1px solid #333;
+  border-radius: 10px;
+  background: #161616;
+}
+.login-identidade strong { color: #fff; }
+.login-identidade span { color: #aaa; font-size: 13px; }
