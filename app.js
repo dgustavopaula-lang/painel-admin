@@ -509,8 +509,63 @@ function renderCatalogo() {
   root.innerHTML = '';
 
   if (!appData.minis.length) {
-    root.innerHTML = `<p class="catalogo-vazio">Nenhum mini-software cadastrado. Clique em "Novo Mini-software".</p>`;
-    return;
+    appData.minis = [
+      {
+        id: 101,
+        nome: 'Mini Mercado',
+        categoria: 'Comercial',
+        desc: 'Gestão simples de produtos, vendas e estoque.',
+        url: '',
+        api: '/api/health',
+        status: 'Rascunho'
+      },
+      {
+        id: 102,
+        nome: 'Curral Ágil',
+        categoria: 'Agro',
+        desc: 'Gestão operacional para propriedades e manejo rural.',
+        url: '',
+        api: '/api/health',
+        status: 'Rascunho'
+      },
+      {
+        id: 103,
+        nome: 'Farmácia FA',
+        categoria: 'Comercial',
+        desc: 'Controle simplificado para farmácia e atendimento.',
+        url: '',
+        api: '/api/health',
+        status: 'Rascunho'
+      },
+      {
+        id: 104,
+        nome: 'GluZen',
+        categoria: 'Saúde',
+        desc: 'Mini-software de organização e acompanhamento.',
+        url: '',
+        api: '/api/health',
+        status: 'Rascunho'
+      },
+      {
+        id: 105,
+        nome: 'Imobiliária',
+        categoria: 'Imóveis',
+        desc: 'Cadastro e gerenciamento de imóveis e patrimônio.',
+        url: '',
+        api: '/api/health',
+        status: 'Rascunho'
+      },
+      {
+        id: 106,
+        nome: 'Registro RG',
+        categoria: 'Outros',
+        desc: 'Cadastro e organização digital de registros.',
+        url: '',
+        api: '/api/health',
+        status: 'Rascunho'
+      }
+    ];
+    persistData();
   }
 
   const categoriasUsadas = [...new Set([...MINI_CATEGORIAS, ...appData.minis.map(m => m.categoria)])];
@@ -561,10 +616,27 @@ function renderMiniCard(m, index, total) {
             : `<span class="mini-sem-link">sem link</span>`}
         </div>
 
+        <div class="mini-link-row">
+          <i class="ph ph-plugs-connected"></i>
+          <input class="inline-input"
+                 value="${escapeHtml(m.api || '/api/health')}"
+                 placeholder="/api/..."
+                 onchange="editarMini(${m.id}, 'api', this.value)">
+          <button class="btn-action secondary"
+                  onclick="testarMiniApi(${m.id})">
+            <i class="ph ph-pulse"></i> Testar API
+          </button>
+        </div>
+
         <div class="mini-card-footer">
           <select class="form-control mini-status" title="Status" onchange="editarMini(${m.id}, 'status', this.value)">${statusOpts}</select>
           <select class="form-control mini-status" title="Categoria" onchange="editarMini(${m.id}, 'categoria', this.value)">${catOpts}</select>
           <div class="action-btns">
+            <button class="btn-action secondary"
+                    title="Aprovar"
+                    onclick="aprovarMini(${m.id})">
+              <i class="ph ph-check-circle"></i> Aprovar
+            </button>
             <button class="btn-icon" title="Editar" onclick="editarItem('minis', ${m.id})"><i class="ph ph-pencil"></i></button>
             <button class="btn-icon" title="Subir" onclick="moverMini(${m.id}, -1)" ${index === 0 ? 'disabled' : ''}><i class="ph ph-arrow-up"></i></button>
             <button class="btn-icon" title="Descer" onclick="moverMini(${m.id}, 1)" ${index === total - 1 ? 'disabled' : ''}><i class="ph ph-arrow-down"></i></button>
@@ -581,6 +653,37 @@ function editarMini(id, campo, valor) {
   item[campo] = valor.trim();
   persistData();
   renderCatalogo();
+}
+
+function aprovarMini(id) {
+  const item = appData.minis.find(x => x.id === id);
+  if (!item) return;
+
+  item.status = 'Publicado';
+  persistData();
+  renderCatalogo();
+}
+
+async function testarMiniApi(id) {
+  const item = appData.minis.find(x => x.id === id);
+  if (!item) return;
+
+  const rota = (item.api || '/api/health').trim();
+  const url = rota.startsWith('http')
+    ? rota
+    : `https://api.gustavopaulasantos.com.br${rota.startsWith('/') ? rota : '/' + rota}`;
+
+  try {
+    const inicio = performance.now();
+    const resposta = await fetch(url, { cache: 'no-store' });
+    const ms = Math.round(performance.now() - inicio);
+
+    alert(
+      `${item.nome}\nAPI: ${resposta.status} ${resposta.ok ? 'OK' : 'ERRO'}\nLatência: ${ms} ms`
+    );
+  } catch (erro) {
+    alert(`${item.nome}\nFalha ao conectar com a NexoTerraCore/API.`);
+  }
 }
 
 function adicionarMini() {
