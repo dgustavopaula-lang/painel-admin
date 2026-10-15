@@ -40,7 +40,6 @@
       </div>
 
       <nav class="main-nav">
-        <button onclick="abrirTela('tela-posts')" class="nav-item active-menu" id="nav-home"><i class="ph ph-house"></i> Home</button>
         <a href="https://gustavopaulasantos.com.br" target="_blank" rel="noopener" class="nav-item"><i class="ph ph-browser"></i> Website <i class="ph ph-arrow-up-right external-icon"></i></a>
       </nav>
 
@@ -50,9 +49,6 @@
 
       <div class="nav-section-title">Conteúdo</div>
       <nav class="secondary-nav">
-        <button onclick="abrirTela('tela-posts')" class="nav-item" id="nav-articles"><i class="ph ph-file-text"></i> Artigos</button>
-        <button onclick="abrirTela('tela-videos')" class="nav-item" id="nav-videos"><i class="ph ph-video-camera"></i> Vídeos</button>
-        <button onclick="abrirTela('tela-podcast')" class="nav-item" id="nav-podcast"><i class="ph ph-microphone-stage"></i> Podcast</button>
       </nav>
 
       <div class="nav-section-title">Meus Projetos</div>
@@ -71,19 +67,18 @@
       <div class="nav-section-title">Produtos</div>
       <nav class="secondary-nav">
         <button onclick="abrirTela('tela-catalogo')" class="nav-item" id="nav-catalogo"><i class="ph ph-squares-four"></i> Mini-softwares</button>
-        <button onclick="abrirTela('tela-vendas')" class="nav-item" id="nav-vendas"><i class="ph ph-storefront"></i> Vendas · WordPress</button>
+        <button onclick="abrirTela('tela-vendas')" class="nav-item" id="nav-vendas"><i class="ph ph-storefront"></i> Comercial</button>
       </nav>
 
       <div class="nav-section-title">API &amp; Turing</div>
       <nav class="secondary-nav">
         <button onclick="abrirTela('tela-api')" class="nav-item" id="nav-api"><i class="ph ph-plugs-connected"></i> API · NexoTerraCore</button>
         <button onclick="abrirTela('tela-treino')" class="nav-item" id="nav-treino"><i class="ph ph-brain"></i> Turing · Treinamento</button>
-        <a href="https://console.gustavopaulasantos.com.br/painel/" target="_blank" rel="noopener" class="nav-item"><i class="ph ph-terminal-window"></i> Sala de Comando <i class="ph ph-arrow-up-right external-icon"></i></a>
       </nav>
 
       <div class="nav-section-title">Gestão</div>
       <nav class="secondary-nav">
-        <button onclick="abrirTela('tela-lab-conhecimento')" class="nav-item" id="nav-lab-conhecimento"><i class="ph ph-brain"></i> Agência de Conhecimento</button>
+        <button onclick="abrirTela('tela-lab-conhecimento')" class="nav-item" id="nav-lab-conhecimento"><i class="ph ph-brain"></i> Base de Conhecimento</button>
         <button onclick="abrirTela('tela-financeiro')" class="nav-item" id="nav-financeiro"><i class="ph ph-currency-dollar"></i> Financeiro</button>
         <button onclick="abrirTela('tela-clientes')" class="nav-item" id="nav-clientes"><i class="ph ph-users"></i> Clientes</button>
         <button onclick="abrirTela('tela-senhas')" class="nav-item" id="nav-senhas"><i class="ph ph-lock-key"></i> Cofre · Senhas e Acessos</button>
@@ -105,7 +100,7 @@
     <main class="main-content">
       <header class="top-header">
         <button class="btn-menu" onclick="alternarMenu()" aria-label="Abrir menu"><i class="ph ph-list"></i></button>
-        <h1 id="titulo-pagina">Home / Conteúdo</h1>
+        <h1 id="titulo-pagina">Home</h1>
         <div class="header-actions" id="header-actions"></div>
       </header>
 
@@ -203,7 +198,7 @@
 <div id="tela-lab-conhecimento" class="tela-interna">
   <div class="lab-conhecimento">
     <h2>Laboratório Gustavo + Turing</h2>
-    <p>Agência de Conhecimento · Edutech Angola · Edutech Brasil · Agro</p>
+    <p>Base de Conhecimento · Edutech Angola · Edutech Brasil · Agro</p>
     <p class="lab-aviso">API real conectada · conhecimentos enviados ao PostgreSQL para revisão.</p>
     <form id="form-lab-conhecimento">
       <label for="lab-area">Área de conhecimento</label>
@@ -590,8 +585,6 @@
         </div>
       </div>
 
-      <div id="tela-videos" class="tela-interna"><div id="container-videos"></div></div>
-      <div id="tela-podcast" class="tela-interna"><div id="container-podcast"></div></div>
     </main>
 
     <div id="modal-container" class="modal-overlay">

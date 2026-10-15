@@ -553,3 +553,27 @@ button.metric-card {
 }
 .login-identidade strong { color: #fff; }
 .login-identidade span { color: #aaa; font-size: 13px; }
+
+
+/* GPS.dev — consolidação 2026 */
+.home-turing-card,
+#home-turing-card {
+    min-height: 0 !important;
+    padding: 18px !important;
+    margin-bottom: 16px !important;
+}
+
+#home-metricas {
+    margin-top: 12px !important;
+    gap: 12px !important;
+}
+
+.metric-card {
+    min-height: 120px !important;
+    padding: 18px !important;
+}
+
+.main-content {
+    padding-top: 18px !important;
+}
+
