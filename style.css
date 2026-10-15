@@ -577,3 +577,64 @@ button.metric-card {
     padding-top: 18px !important;
 }
 
+
+/* ===== GPS.dev ADMIN — CONSOLIDAÇÃO FINAL ===== */
+
+/* conteúdo mais compacto */
+.main-content,
+.content,
+.page-content {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+/* sidebar profissional */
+.sidebar .nav-item,
+.nav-item {
+  min-height: 42px;
+}
+
+/* home */
+#home-turing-card {
+  margin-bottom: 14px !important;
+}
+
+#home-metricas {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit,minmax(190px,1fr)) !important;
+  gap: 12px !important;
+}
+
+/* cartões */
+.metric-card,
+.card {
+  min-height: 0 !important;
+}
+
+/* notebook */
+@media (min-width: 900px) {
+  #tela-posts {
+    padding-top: 8px !important;
+  }
+}
+
+/* Samsung / telas menores */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 250px;
+  }
+
+  .main-content,
+  .content,
+  .page-content {
+    padding: 12px !important;
+  }
+
+  #home-metricas {
+    grid-template-columns: 1fr !important;
+  }
+
+  #home-turing-card {
+    padding: 12px !important;
+  }
+}
