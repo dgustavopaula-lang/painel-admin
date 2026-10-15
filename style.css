@@ -638,3 +638,67 @@ button.metric-card {
     padding: 12px !important;
   }
 }
+
+/* ===== GPS PAINEL PWA — PRETO + VERDE ===== */
+:root{
+  --gps-green:#0bff5a;
+  --gps-green-soft:#22c55e;
+  --gps-bg:#050805;
+  --gps-card:#0d120f;
+  --gps-border:#173d24;
+}
+
+body{
+  background:var(--gps-bg) !important;
+}
+
+.sidebar{
+  background:#060906 !important;
+  border-right:1px solid var(--gps-border) !important;
+}
+
+.nav-item.active-menu,
+.nav-item:hover{
+  border-left-color:var(--gps-green) !important;
+}
+
+.btn-action,
+button.primary,
+.primary{
+  background:var(--gps-green) !important;
+  color:#031006 !important;
+  border-color:var(--gps-green) !important;
+}
+
+#home-turing-card,
+.card,
+.metric-card{
+  background:var(--gps-card) !important;
+  border-color:var(--gps-border) !important;
+}
+
+.api-online,
+.status-online,
+.online{
+  color:var(--gps-green) !important;
+}
+
+@media (max-width:768px){
+  body{
+    overscroll-behavior:none;
+  }
+
+  .sidebar{
+    width:240px !important;
+  }
+
+  .main-content,
+  .content,
+  .page-content{
+    padding:10px !important;
+  }
+
+  #home-turing-card{
+    border-radius:14px !important;
+  }
+}
