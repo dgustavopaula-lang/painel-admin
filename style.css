@@ -702,3 +702,83 @@ button.primary,
     border-radius:14px !important;
   }
 }
+
+
+/* ===== IMÓVEIS / PATRIMÔNIO ===== */
+
+.patrimonio-resumo {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  margin:16px 0 20px;
+}
+
+.patrimonio-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:16px;
+}
+
+.patrimonio-card {
+  background:#0d120f;
+  border:1px solid #173d24;
+  border-radius:14px;
+  padding:18px;
+}
+
+.patrimonio-card-head {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.patrimonio-card-head h3 {
+  margin:0 0 4px;
+}
+
+.patrimonio-card-head span {
+  opacity:.75;
+  font-size:.85rem;
+}
+
+.patrimonio-dados {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:18px;
+}
+
+.patrimonio-dados div {
+  background:rgba(255,255,255,.03);
+  border-radius:8px;
+  padding:10px;
+}
+
+.patrimonio-dados small {
+  display:block;
+  opacity:.65;
+  margin-bottom:4px;
+}
+
+.patrimonio-obs {
+  opacity:.8;
+  margin-top:16px;
+}
+
+.patrimonio-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+
+@media(max-width:768px) {
+  .patrimonio-grid {
+    grid-template-columns:1fr;
+  }
+
+  .patrimonio-dados {
+    grid-template-columns:1fr;
+  }
+}

@@ -318,7 +318,7 @@ function abrirTela(idTela) {
   if (target) target.classList.add('ativa');
   const navMap = {
     'tela-posts': 'nav-home', 'tela-videos': 'nav-videos', 'tela-podcast': 'nav-podcast',
-    'tela-financeiro': 'nav-financeiro', 'tela-clientes': 'nav-clientes', 'tela-senhas': 'nav-senhas',
+    'tela-patrimonio': 'nav-patrimonio', 'tela-financeiro': 'nav-financeiro', 'tela-clientes': 'nav-clientes', 'tela-senhas': 'nav-senhas',
     'tela-agro': 'nav-agro', 'tela-nexus': 'nav-nexus', 'tela-turin': 'nav-turin',
     'tela-catalogo': 'nav-catalogo', 'tela-edutech': 'nav-edutech', 'tela-angola': 'nav-angola',
     'tela-vendas': 'nav-vendas', 'tela-api': 'nav-api',
@@ -1727,3 +1727,276 @@ async function carregarDadosReaisApi() {
       '</p>';
   }
 }
+
+
+/* ============================================================
+   IMÓVEIS / PATRIMÔNIO
+   ============================================================ */
+
+const STORAGE_PATRIMONIO = 'gps_patrimonio_imoveis_v1';
+
+const PATRIMONIO_SEED = [
+  {
+    id: 1001,
+    nome: 'Fazenda do Lago',
+    municipio: 'São Simão',
+    uf: 'GO',
+    areaHa: 2478,
+    latitude: '',
+    longitude: '',
+    valor: '',
+    status: 'Confirmado',
+    tipo: 'Rural',
+    fonte: 'Cadastro/documentação a validar no backend',
+    observacoes: 'Propriedade rural real. Coordenadas e documentação detalhada pendentes de vinculação segura à API.'
+  },
+  {
+    id: 1002,
+    nome: 'Fazenda Saudade',
+    municipio: 'Paranaiguara',
+    uf: 'GO',
+    areaHa: 330.84,
+    latitude: '',
+    longitude: '',
+    valor: '',
+    status: 'Confirmado',
+    tipo: 'Rural',
+    fonte: 'Cadastro/documentação a validar no backend',
+    observacoes: 'Propriedade rural real. Possui referência ambiental e hídrica; identificadores sensíveis não são exibidos no frontend.'
+  },
+  {
+    id: 1003,
+    nome: 'Fazenda Porteirinho / Poteirinho',
+    municipio: '',
+    uf: 'GO',
+    areaHa: '',
+    latitude: '',
+    longitude: '',
+    valor: '',
+    status: 'Pendente de validação',
+    tipo: 'Rural',
+    fonte: 'Informação fornecida pelo proprietário',
+    observacoes: 'Área, município e coordenadas ainda pendentes de confirmação.'
+  }
+];
+
+function carregarPatrimonio() {
+  try {
+    const raw = localStorage.getItem(STORAGE_PATRIMONIO);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+
+  localStorage.setItem(
+    STORAGE_PATRIMONIO,
+    JSON.stringify(PATRIMONIO_SEED)
+  );
+
+  return JSON.parse(JSON.stringify(PATRIMONIO_SEED));
+}
+
+function salvarPatrimonio(lista) {
+  localStorage.setItem(STORAGE_PATRIMONIO, JSON.stringify(lista));
+}
+
+function escapePatrimonio(v) {
+  return String(v ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function renderPatrimonio() {
+  const root = document.getElementById('patrimonio-grid');
+  const resumo = document.getElementById('patrimonio-resumo');
+
+  if (!root) return;
+
+  const lista = carregarPatrimonio();
+
+  const areaTotal = lista.reduce((acc, i) => {
+    const n = Number(i.areaHa);
+    return acc + (Number.isFinite(n) ? n : 0);
+  }, 0);
+
+  if (resumo) {
+    resumo.innerHTML = `
+      <div class="metric-card">
+        <small>Imóveis cadastrados</small>
+        <strong>${lista.length}</strong>
+      </div>
+      <div class="metric-card">
+        <small>Área confirmada</small>
+        <strong>${areaTotal.toLocaleString('pt-BR')} ha</strong>
+      </div>
+      <div class="metric-card">
+        <small>Integração</small>
+        <strong>NexoTerraCore/API</strong>
+      </div>
+    `;
+  }
+
+  root.innerHTML = lista.map(item => `
+    <article class="patrimonio-card">
+      <div class="patrimonio-card-head">
+        <div>
+          <h3>${escapePatrimonio(item.nome)}</h3>
+          <span>${escapePatrimonio(item.tipo)} · ${escapePatrimonio(item.status)}</span>
+        </div>
+        <button class="btn-action secondary"
+                onclick="editarPatrimonio(${item.id})">
+          <i class="ph ph-pencil"></i> Editar
+        </button>
+      </div>
+
+      <div class="patrimonio-dados">
+        <div>
+          <small>Município / UF</small>
+          <strong>${escapePatrimonio(item.municipio || 'Pendente')} / ${escapePatrimonio(item.uf || '-')}</strong>
+        </div>
+
+        <div>
+          <small>Área</small>
+          <strong>${item.areaHa !== '' ? escapePatrimonio(item.areaHa) + ' ha' : 'Pendente'}</strong>
+        </div>
+
+        <div>
+          <small>Latitude</small>
+          <strong>${escapePatrimonio(item.latitude || 'Pendente')}</strong>
+        </div>
+
+        <div>
+          <small>Longitude</small>
+          <strong>${escapePatrimonio(item.longitude || 'Pendente')}</strong>
+        </div>
+
+        <div>
+          <small>Valor</small>
+          <strong>${escapePatrimonio(item.valor || 'Não informado')}</strong>
+        </div>
+
+        <div>
+          <small>Status</small>
+          <strong>${escapePatrimonio(item.status)}</strong>
+        </div>
+      </div>
+
+      <p class="patrimonio-obs">${escapePatrimonio(item.observacoes)}</p>
+
+      <div class="patrimonio-actions">
+        <button class="btn-action secondary"
+                onclick="testarPatrimonioApi(${item.id})">
+          <i class="ph ph-plugs-connected"></i> Testar API
+        </button>
+
+        ${item.latitude && item.longitude ? `
+          <a class="btn-action secondary"
+             target="_blank"
+             rel="noopener"
+             href="https://www.google.com/maps?q=${encodeURIComponent(item.latitude)},${encodeURIComponent(item.longitude)}">
+             <i class="ph ph-map-pin"></i> Mapa
+          </a>
+        ` : ''}
+      </div>
+    </article>
+  `).join('');
+}
+
+function editarPatrimonio(id) {
+  const lista = carregarPatrimonio();
+  const item = lista.find(i => i.id === id);
+  if (!item) return;
+
+  const nome = prompt('Nome do imóvel:', item.nome);
+  if (nome === null) return;
+
+  const municipio = prompt('Município:', item.municipio);
+  if (municipio === null) return;
+
+  const uf = prompt('UF:', item.uf);
+  if (uf === null) return;
+
+  const areaHa = prompt('Área em hectares:', item.areaHa);
+  if (areaHa === null) return;
+
+  const latitude = prompt('Latitude:', item.latitude);
+  if (latitude === null) return;
+
+  const longitude = prompt('Longitude:', item.longitude);
+  if (longitude === null) return;
+
+  const valor = prompt('Valor / preço de venda:', item.valor);
+  if (valor === null) return;
+
+  const status = prompt(
+    'Status:',
+    item.status
+  );
+  if (status === null) return;
+
+  Object.assign(item, {
+    nome: nome.trim(),
+    municipio: municipio.trim(),
+    uf: uf.trim().toUpperCase(),
+    areaHa: areaHa.trim(),
+    latitude: latitude.trim(),
+    longitude: longitude.trim(),
+    valor: valor.trim(),
+    status: status.trim()
+  });
+
+  salvarPatrimonio(lista);
+  renderPatrimonio();
+}
+
+function adicionarPatrimonio() {
+  const lista = carregarPatrimonio();
+
+  lista.unshift({
+    id: Date.now(),
+    nome: 'Novo imóvel',
+    municipio: '',
+    uf: '',
+    areaHa: '',
+    latitude: '',
+    longitude: '',
+    valor: '',
+    status: 'Em cadastro',
+    tipo: 'Rural',
+    fonte: '',
+    observacoes: ''
+  });
+
+  salvarPatrimonio(lista);
+  renderPatrimonio();
+}
+
+async function testarPatrimonioApi(id) {
+  const item = carregarPatrimonio().find(i => i.id === id);
+  if (!item) return;
+
+  try {
+    const inicio = performance.now();
+
+    const resposta = await fetch(
+      'https://api.gustavopaulasantos.com.br/api/health',
+      { cache: 'no-store' }
+    );
+
+    const ms = Math.round(performance.now() - inicio);
+
+    alert(
+      `${item.nome}\nNexoTerraCore/API: HTTP ${resposta.status}\nLatência: ${ms} ms`
+    );
+  } catch (erro) {
+    alert(
+      `${item.nome}\nFalha ao conectar com a NexoTerraCore/API.`
+    );
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  carregarPatrimonio();
+});
+
