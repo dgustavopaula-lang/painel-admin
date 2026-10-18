@@ -12,6 +12,7 @@
 const STORAGE_AUTH = 'gps_console_auth_v1';
 const STORAGE_DATA = 'gps_console_data_v1';
 const STORAGE_VAULT = 'gps_console_vault_v1';
+const PANEL_LOGIN_EMAIL = 'gustavosantosdev@proton.me';
 const PBKDF2_ITERATIONS = 210000;
 const CHECK_PLAINTEXT = 'gps-console-ok';
 
@@ -233,28 +234,33 @@ function setLoginMode(mode) {
   document.getElementById('login-erro').textContent = '';
 
   if (mode === 'setup') {
-    subtitle.textContent = 'Crie sua senha de acesso';
+    subtitle.textContent = 'Crie seu usuário e senha de acesso';
     aviso.hidden = false;
     campos.innerHTML = `
+      <label class="login-field-label" for="login-usuario">Usuário</label>
+      <input id="login-usuario" type="email" class="form-control" value="${PANEL_LOGIN_EMAIL}" autocomplete="username" readonly required />
       <label class="login-field-label">Nova senha (mín. 6 caracteres)</label>
       <input id="login-senha" type="password" class="form-control" autocomplete="new-password" />
       <label class="login-field-label">Confirmar senha</label>
       <input id="login-senha-confirma" type="password" class="form-control" autocomplete="new-password" />
     `;
   } else {
-    subtitle.textContent = 'Entre com sua senha de acesso';
+    subtitle.textContent = 'Entre com seu usuário e senha';
     aviso.hidden = true;
     campos.innerHTML = `
+      <label class="login-field-label" for="login-usuario">Usuário</label>
+      <input id="login-usuario" type="email" class="form-control" value="${PANEL_LOGIN_EMAIL}" autocomplete="username" readonly required />
       <label class="login-field-label">Senha de acesso</label>
       <input id="login-senha" type="password" class="form-control" autocomplete="current-password" />
     `;
   }
-  const first = document.getElementById('login-senha');
+  const first = document.getElementById('login-usuario');
   if (first) first.focus();
 }
 
-async function fazerSetup(senha, confirma) {
+async function fazerSetup(usuario, senha, confirma) {
   const erro = document.getElementById('login-erro');
+  if (usuario.trim().toLowerCase() !== PANEL_LOGIN_EMAIL) { erro.textContent = 'Usuário inválido.'; return; }
   if (senha.length < 6) { erro.textContent = 'Use ao menos 6 caracteres.'; return; }
   if (senha !== confirma) { erro.textContent = 'As senhas não coincidem.'; return; }
 
@@ -263,7 +269,7 @@ async function fazerSetup(senha, confirma) {
   const key = await deriveKey(senha, saltB64);
   const check = await encryptJSON(key, CHECK_PLAINTEXT);
 
-  localStorage.setItem(STORAGE_AUTH, JSON.stringify({ salt: saltB64, check }));
+  localStorage.setItem(STORAGE_AUTH, JSON.stringify({ usuario: PANEL_LOGIN_EMAIL, salt: saltB64, check }));
   vaultKey = key;
   appData.senhas = [];
   await persistVault();
@@ -272,13 +278,19 @@ async function fazerSetup(senha, confirma) {
   entrarNoApp();
 }
 
-async function fazerLogin(senha) {
+async function fazerLogin(usuario, senha) {
   const erro = document.getElementById('login-erro');
   const auth = JSON.parse(localStorage.getItem(STORAGE_AUTH));
   try {
+    if (usuario.trim().toLowerCase() !== PANEL_LOGIN_EMAIL) throw new Error('user mismatch');
     const key = await deriveKey(senha, auth.salt);
     const check = await decryptJSON(key, auth.check);
     if (check !== CHECK_PLAINTEXT) throw new Error('check mismatch');
+
+    if (auth.usuario !== PANEL_LOGIN_EMAIL) {
+      auth.usuario = PANEL_LOGIN_EMAIL;
+      localStorage.setItem(STORAGE_AUTH, JSON.stringify(auth));
+    }
 
     vaultKey = key;
     const vaultRaw = localStorage.getItem(STORAGE_VAULT);
@@ -286,7 +298,9 @@ async function fazerLogin(senha) {
     loadPlainData();
     entrarNoApp();
   } catch (e) {
-    erro.textContent = 'Senha incorreta.';
+    erro.textContent = 'Usuário ou senha incorretos.';
+    const campoUsuario = document.getElementById('login-usuario');
+    if (campoUsuario) campoUsuario.focus();
     const campo = document.getElementById('login-senha');
     if (campo) { campo.value = ''; campo.focus(); }
   }
@@ -383,7 +397,67 @@ function renderHeaderActions(idTela) {
   }
 }
 
+
+async function renderPatrimonio() {
+  const box = document.getElementById('patrimonio-lista');
+  if (!box) return;
+
+  const token = tokenDoCofre();
+  if (!token) {
+    box.textContent = 'Configure o token da API no cofre para consultar os imóveis.';
+    return;
+  }
+
+  box.textContent = 'Consultando imóveis na API Central...';
+
+  try {
+    const base = appData.config.apiBase.replace(/\/+$/, '');
+    const resposta = await fetch(base + '/api/imoveis', {
+      headers: { Authorization: 'Bearer ' + token },
+      cache: 'no-store'
+    });
+
+    if (!resposta.ok) {
+      box.textContent = 'Consulta não autorizada ou indisponível. HTTP ' + resposta.status;
+      return;
+    }
+
+    const imoveis = await resposta.json();
+    if (!Array.isArray(imoveis)) {
+      box.textContent = 'Formato de resposta inesperado.';
+      return;
+    }
+
+    box.replaceChildren();
+
+    const titulo = document.createElement('h3');
+    titulo.textContent = 'Imóveis cadastrados: ' + imoveis.length;
+    box.appendChild(titulo);
+
+    for (const imovel of imoveis) {
+      const item = document.createElement('p');
+      const valor = Number(imovel.valor);
+      const moeda = Number.isFinite(valor)
+        ? valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+        : 'Não informado';
+
+      item.textContent = [
+        imovel.titulo,
+        'Matrícula: ' + (imovel.matricula || 'Não informada'),
+        'Valor: ' + moeda,
+        [imovel.endereco, imovel.numero, imovel.cidade, imovel.uf]
+          .filter(Boolean).join(', ')
+      ].filter(Boolean).join(' | ');
+
+      box.appendChild(item);
+    }
+  } catch (erro) {
+    box.textContent = 'Não foi possível consultar a API. Verifique conexão e CORS.';
+  }
+}
+
 function renderCurrentView() {
+  if (currentView === 'tela-patrimonio') renderPatrimonio();
   if (currentView === 'tela-financeiro') renderFinanceiro();
   if (currentView === 'tela-clientes') renderClientes();
   if (currentView === 'tela-senhas') renderSenhas();
@@ -905,7 +979,77 @@ function abrirModalForm(tipo, id = null) {
   }
 }
 
+function abrirModalAlterarSenha() {
+  if (!vaultKey) return;
+  activeModalType = 'senha-acesso';
+  editingId = null;
+  document.getElementById('modal-titulo').innerText = 'Alterar senha de acesso';
+  document.getElementById('modal-submit').innerHTML = '<i class="ph ph-key"></i> Atualizar senha';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group"><label for="senha-atual">Senha atual</label><input id="senha-atual" type="password" class="form-control" autocomplete="current-password" required></div>
+    <div class="form-group"><label for="senha-nova">Nova senha (mín. 12 caracteres)</label><input id="senha-nova" type="password" class="form-control" autocomplete="new-password" required></div>
+    <div class="form-group"><label for="senha-nova-confirma">Confirmar nova senha</label><input id="senha-nova-confirma" type="password" class="form-control" autocomplete="new-password" required></div>
+    <p id="senha-acesso-erro" class="login-erro" role="alert"></p>
+  `;
+  document.getElementById('modal-container').classList.add('active');
+  document.getElementById('senha-atual').focus();
+}
+
+async function salvarSenhaAcesso() {
+  const erro = document.getElementById('senha-acesso-erro');
+  const senhaAtual = document.getElementById('senha-atual').value;
+  const senhaNova = document.getElementById('senha-nova').value;
+  const confirma = document.getElementById('senha-nova-confirma').value;
+
+  if (!senhaAtual) { erro.textContent = 'Informe a senha atual.'; return; }
+  if (senhaNova.length < 12) { erro.textContent = 'Use ao menos 12 caracteres na nova senha.'; return; }
+  if (senhaNova !== confirma) { erro.textContent = 'As novas senhas não coincidem.'; return; }
+
+  let auth;
+  try {
+    auth = JSON.parse(localStorage.getItem(STORAGE_AUTH));
+    const chaveAtual = await deriveKey(senhaAtual, auth.salt);
+    if (await decryptJSON(chaveAtual, auth.check) !== CHECK_PLAINTEXT) throw new Error('Senha atual incorreta.');
+
+    const vaultRaw = localStorage.getItem(STORAGE_VAULT);
+    const senhas = vaultRaw ? await decryptJSON(chaveAtual, JSON.parse(vaultRaw)) : appData.senhas || [];
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const saltB64 = bufToB64(salt);
+    const chaveNova = await deriveKey(senhaNova, saltB64);
+    const authNovo = Object.assign({}, auth, {
+      salt: saltB64,
+      check: await encryptJSON(chaveNova, CHECK_PLAINTEXT)
+    });
+    const cofreNovo = await encryptJSON(chaveNova, senhas);
+    const cofreAnterior = vaultRaw;
+
+    try {
+      localStorage.setItem(STORAGE_VAULT, JSON.stringify(cofreNovo));
+      localStorage.setItem(STORAGE_AUTH, JSON.stringify(authNovo));
+    } catch (storageError) {
+      if (cofreAnterior === null) localStorage.removeItem(STORAGE_VAULT);
+      else localStorage.setItem(STORAGE_VAULT, cofreAnterior);
+      throw new Error('Não foi possível salvar. A senha anterior foi mantida.');
+    }
+
+    vaultKey = chaveNova;
+    appData.senhas = senhas;
+    fecharModal();
+    alert('Senha atualizada. O cofre foi recriptografado com a nova senha.');
+  } catch (e) {
+    erro.textContent = e.message === 'Senha atual incorreta.'
+      ? e.message
+      : (e.message === 'Não foi possível salvar. A senha anterior foi mantida.'
+        ? e.message
+        : 'Não foi possível validar a senha atual ou abrir o cofre. Nenhuma alteração foi aplicada.');
+  }
+}
+
 async function salvarModal() {
+  if (activeModalType === 'senha-acesso') {
+    await salvarSenhaAcesso();
+    return;
+  }
   if (activeModalType === 'link') {
     const nome = document.getElementById('form-link-nome').value;
     const url = document.getElementById('form-link-url').value;
@@ -1026,6 +1170,8 @@ async function salvarModal() {
 
 function fecharModal() {
   document.getElementById('modal-container').classList.remove('active');
+  const submit = document.getElementById('modal-submit');
+  if (submit) submit.innerText = 'Salvar Dados';
 }
 
 function editarItem(tipo, id) {
@@ -1508,12 +1654,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('form-login').addEventListener('submit', async (ev) => {
     ev.preventDefault();
+    const usuario = document.getElementById('login-usuario').value;
     const senha = document.getElementById('login-senha').value;
     if (temSenhaCriada()) {
-      await fazerLogin(senha);
+      await fazerLogin(usuario, senha);
     } else {
       const confirma = document.getElementById('login-senha-confirma').value;
-      await fazerSetup(senha, confirma);
+      await fazerSetup(usuario, senha, confirma);
     }
   });
 });
@@ -2000,3 +2147,107 @@ document.addEventListener('DOMContentLoaded', () => {
   carregarPatrimonio();
 });
 
+
+
+function dadosFormularioPatrimonio() {
+  const form = document.getElementById('form-patrimonio');
+  if (!form) return null;
+  const dados = Object.fromEntries(new FormData(form).entries());
+  for (const campo of ['terreno', 'area', 'valor']) {
+    dados[campo] = dados[campo] === '' ? null : Number(dados[campo]);
+  }
+  dados.uf = (dados.uf || '').trim().toUpperCase();
+  return dados;
+}
+
+function atualizarCalculoPatrimonio() {
+  const dados = dadosFormularioPatrimonio();
+  const saida = document.getElementById('patrimonio-valor-m2');
+  if (!dados || !saida) return;
+  const area = dados.area > 0 ? dados.area : dados.terreno;
+  const valorM2 = area > 0 && dados.valor != null
+    ? dados.valor / area : null;
+  saida.textContent = valorM2 === null
+    ? 'Valor por m²: —'
+    : 'Valor por m² (' + (dados.area > 0 ? 'área construída' : 'terreno') +
+      '): ' + valorM2.toLocaleString('pt-BR', {
+        style: 'currency', currency: 'BRL'
+      });
+}
+
+function enderecoPatrimonio() {
+  const d = dadosFormularioPatrimonio();
+  return d ? [
+    d.endereco, d.numero, d.bairro, d.cidade, d.uf, d.cep
+  ].filter(Boolean).join(', ') : '';
+}
+
+function abrirMapaPatrimonio() {
+  const endereco = enderecoPatrimonio();
+  if (!endereco) return alert('Informe o endereço primeiro.');
+  window.open(
+    'https://www.google.com/maps/search/?api=1&query=' +
+    encodeURIComponent(endereco),
+    '_blank', 'noopener,noreferrer'
+  );
+}
+
+function abrirEarthPatrimonio() {
+  const endereco = enderecoPatrimonio();
+  if (!endereco) return alert('Informe o endereço primeiro.');
+  window.open(
+    'https://earth.google.com/web/search/' +
+    encodeURIComponent(endereco),
+    '_blank', 'noopener,noreferrer'
+  );
+}
+
+async function salvarPatrimonio() {
+  const form = document.getElementById('form-patrimonio');
+  const mensagem = document.getElementById('patrimonio-mensagem');
+  if (!form || !mensagem || !form.reportValidity()) return;
+
+  const token = tokenDoCofre();
+  if (!token) {
+    mensagem.textContent = 'Token da API não configurado no cofre.';
+    return;
+  }
+
+  const dados = dadosFormularioPatrimonio();
+  if (!dados.titulo.trim() || !dados.matricula.trim()) {
+    mensagem.textContent = 'Identificação e matrícula são obrigatórias.';
+    return;
+  }
+
+  const base = appData.config.apiBase.replace(/\/+$/, '');
+  mensagem.textContent = 'Salvando na API Central...';
+
+  try {
+    const resposta = await fetch(base + '/api/imoveis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify(dados)
+    });
+
+    if (!resposta.ok) {
+      mensagem.textContent = 'Cadastro não concluído. HTTP ' + resposta.status;
+      return;
+    }
+
+    mensagem.textContent = 'Imóvel cadastrado com sucesso.';
+    form.reset();
+    atualizarCalculoPatrimonio();
+    await renderPatrimonio();
+  } catch (erro) {
+    mensagem.textContent = 'Erro de conexão. Verifique API e CORS.';
+  }
+}
+
+document.addEventListener('input', function(evento) {
+  if (evento.target.closest('#form-patrimonio')) {
+    atualizarCalculoPatrimonio();
+  }
+});
