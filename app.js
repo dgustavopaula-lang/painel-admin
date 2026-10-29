@@ -601,63 +601,7 @@ function renderCatalogo() {
   root.innerHTML = '';
 
   if (!appData.minis.length) {
-    appData.minis = [
-      {
-        id: 101,
-        nome: 'Mini Mercado',
-        categoria: 'Comercial',
-        desc: 'Gestão simples de produtos, vendas e estoque.',
-        url: '',
-        api: '/api/health',
-        status: 'Rascunho'
-      },
-      {
-        id: 102,
-        nome: 'Curral Ágil',
-        categoria: 'Agro',
-        desc: 'Gestão operacional para propriedades e manejo rural.',
-        url: '',
-        api: '/api/health',
-        status: 'Rascunho'
-      },
-      {
-        id: 103,
-        nome: 'Farmácia FA',
-        categoria: 'Comercial',
-        desc: 'Controle simplificado para farmácia e atendimento.',
-        url: '',
-        api: '/api/health',
-        status: 'Rascunho'
-      },
-      {
-        id: 104,
-        nome: 'GluZen',
-        categoria: 'Saúde',
-        desc: 'Mini-software de organização e acompanhamento.',
-        url: '',
-        api: '/api/health',
-        status: 'Rascunho'
-      },
-      {
-        id: 105,
-        nome: 'Imobiliária',
-        categoria: 'Imóveis',
-        desc: 'Cadastro e gerenciamento de imóveis e patrimônio.',
-        url: '',
-        api: '/api/health',
-        status: 'Rascunho'
-      },
-      {
-        id: 106,
-        nome: 'Registro RG',
-        categoria: 'Outros',
-        desc: 'Cadastro e organização digital de registros.',
-        url: '',
-        api: '/api/health',
-        status: 'Rascunho'
-      }
-    ];
-    persistData();
+    appData.minis = JSON.parse(JSON.stringify(SEED_MINIS));
   }
 
   const categoriasUsadas = [...new Set([...MINI_CATEGORIAS, ...appData.minis.map(m => m.categoria)])];
