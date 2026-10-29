@@ -107,12 +107,10 @@ function migrarMinis(minis, seedVersion) {
       m.categoria = ref ? ref.categoria : 'Outros';
     }
   });
-  if ((seedVersion || 0) < SEED_VERSION) {
-    const nomes = new Set(lista.map(m => m.nome));
-    SEED_MINIS.forEach(s => {
-      if (!nomes.has(s.nome)) lista.push(JSON.parse(JSON.stringify(s)));
-    });
-  }
+  const nomes = new Set(lista.map(m => m.nome));
+  SEED_MINIS.forEach(s => {
+    if (!nomes.has(s.nome)) lista.push(JSON.parse(JSON.stringify(s)));
+  });
   return lista;
 }
 
