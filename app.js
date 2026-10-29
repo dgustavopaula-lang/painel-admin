@@ -1934,13 +1934,112 @@ const PATRIMONIO_SEED = [
     tipo: 'Rural',
     fonte: 'Informação fornecida pelo proprietário',
     observacoes: 'Área, município e coordenadas ainda pendentes de confirmação.'
+  },
+  {
+    id: 1004,
+    nome: 'Fazenda PIPE',
+    municipio: 'Malanje',
+    uf: 'AO',
+    areaHa: '',
+    latitude: '',
+    longitude: '',
+    valor: '',
+    status: 'Em validação',
+    tipo: 'Rural',
+    fonte: 'Cadastro a validar',
+    observacoes: 'Propriedade em Malanje, Angola. Área, coordenadas e documentação pendentes.'
+  },
+  {
+    id: 2001,
+    nome: 'Residência Principal - Rua Alexandre Marquez, 1131',
+    municipio: 'Uberlândia',
+    uf: 'MG',
+    areaHa: '',
+    areaM2: '182.02',
+    endereco: 'Rua Alexandre Marquez, 1131, Oswaldo Rezende, Uberlândia, MG',
+    latitude: '-18.951440',
+    longitude: '-48.277750',
+    valor: '',
+    status: 'Confirmado',
+    tipo: 'Residencial',
+    fonte: 'Matrícula (documento)',
+    observacoes: 'Unidade do conjunto patrimonial (5 unidades, terreno de 345,10 m²). Matrícula fica no banco da API, fora do código.'
+  },
+  {
+    id: 2002,
+    nome: 'Comércio 01 - Rua Alexandre Marquez, 1131',
+    municipio: 'Uberlândia',
+    uf: 'MG',
+    areaHa: '',
+    areaM2: '34.18',
+    endereco: 'Rua Alexandre Marquez, 1131, Oswaldo Rezende, Uberlândia, MG',
+    latitude: '-18.951440',
+    longitude: '-48.277750',
+    valor: '',
+    status: 'Confirmado',
+    tipo: 'Comercial',
+    fonte: 'Matrícula (documento)',
+    observacoes: 'Unidade do conjunto patrimonial (5 unidades, terreno de 345,10 m²). Matrícula fica no banco da API, fora do código.'
+  },
+  {
+    id: 2003,
+    nome: 'Comércio 02 - Rua Alexandre Marquez, 1131',
+    municipio: 'Uberlândia',
+    uf: 'MG',
+    areaHa: '',
+    areaM2: '24.85',
+    endereco: 'Rua Alexandre Marquez, 1131, Oswaldo Rezende, Uberlândia, MG',
+    latitude: '-18.951440',
+    longitude: '-48.277750',
+    valor: '',
+    status: 'Confirmado',
+    tipo: 'Comercial',
+    fonte: 'Matrícula (documento)',
+    observacoes: 'Unidade do conjunto patrimonial (5 unidades, terreno de 345,10 m²). Matrícula fica no banco da API, fora do código.'
+  },
+  {
+    id: 2004,
+    nome: 'Apartamento 101 - Rua Alexandre Marquez, 1131',
+    municipio: 'Uberlândia',
+    uf: 'MG',
+    areaHa: '',
+    areaM2: '27.25',
+    endereco: 'Rua Alexandre Marquez, 1131, Oswaldo Rezende, Uberlândia, MG',
+    latitude: '-18.951440',
+    longitude: '-48.277750',
+    valor: '',
+    status: 'Confirmado',
+    tipo: 'Apartamento',
+    fonte: 'Matrícula (documento)',
+    observacoes: 'Unidade do conjunto patrimonial (5 unidades, terreno de 345,10 m²). Matrícula fica no banco da API, fora do código.'
+  },
+  {
+    id: 2005,
+    nome: 'Apartamento 102 - Rua Alexandre Marquez, 1131',
+    municipio: 'Uberlândia',
+    uf: 'MG',
+    areaHa: '',
+    areaM2: '34.18',
+    endereco: 'Rua Alexandre Marquez, 1131, Oswaldo Rezende, Uberlândia, MG',
+    latitude: '-18.951440',
+    longitude: '-48.277750',
+    valor: '',
+    status: 'Confirmado',
+    tipo: 'Apartamento',
+    fonte: 'Matrícula (documento)',
+    observacoes: 'Unidade do conjunto patrimonial (5 unidades, terreno de 345,10 m²). Matrícula fica no banco da API, fora do código.'
   }
 ];
 
 function carregarPatrimonio() {
   try {
     const raw = localStorage.getItem(STORAGE_PATRIMONIO);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const lista = JSON.parse(raw);
+      const ids = new Set(lista.map(i => i.id));
+      PATRIMONIO_SEED.forEach(seed => { if (!ids.has(seed.id)) lista.push(JSON.parse(JSON.stringify(seed))); });
+      return lista;
+    }
   } catch (e) {}
 
   localStorage.setItem(
@@ -2015,7 +2114,7 @@ function renderPatrimonio() {
 
         <div>
           <small>Área</small>
-          <strong>${item.areaHa !== '' ? escapePatrimonio(item.areaHa) + ' ha' : 'Pendente'}</strong>
+          <strong>${item.areaM2 ? escapePatrimonio(item.areaM2) + ' m²' : (item.areaHa !== '' ? escapePatrimonio(item.areaHa) + ' ha' : 'Pendente')}</strong>
         </div>
 
         <div>
@@ -2047,6 +2146,15 @@ function renderPatrimonio() {
           <i class="ph ph-plugs-connected"></i> Testar API
         </button>
 
+        <a class="btn-action secondary" target="_blank" rel="noopener"
+           href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((item.endereco || [item.nome, item.municipio, item.uf].filter(Boolean).join(', ')))}">
+          <i class="ph ph-map-trifold"></i> Google Maps
+        </a>
+        <a class="btn-action secondary" target="_blank" rel="noopener"
+           href="https://earth.google.com/web/search/${encodeURIComponent((item.endereco || [item.nome, item.municipio, item.uf].filter(Boolean).join(', ')))}">
+          <i class="ph ph-globe-hemisphere-west"></i> Google Earth
+        </a>
+
         ${item.latitude && item.longitude ? `
           <a class="btn-action secondary"
              target="_blank"
@@ -2076,6 +2184,11 @@ function editarPatrimonio(id) {
 
   const areaHa = prompt('Área em hectares:', item.areaHa);
   if (areaHa === null) return;
+  const areaM2 = prompt('Área em m² (deixe vazio se for fazenda):', item.areaM2 || '');
+  if (areaM2 === null) return;
+
+  const endereco = prompt('Endereço completo (usado no Google Maps e Earth):', item.endereco || '');
+  if (endereco === null) return;
 
   const latitude = prompt('Latitude:', item.latitude);
   if (latitude === null) return;
@@ -2097,6 +2210,8 @@ function editarPatrimonio(id) {
     municipio: municipio.trim(),
     uf: uf.trim().toUpperCase(),
     areaHa: areaHa.trim(),
+    areaM2: areaM2.trim(),
+    endereco: endereco.trim(),
     latitude: latitude.trim(),
     longitude: longitude.trim(),
     valor: valor.trim(),
