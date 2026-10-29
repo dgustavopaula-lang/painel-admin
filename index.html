@@ -110,6 +110,34 @@
     font-size: 14px;
   }
 }
+
+.gps-sidebar-nav details.nav-group { margin: 0; }
+.gps-sidebar-nav details.nav-group > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 11px 6px;
+  color: #8f9caf;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+}
+.gps-sidebar-nav details.nav-group > summary::-webkit-details-marker { display: none; }
+.gps-sidebar-nav details.nav-group > summary::after {
+  content: "\203A";
+  font-size: 15px;
+  transition: transform .15s ease;
+}
+.gps-sidebar-nav details.nav-group[open] > summary::after { transform: rotate(90deg); }
+.gps-sidebar-nav details.nav-group > summary:hover { color: #fff; }
+.gps-sidebar-footer { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.gps-status-dot.off { background: #e5484d; }
+.gps-status-dot.wait { background: #8492a6; }
+#gps-api-status { width: 100%; margin-top: 4px; font-size: 11px; color: #96a4b5; }
 </style>
 
 <style id="gps-patrimonio-css-v1">
@@ -224,70 +252,90 @@
   </div>
 
   <nav class="gps-sidebar-nav" aria-label="Menu principal">
-    <div class="nav-section-title">Painel</div>
-    <button class="nav-item active-menu" id="nav-home"
-      onclick="abrirTela('tela-posts')">
-      <i class="ph ph-house"></i> Home / Dashboard
+    <button class="nav-item active-menu" id="nav-home" onclick="abrirTela('tela-posts')">
+      <i class="ph ph-house"></i> Início
     </button>
-
-    <div class="nav-section-title">Núcleo</div>
-    <button class="nav-item" id="nav-api"
-      onclick="abrirTela('tela-api')">
-      <i class="ph ph-plugs-connected"></i> API Central
-    </button>
-    <button class="nav-item" id="nav-treino"
-      onclick="abrirTela('tela-treino')">
-      <i class="ph ph-brain"></i> Treinamento Turing
-    </button>
-    <a class="nav-item" id="nav-n8n"
-      href="https://n8n.gustavopaulasantos.com.br/"
-      target="_blank" rel="noopener noreferrer">
-      <i class="ph ph-flow-arrow"></i> Automação n8n
-    </a>
-
-    <button class="nav-item" id="nav-lab-conhecimento"
-      onclick="abrirTela('tela-lab-conhecimento')">
-      <i class="ph ph-flask"></i> Laboratório Turing
-    </button>
-
-    <div class="nav-section-title">Comercial</div>
-    <a class="nav-item" id="nav-gps-vendas"
-      href="https://conecta.gustavopaulasantos.com.br/"
-      target="_blank" rel="noopener noreferrer">
-      <i class="ph ph-storefront"></i> GPS.dev Vendas
-    </a>
-    <button class="nav-item" id="nav-catalogo"
-      onclick="abrirTela('tela-catalogo')">
-      <i class="ph ph-squares-four"></i> Mini-softwares
-    </button>
-
-    <div class="nav-section-title">Gestão</div>
-    <button class="nav-item" id="nav-patrimonio"
-      onclick="abrirTela('tela-patrimonio')">
-      <i class="ph ph-buildings"></i> Patrimônio / Imóveis
-    </button>
-
-    <button class="nav-item" id="nav-financeiro"
-      onclick="abrirTela('tela-financeiro')">
-      <i class="ph ph-currency-dollar"></i> Financeiro
-    </button>
-    <button class="nav-item" id="nav-clientes"
-      onclick="abrirTela('tela-clientes')">
-      <i class="ph ph-users"></i> Clientes
-    </button>
-
-    <div class="nav-section-title">Conteúdo</div>
-    <button class="nav-item" id="nav-articles"
-      onclick="abrirTela('tela-posts')">
-      <i class="ph ph-file-text"></i> Artigos
-    </button>
-
-
+    <details class="nav-group" data-grupo="Turing · IA" open>
+      <summary>Turing · IA</summary>
+      <button class="nav-item" id="nav-turin" onclick="abrirTela('tela-turin')">
+        <i class="ph ph-robot"></i> Turing · Inteligência
+      </button>
+      <button class="nav-item" id="nav-treino" onclick="abrirTela('tela-treino')">
+        <i class="ph ph-brain"></i> Treinamento
+      </button>
+      <button class="nav-item" id="nav-lab-conhecimento" onclick="abrirTela('tela-lab-conhecimento')">
+        <i class="ph ph-flask"></i> Laboratório
+      </button>
+      <a class="nav-item" id="nav-n8n" href="https://n8n.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-flow-arrow"></i> Automação n8n
+      </a>
+    </details>
+    <details class="nav-group" data-grupo="NexoTerraCore" open>
+      <summary>NexoTerraCore</summary>
+      <button class="nav-item" id="nav-api" onclick="abrirTela('tela-api')">
+        <i class="ph ph-plugs-connected"></i> API Central
+      </button>
+      <button class="nav-item" id="nav-nexus" onclick="abrirTela('tela-nexus')">
+        <i class="ph ph-globe-hemisphere-west"></i> Projeto NexoTerraCore
+      </button>
+      <button class="nav-item" id="nav-agro" onclick="abrirTela('tela-agro')">
+        <i class="ph ph-plant"></i> Agro Digital
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Comercial" open>
+      <summary>Comercial</summary>
+      <a class="nav-item" id="nav-gps-vendas" href="https://conecta.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-storefront"></i> GPS.dev Vendas
+      </a>
+      <button class="nav-item" id="nav-vendas" onclick="abrirTela('tela-vendas')">
+        <i class="ph ph-shopping-cart"></i> Vendas · WordPress
+      </button>
+      <button class="nav-item" id="nav-catalogo" onclick="abrirTela('tela-catalogo')">
+        <i class="ph ph-squares-four"></i> Mini-softwares
+      </button>
+      <button class="nav-item" id="nav-clientes" onclick="abrirTela('tela-clientes')">
+        <i class="ph ph-users"></i> Clientes
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Gestão" open>
+      <summary>Gestão</summary>
+      <button class="nav-item" id="nav-financeiro" onclick="abrirTela('tela-financeiro')">
+        <i class="ph ph-currency-dollar"></i> Financeiro
+      </button>
+      <button class="nav-item" id="nav-patrimonio" onclick="abrirTela('tela-patrimonio')">
+        <i class="ph ph-buildings"></i> Patrimônio / Imóveis
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Segurança" open>
+      <summary>Segurança</summary>
+      <button class="nav-item" id="nav-senhas" onclick="abrirTela('tela-senhas')">
+        <i class="ph ph-vault"></i> Cofre de Senhas
+      </button>
+      <button class="nav-item" id="nav-backup" onclick="abrirTela('tela-backup')">
+        <i class="ph ph-cloud-arrow-up"></i> Backup
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Educação">
+      <summary>Educação</summary>
+      <button class="nav-item" id="nav-edutech" onclick="abrirTela('tela-edutech')">
+        <i class="ph ph-graduation-cap"></i> EduTech
+      </button>
+      <button class="nav-item" id="nav-angola" onclick="abrirTela('tela-angola')">
+        <i class="ph ph-globe"></i> Angola
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Conteúdo">
+      <summary>Conteúdo</summary>
+      <button class="nav-item" id="nav-articles" onclick="abrirTela('tela-posts')">
+        <i class="ph ph-file-text"></i> Artigos
+      </button>
+    </details>
   </nav>
 
   <div class="gps-sidebar-footer">
-    <span class="gps-status-dot"></span>
+    <span class="gps-status-dot wait" id="gps-api-dot"></span>
     GPS.dev · NexoTerraCore
+    <div id="gps-api-status">Verificando API…</div>
   </div>
 </aside>
     <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="alternarMenu(false)"></div>

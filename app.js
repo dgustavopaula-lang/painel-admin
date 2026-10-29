@@ -336,10 +336,15 @@ function abrirTela(idTela) {
     'tela-agro': 'nav-agro', 'tela-nexus': 'nav-nexus', 'tela-turin': 'nav-turin',
     'tela-catalogo': 'nav-catalogo', 'tela-edutech': 'nav-edutech', 'tela-angola': 'nav-angola',
     'tela-vendas': 'nav-vendas', 'tela-api': 'nav-api',
-    'tela-treino': 'nav-treino', 'tela-backup': 'nav-backup'
+    'tela-treino': 'nav-treino', 'tela-backup': 'nav-backup',
+    'tela-lab-conhecimento': 'nav-lab-conhecimento'
   };
   const navEl = document.getElementById(navMap[idTela]);
-  if (navEl) navEl.classList.add('active-menu');
+  if (navEl) {
+    navEl.classList.add('active-menu');
+    const grupo = navEl.closest('details.nav-group');
+    if (grupo) grupo.open = true;
+  }
 
   const titleMap = {
     'tela-posts': 'Home / Conteúdo',
@@ -357,7 +362,9 @@ function abrirTela(idTela) {
     'tela-videos': 'Gerenciador de Vídeos',
     'tela-podcast': 'Gerenciador de Podcasts',
     'tela-edutech': 'EduTech · Cursos',
-    'tela-angola': 'Angola · Formação e oportunidades'
+    'tela-angola': 'Angola · Formação e oportunidades',
+    'tela-lab-conhecimento': 'Laboratório Turing',
+    'tela-patrimonio': 'Patrimônio / Imóveis'
   };
 
   document.getElementById('titulo-pagina').innerText = titleMap[idTela] || 'Console';
@@ -2251,3 +2258,26 @@ document.addEventListener('input', function(evento) {
     atualizarCalculoPatrimonio();
   }
 });
+
+
+/* ---------------- Status da API na barra lateral (somente leitura: GET /api/health) ---------------- */
+async function verificarStatusApi() {
+  const dot = document.getElementById('gps-api-dot');
+  const txt = document.getElementById('gps-api-status');
+  if (!dot || !txt) return;
+  const ini = performance.now();
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch('https://api.gustavopaulasantos.com.br/api/health', { cache: 'no-store', signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    dot.className = 'gps-status-dot';
+    txt.textContent = 'API online · ' + Math.round(performance.now() - ini) + ' ms';
+  } catch (e) {
+    dot.className = 'gps-status-dot off';
+    txt.textContent = 'API sem resposta';
+  }
+}
+verificarStatusApi();
+setInterval(verificarStatusApi, 60000);
