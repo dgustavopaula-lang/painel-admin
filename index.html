@@ -138,6 +138,10 @@
 .gps-status-dot.off { background: #e5484d; }
 .gps-status-dot.wait { background: #8492a6; }
 #gps-api-status { width: 100%; margin-top: 4px; font-size: 11px; color: #96a4b5; }
+
+.breadcrumb-wrap { display: flex; flex-direction: column; min-width: 0; }
+.breadcrumb { font-size: 12px; letter-spacing: .5px; color: #8492a6; text-transform: uppercase; }
+.breadcrumb:empty { display: none; }
 </style>
 
 <style id="gps-patrimonio-css-v1">
@@ -343,7 +347,7 @@
     <main class="main-content">
       <header class="top-header">
         <button class="btn-menu" onclick="alternarMenu()" aria-label="Abrir menu"><i class="ph ph-list"></i></button>
-        <h1 id="titulo-pagina">Home</h1>
+        <div class="breadcrumb-wrap"><span id="breadcrumb" class="breadcrumb"></span><h1 id="titulo-pagina">Home</h1></div>
         <div class="header-actions" id="header-actions"></div>
       </header>
 

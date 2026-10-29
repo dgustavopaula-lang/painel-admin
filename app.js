@@ -368,6 +368,9 @@ function abrirTela(idTela) {
   };
 
   document.getElementById('titulo-pagina').innerText = titleMap[idTela] || 'Console';
+  const grupoEl = navEl ? navEl.closest('details.nav-group') : null;
+  const grupoNome = grupoEl ? grupoEl.dataset.grupo : '';
+  document.getElementById('breadcrumb').innerText = grupoNome;
   renderHeaderActions(idTela);
   renderCurrentView();
   alternarMenu(false);
