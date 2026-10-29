@@ -84,10 +84,18 @@ const SEED_MINIS = [
   { id: 11, nome: 'IA API', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' },
   { id: 12, nome: 'Console do Turing', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' },
   { id: 13, nome: 'Turing Cell', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' },
-  { id: 14, nome: 'Search and Optimization', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' }
+  { id: 14, nome: 'Search and Optimization', categoria: 'Turing', desc: '', url: '', status: 'Rascunho' },
+  { id: 15, nome: 'Hotel', categoria: 'Sistema Raiz', desc: 'Gestão de hotéis e pousadas: quartos, hóspedes e reservas. Preço R$ 49,90/mês.', url: '', status: 'Rascunho' },
+  { id: 16, nome: 'Posto', categoria: 'Sistema Raiz', desc: 'Gestão de posto de combustível: bomba, caixa e estoque. Preço R$ 49,90/mês.', url: '', status: 'Rascunho' },
+  { id: 17, nome: 'Clínica', categoria: 'Sistema Raiz', desc: 'Gestão de clínica: agenda, pacientes e atendimento. Preço R$ 49,90/mês.', url: '', status: 'Rascunho' },
+  { id: 18, nome: 'Imobiliária', categoria: 'Sistema Raiz', desc: 'Gestão de imobiliária: imóveis, contratos e clientes. Preço R$ 49,90/mês.', url: '', status: 'Rascunho' },
+  { id: 19, nome: 'Academia', categoria: 'Sistema Raiz', desc: 'Gestão de academia: alunos, planos e mensalidades. Preço R$ 49,90/mês.', url: '', status: 'Rascunho' },
+  { id: 20, nome: 'AgroConex', categoria: 'Agro', desc: 'Conexão de produtores rurais: cadastro, safra e comercialização. Preço R$ 49,90/mês.', url: '', status: 'Rascunho' },
+  { id: 21, nome: 'Raiz Financeiro', categoria: 'Sistema Raiz', desc: 'Controle financeiro pessoal e de pequenos negócios. Preço R$ 49,90/mês.', url: '', status: 'Rascunho' },
+  { id: 22, nome: 'Super Gut', categoria: 'Nexa Tech', desc: 'Acompanhamento de saúde intestinal e microbioma. Preço R$ 49,90/mês.', url: '', status: 'Rascunho' }
 ];
 
-const SEED_VERSION = 2;
+const SEED_VERSION = 3;
 
 // Completa o catálogo salvo sem apagar nada: adiciona os itens do seed que ainda não existem
 // (pelo nome) e preenche a categoria dos itens antigos.
