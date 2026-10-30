@@ -1,12 +1,12 @@
 {
-  "name": "GPS Painel",
-  "short_name": "GPS Painel",
+  "name": "GPS Command Center",
+  "short_name": "GPS Command",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#050805",
-  "theme_color": "#0bff5a",
-  "description": "Painel administrativo GPS.dev conectado ao NexoTerraCore e Turing",
+  "background_color": "#201e1d",
+  "theme_color": "#c67139",
+  "description": "GPS.dev Command Center — painel administrativo com NexoTerraCore e Turing",
   "icons": [
     {
       "src": "icon-192.png",
