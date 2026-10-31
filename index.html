@@ -3,13 +3,226 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GPS.dev — Admin Console</title>
+<title>GPS Command Center | GPS.dev</title>
 <meta name="theme-color" content="#0f0f0f" />
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 <link rel="stylesheet" href="style.css" />
+<style id="gps-sidebar-v2">
+.sidebar {
+  width: 252px;
+  max-width: 85vw;
+  display: flex;
+  flex-direction: column;
+  background: #0c111b;
+  color: #e9edf5;
+  border-right: 1px solid #263044;
+  overflow: hidden;
+}
+.gps-sidebar-header {
+  padding: 21px 18px 16px;
+  border-bottom: 1px solid #263044;
+}
+.gps-brand {
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.gps-brand span { color: #eab94b; }
+.gps-sidebar-header small {
+  color: #8492a6;
+  letter-spacing: 2px;
+  font-size: 10px;
+}
+.gps-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 10px;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+.gps-sidebar-nav .nav-section-title {
+  padding: 15px 11px 6px;
+  color: #8f9caf;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.gps-sidebar-nav .nav-item {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 41px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #c6d0df;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.gps-sidebar-nav .nav-item i {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.gps-sidebar-nav .nav-item:hover,
+.gps-sidebar-nav .nav-item:focus-visible {
+  background: #1d2939;
+  color: #fff;
+}
+.gps-sidebar-nav .nav-item.active-menu,
+.gps-sidebar-nav .nav-item.nav-itemactive-menu {
+  background: #302819;
+  color: #f3c454;
+}
+.gps-sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid #263044;
+  color: #96a4b5;
+  font-size: 11px;
+}
+.gps-status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #34c77b;
+}
+@media (max-width: 768px) {
+  .sidebar {
+    width: min(280px, 85vw);
+    max-height: 100dvh;
+  }
+  .gps-sidebar-nav .nav-item {
+    min-height: 44px;
+    font-size: 14px;
+  }
+}
+
+.gps-sidebar-nav details.nav-group { margin: 0; }
+.gps-sidebar-nav details.nav-group > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 11px 6px;
+  color: #8f9caf;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+}
+.gps-sidebar-nav details.nav-group > summary::-webkit-details-marker { display: none; }
+.gps-sidebar-nav details.nav-group > summary::after {
+  content: "\203A";
+  font-size: 15px;
+  transition: transform .15s ease;
+}
+.gps-sidebar-nav details.nav-group[open] > summary::after { transform: rotate(90deg); }
+.gps-sidebar-nav details.nav-group > summary:hover { color: #fff; }
+.gps-sidebar-footer { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.gps-status-dot.off { background: #e5484d; }
+.gps-status-dot.wait { background: #8492a6; }
+#gps-api-status { width: 100%; margin-top: 4px; font-size: 11px; color: #96a4b5; }
+</style>
+
+<style id="gps-patrimonio-css-v1">
+#tela-patrimonio {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+#tela-patrimonio .section-header {
+  margin-bottom: 28px;
+}
+
+#tela-patrimonio .card {
+  background: #1b1b1b;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+#form-patrimonio .grid-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 22px 0;
+}
+
+#form-patrimonio label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: #ccc;
+  min-width: 0;
+}
+
+#form-patrimonio input,
+#form-patrimonio select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: #101010;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-height: 44px;
+  font: inherit;
+}
+
+#form-patrimonio input:focus,
+#form-patrimonio select:focus {
+  outline: 2px solid #ff6a00;
+  outline-offset: 1px;
+}
+
+#form-patrimonio button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 44px;
+  margin: 6px 8px 6px 0;
+  padding: 10px 18px;
+  border-radius: 8px;
+}
+
+@media (max-width: 1000px) {
+  #form-patrimonio .grid-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  #tela-patrimonio { padding: 12px; }
+  #tela-patrimonio .card { padding: 16px; }
+  #form-patrimonio .grid-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+}
+</style>
+
+<link rel="stylesheet" href="gps-command-center.css?v=20261030" />
 </head>
 <body>
 
@@ -17,7 +230,7 @@
   <div id="tela-login" class="login-overlay">
     <form id="form-login" class="login-box">
       <h1>GPS.dev</h1>
-      <p class="login-subtitle" id="login-subtitle">GPS.dev • Admin Console</p>
+      <p class="login-subtitle" id="login-subtitle">GPS Command Center • Acesso administrativo</p>
       <div class="login-identidade">
         <strong>Gustavo Santos</strong>
         <span>gustavosantosdev@proton.me</span>
@@ -33,88 +246,101 @@
   </div>
 
   <div id="app-root" class="app-root" hidden>
-    <aside class="sidebar">
-      <nav class="main-nav">
-        <a href="#" onclick="abrirTela('tela-posts'); return false;" id="nav-home" class="nav-item">
-          <i class="ph ph-house"></i> Home
-        </a>
-      </nav>
+    <aside class="sidebar" aria-label="Navegação principal">
+  <div class="gps-sidebar-header">
+    <div class="gps-brand">GPS<span>.dev</span></div>
+    <small>GPS COMMAND CENTER</small>
+  </div>
 
-      <div class="nav-section-title">Núcleo</div>
-      <nav class="secondary-nav">
-        <button onclick="abrirTela('tela-nexus')" class="nav-item" id="nav-nexus">
-          <i class="ph ph-planet"></i> NexoTerraCore
-        </button>
-        <button onclick="abrirTela('tela-turin')" class="nav-item" id="nav-turin">
-          <i class="ph ph-robot"></i> Turing
-        </button>
-        <button onclick="abrirTela('tela-api')" class="nav-item" id="nav-api">
-          <i class="ph ph-plugs-connected"></i> API
-        </button>
-        <button onclick="abrirTela('tela-treino')" class="nav-item" id="nav-treino">
-          <i class="ph ph-brain"></i> Treinamento
-        </button>
-        <button onclick="abrirTela('tela-lab-conhecimento')" class="nav-item" id="nav-lab-conhecimento">
-          <i class="ph ph-database"></i> Base de Conhecimento
-        </button>
-      </nav>
+  <nav class="gps-sidebar-nav" aria-label="Menu principal">
+    <button class="nav-item active-menu" id="nav-home" onclick="abrirTela('tela-posts')">
+      <i class="ph ph-house"></i> Início
+    </button>
+    <details class="nav-group" data-grupo="Turing · IA" open>
+      <summary>Turing · IA</summary>
+      <button class="nav-item" id="nav-turin" onclick="abrirTela('tela-turin')">
+        <i class="ph ph-robot"></i> Turing · Inteligência
+      </button>
+      <button class="nav-item" id="nav-treino" onclick="abrirTela('tela-treino')">
+        <i class="ph ph-brain"></i> Treinamento
+      </button>
+      <button class="nav-item" id="nav-lab-conhecimento" onclick="abrirTela('tela-lab-conhecimento')">
+        <i class="ph ph-flask"></i> Laboratório
+      </button>
+      <a class="nav-item" id="nav-n8n" href="https://n8n.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-flow-arrow"></i> Automação n8n
+      </a>
+    </details>
+    <details class="nav-group" data-grupo="NexoTerraCore" open>
+      <summary>NexoTerraCore</summary>
+      <button class="nav-item" id="nav-api" onclick="abrirTela('tela-api')">
+        <i class="ph ph-plugs-connected"></i> API Central
+      </button>
+      <button class="nav-item" id="nav-nexus" onclick="abrirTela('tela-nexus')">
+        <i class="ph ph-globe-hemisphere-west"></i> Projeto NexoTerraCore
+      </button>
+      <button class="nav-item" id="nav-agro" onclick="abrirTela('tela-agro')">
+        <i class="ph ph-plant"></i> Agro Digital
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Comercial" open>
+      <summary>Comercial</summary>
+      <a class="nav-item" id="nav-gps-vendas" href="https://conecta.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-storefront"></i> GPS.dev Vendas
+      </a>
+      <button class="nav-item" id="nav-vendas" onclick="abrirTela('tela-vendas')">
+        <i class="ph ph-shopping-cart"></i> Vendas · WordPress
+      </button>
+      <button class="nav-item" id="nav-catalogo" onclick="abrirTela('tela-catalogo')">
+        <i class="ph ph-squares-four"></i> Mini-softwares
+      </button>
+      <button class="nav-item" id="nav-clientes" onclick="abrirTela('tela-clientes')">
+        <i class="ph ph-users"></i> Clientes
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Gestão" open>
+      <summary>Gestão</summary>
+      <button class="nav-item" id="nav-financeiro" onclick="abrirTela('tela-financeiro')">
+        <i class="ph ph-currency-dollar"></i> Financeiro
+      </button>
+      <button class="nav-item" id="nav-patrimonio" onclick="abrirTela('tela-patrimonio')">
+        <i class="ph ph-buildings"></i> Patrimônio / Imóveis
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Segurança" open>
+      <summary>Segurança</summary>
+      <button class="nav-item" id="nav-senhas" onclick="abrirTela('tela-senhas')">
+        <i class="ph ph-vault"></i> Cofre de Senhas
+      </button>
+      <button class="nav-item" id="nav-backup" onclick="abrirTela('tela-backup')">
+        <i class="ph ph-cloud-arrow-up"></i> Backup
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Educação">
+      <summary>Educação</summary>
+      <button class="nav-item" id="nav-edutech" onclick="abrirTela('tela-edutech')">
+        <i class="ph ph-graduation-cap"></i> EduTech
+      </button>
+      <button class="nav-item" id="nav-angola" onclick="abrirTela('tela-angola')">
+        <i class="ph ph-globe"></i> Angola
+      </button>
+    </details>
+    <details class="nav-group" data-grupo="Conteúdo">
+      <summary>Conteúdo</summary>
+      <a class="nav-item" id="nav-paranagel"
+         href="https://paranagel.gustavopaulasantos.com.br/"
+         target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-warehouse"></i> Paranagel
+      </a>
+    </details>
+  </nav>
 
-      <div class="nav-section-title">Produtos</div>
-      <nav class="secondary-nav">
-        <button onclick="abrirTela('tela-catalogo')" class="nav-item" id="nav-catalogo">
-          <i class="ph ph-squares-four"></i> Mini-softwares
-        </button>
-        <button onclick="abrirTela('tela-vendas')" class="nav-item" id="nav-vendas">
-          <i class="ph ph-storefront"></i> Vendas / WordPress
-        </button>
-        <button onclick="abrirTela('tela-agro')" class="nav-item" id="nav-agro">
-          <i class="ph ph-plant"></i> Agro Digital
-        </button>
-      </nav>
-
-      <div class="nav-section-title">Territórios</div>
-      <nav class="secondary-nav">
-        <button onclick="abrirTela('tela-satelite')" class="nav-item" id="nav-satelite">
-          <i class="ph ph-satellite"></i> Sentinel-2
-        </button>
-        <button onclick="abrirTela('tela-angola')" class="nav-item" id="nav-angola">
-          <i class="ph ph-globe-hemisphere-east"></i> Angola · Malanje
-        </button>
-        <a href="https://n8n.gustavopaulasantos.com.br"
-           target="_blank" rel="noopener"
-           class="nav-item" id="nav-automacao">
-          <i class="ph ph-flow-arrow"></i> Automação
-        </a>
-      </nav>
-
-      <div class="nav-section-title">Gestão</div>
-      <nav class="secondary-nav">
-        <button onclick="abrirTela('tela-patrimonio')" class="nav-item" id="nav-patrimonio">
-          <i class="ph ph-buildings"></i> Patrimônio
-        </button>
-        <button onclick="abrirTela('tela-financeiro')" class="nav-item" id="nav-financeiro">
-          <i class="ph ph-currency-dollar"></i> Financeiro
-        </button>
-        <button onclick="abrirTela('tela-clientes')" class="nav-item" id="nav-clientes">
-          <i class="ph ph-users"></i> Clientes
-        </button>
-        <button onclick="abrirTela('tela-senhas')" class="nav-item" id="nav-senhas">
-          <i class="ph ph-lock-key"></i> Cofre
-        </button>
-        <button onclick="abrirTela('tela-backup')" class="nav-item" id="nav-backup">
-          <i class="ph ph-floppy-disk"></i> Backup
-        </button>
-      </nav>
-
-      <div class="sidebar-bottom">
-        <button class="nav-item" style="color: var(--text-secondary);" onclick="alternarTema()">
-          <i class="ph ph-moon"></i> Tema
-        </button>
-        <button class="nav-item" style="color: var(--text-secondary);" onclick="sair()">
-          <i class="ph ph-sign-out"></i> Sair
-        </button>
-      </div>
-    </aside>
+  <div class="gps-sidebar-footer">
+    <span class="gps-status-dot wait" id="gps-api-dot"></span>
+    GPS.dev · NexoTerraCore
+    <div id="gps-api-status">Verificando API…</div>
+  </div>
+</aside>
     <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="alternarMenu(false)"></div>
 
     <main class="main-content">
@@ -682,7 +908,8 @@
         </div>
       </div>
 
-      <div id="tela-satelite" class="tela-interna">
+
+<div id="tela-satelite" class="tela-interna">
         <div class="project-section">
           <h3><i class="ph ph-satellite"></i> Sentinel-2 · NDVI</h3>
           <p class="vault-hint">Consulta territorial via NexoTerraCore API — índice de vegetação por coordenadas.</p>
@@ -748,30 +975,77 @@
         </div>
       </div>
 
-      <div id="tela-patrimonio" class="tela-interna">
-        <div id="patrimonio-resumo" class="metrics-grid" style="margin-bottom:16px"></div>
-        <div class="project-section">
-          <p class="vault-hint" id="patrimonio-status-api"></p>
-          <div class="data-table-container">
-            <table id="tabela-imoveis">
-              <thead>
-                <tr>
-                  <th>Matrícula</th>
-                  <th>Título</th>
-                  <th>Cidade / UF</th>
-                  <th>Tipo</th>
-                  <th>Valor</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-imoveis"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+<section id="tela-patrimonio" class="tela-interna">
+  <div class="section-header">
+    <h2>Patrimônio / Imóveis</h2>
+    <p>Gestão de imóveis vinculada à API Central NexoTerraCore.</p>
+  </div>
+  <div class="card">
 
-    </main>
+<h3>Cadastro de Imóveis</h3>
+<form id="form-patrimonio">
+  <div class="grid-form">
+    <label>Identificação
+      <input name="titulo" required maxlength="180">
+    </label>
+    <label>Matrícula
+      <input name="matricula" required maxlength="100">
+    </label>
+    <label>Tipo
+      <select name="tipo">
+        <option>Casa</option>
+        <option>Apartamento</option>
+        <option>Terreno</option>
+        <option>Fazenda</option>
+        <option>Comercial</option>
+      </select>
+    </label>
+    <label>Rua / Endereço
+      <input name="endereco">
+    </label>
+    <label>Número
+      <input name="numero">
+    </label>
+    <label>Bairro
+      <input name="bairro">
+    </label>
+    <label>Cidade
+      <input name="cidade">
+    </label>
+    <label>UF
+      <input name="uf" maxlength="2">
+    </label>
+    <label>CEP
+      <input name="cep">
+    </label>
+    <label>Área do terreno (m²)
+      <input name="terreno" type="number" min="0" step="0.01">
+    </label>
+    <label>Área construída (m²)
+      <input name="area" type="number" min="0" step="0.01">
+    </label>
+    <label>Valor do imóvel (R$)
+      <input name="valor" type="number" min="0" step="0.01">
+    </label>
+  </div>
+  <p id="patrimonio-valor-m2">Valor por m²: —</p>
+  <button type="button" class="btn-action"
+    onclick="abrirMapaPatrimonio()">Google Maps</button>
+  <button type="button" class="btn-action secondary"
+    onclick="abrirEarthPatrimonio()">Google Earth</button>
+  <button type="button" class="btn-action"
+    onclick="salvarPatrimonio()">Salvar na API</button>
+  <p id="patrimonio-mensagem" role="status"></p>
+</form>
+
+    <p>Consulta e cadastro autenticados pela rota /api/imoveis.</p>
+    <p>Endereço, matrícula, valores, Google Maps e Google Earth.</p>
+    <p>Os registros existentes serão preservados.</p>
+  </div>
+  <div id="patrimonio-lista" class="card"></div>
+</section>
+
+</main>
 
     <div id="modal-container" class="modal-overlay">
       <div class="modal-box">

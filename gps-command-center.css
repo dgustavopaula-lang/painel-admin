@@ -1,0 +1,113 @@
+/* GPS Command Center — tema premium baseado na versão visual aprovada do Cláudio.
+   Somente CSS: não altera login, credenciais, módulos, dados ou chamadas à API. */
+@import url('https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;500;600;700;800&display=swap');
+:root {
+  --bg-main: #201e1d;
+  --bg-sidebar: #201e1d;
+  --bg-card: #2e2b25;
+  --border-color: #474238;
+  --text-primary: #f9f4ed;
+  --text-secondary: #c0b6a5;
+  --accent-orange: #f6a06b;
+  --accent-hover: #ffc6a5;
+  --hover-bg: #474238;
+  --font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gps-surface: #2e2b25;
+  --gps-ink: #201e1d;
+  --gps-border: #474238;
+  --gps-accent: #f6a06b;
+  --gps-muted: #c0b6a5;
+}
+body, button, input, select, textarea { font-family: var(--font-family); }
+body { background: var(--bg-main); color: var(--text-primary); }
+:focus-visible { outline: 2px solid var(--gps-accent); outline-offset: 3px; }
+::selection { background: #8c491a; color: #fff2eb; }
+.sidebar {
+  width: 278px; max-width: 86vw; background: var(--bg-sidebar);
+  border-right: 1px solid var(--gps-border); box-shadow: 12px 0 32px rgba(0,0,0,.12);
+}
+.gps-sidebar-header { padding: 25px 22px 21px; border-bottom: 1px solid var(--gps-border); }
+.gps-brand { color: #f9f4ed; font-size: 28px; line-height: 1.1; letter-spacing: -.04em; font-weight: 800; }
+.gps-brand span { color: var(--gps-accent); }
+.gps-sidebar-header small { display: block; margin-top: 9px; font-size: 10px; letter-spacing: .18em; color: var(--gps-muted); }
+.gps-sidebar-nav { padding: 17px 12px; gap: 4px; }
+.gps-sidebar-nav .nav-section-title,
+.gps-sidebar-nav details.nav-group > summary { color: #c0b6a5; font-size: 11px; letter-spacing: .11em; padding-top: 18px; }
+.gps-sidebar-nav .nav-item {
+  color: #eee7db; border-radius: 999px; min-height: 44px; padding: 11px 15px;
+  font-size: 13.5px; font-weight: 600;
+  transition: background-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.gps-sidebar-nav .nav-item i { color: #a19786; }
+.gps-sidebar-nav .nav-item:hover,
+.gps-sidebar-nav .nav-item:focus-visible { color: #fff2eb; background: #474238; }
+.gps-sidebar-nav .nav-item.active-menu,
+.gps-sidebar-nav .nav-item.nav-itemactive-menu {
+  background: #643312; color: #ffe1d0; box-shadow: inset 3px 0 0 #f6a06b;
+}
+.gps-sidebar-nav .nav-item.active-menu i { color: #ffc6a5; }
+.gps-sidebar-footer { border-top: 1px solid var(--gps-border); color: var(--gps-muted); padding: 16px 22px; }
+#gps-api-status { color: var(--gps-muted); }
+.main-content { background: #201e1d; }
+.top-header {
+  padding: 26px clamp(18px, 3vw, 42px) 22px; background: #25221e;
+  border-bottom: 1px solid var(--gps-border); gap: 12px;
+}
+.top-header h1 {
+  font-family: "Caprasimo", Georgia, serif; font-weight: 400;
+  font-size: clamp(24px, 2.5vw, 35px); letter-spacing: -.02em;
+  color: #f9f4ed; line-height: 1.2;
+}
+.top-header .btn-menu { color: #f6a06b; }
+.tela-interna { color: #f9f4ed; }
+.tela-interna h2, .section-header h2, .project-section > h3 { color: #f9f4ed; letter-spacing: -.025em; }
+.tela-interna p, .project-section p { line-height: 1.55; }
+.card, .metric-card, .home-turing-card, .project-section, .lab-registro,
+#tela-patrimonio .card {
+  background: var(--gps-surface); color: #f9f4ed; border: 1px solid var(--gps-border);
+  border-radius: 18px; box-shadow: 0 8px 26px rgba(0,0,0,.12);
+}
+.metric-card { transition: border-color .16s ease, transform .16s ease; }
+.metric-card:hover { border-color: #8c491a; transform: translateY(-1px); }
+.card h2, .card h3, .metric-card h3 { color: #f9f4ed; }
+.card span, .metric-card span { color: #dcd3c4; }
+.btn-action, .btn-create, button.btn-action:not(.secondary) {
+  background: var(--gps-accent); color: var(--gps-ink); border-radius: 999px;
+  font-weight: 700; transition: background-color .16s ease, transform .16s ease;
+}
+.btn-action:hover, .btn-create:hover { background: #ffc6a5; }
+.btn-action:active, .btn-create:active { transform: translateY(1px); }
+.btn-action.secondary { background: #474238; color: #f9f4ed; border: 1px solid #645c50; }
+.btn-action.secondary:hover { background: #645c50; }
+input, select, textarea, .form-control,
+#form-patrimonio input, #form-patrimonio select {
+  background-color: #25221e; color: #f9f4ed; border-color: #645c50; border-radius: 12px;
+}
+input:focus, select:focus, textarea:focus,
+#form-patrimonio input:focus, #form-patrimonio select:focus {
+  outline: 2px solid #f6a06b; outline-offset: 1px; border-color: #f6a06b;
+}
+.login-overlay { background: radial-gradient(circle at 25% 15%, #402310 0%, #201e1d 55%, #171615 100%); }
+.login-box {
+  max-width: 420px; padding: 38px 32px; background: #2e2b25;
+  border: 1px solid #645c50; border-radius: 24px; box-shadow: 0 22px 70px rgba(0,0,0,.32);
+}
+.login-box h1 { color: #f6a06b; font-size: 27px; font-weight: 800; letter-spacing: -.03em; }
+.login-subtitle { color: #dcd3c4; }
+.login-box .login-field-label, .login-box .login-aviso { color: #c0b6a5; }
+.home-turing-card { overflow: hidden; }
+.home-turing-head { border-bottom-color: #474238; }
+.home-turing-ident h2, .home-turing-avatar strong { color: #f9f4ed; }
+.home-turing-ident p, .home-turing-label { color: #dcd3c4; }
+@media (max-width: 768px) {
+  .sidebar { width: min(290px, 86vw); }
+  .gps-sidebar-nav .nav-item { min-height: 46px; font-size: 14px; }
+  .top-header { padding: 18px 16px; }
+  .top-header h1 { font-size: 23px; }
+  .login-box { padding: 28px 21px; }
+  .card, .metric-card, .home-turing-card, .project-section { border-radius: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gps-sidebar-nav .nav-item, .metric-card, .btn-action, .btn-create { transition: none; }
+  .metric-card:hover, .btn-action:active, .btn-create:active { transform: none; }
+}

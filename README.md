@@ -7,14 +7,14 @@ Painel administrativo pessoal (página estática, HTML + CSS + JS puros), public
 - **Home / Articles, Video, Podcast**: lista de conteúdos.
 - **Financeiro**: receitas, despesas e saldo.
 - **Clientes**: cadastro simples.
-- **Senhas e Acessos**: cofre de credenciais criptografado (AES-GCM) com a sua senha de acesso.
+- **Acesso**: login local com usuário e senha; a senha também protege o cofre de credenciais (AES-GCM).
 - **Projetos** (Agro Digital, NexoTerraCore, Projeto Turim): notas, status, checklist e links.
 
 ## Modelo de segurança (leia antes de usar)
 
 Esta é uma página estática. Não existe servidor fazendo autenticação. Por isso:
 
-1. **A tela de senha é um gate local.** Ela esconde o painel, mas o código é público no repositório. Não confie nela como proteção contra terceiros.
+1. **A tela de acesso é um gate local.** Usuário e senha são verificados no navegador; isso esconde o painel, mas o código é público no repositório. Não confie nela como proteção contra terceiros.
 2. **O cofre de senhas é criptografado no navegador.** A chave vem da sua senha via PBKDF2 (210.000 iterações, SHA-256) e o conteúdo é cifrado com AES-GCM. No `localStorage` fica só o texto cifrado. Quem roubar o `localStorage` sem a senha não lê as credenciais. Mesmo assim, qualquer script malicioso rodando na página enquanto você está logado consegue ler o que você vê.
 3. **Não há seed de credenciais no código.** A versão anterior tinha `sk_live_console_pass` no HTML. Ela foi removida.
 4. **Esquecer a senha = perder o cofre.** Não há recuperação. A tela de setup avisa sobre isso.
@@ -37,7 +37,7 @@ Basta abrir `index.html` no navegador, ou servir a pasta:
 python3 -m http.server 8000
 ```
 
-Depois acesse `http://localhost:8000`. Na primeira vez, crie a senha de acesso.
+Depois acesse `http://localhost:8000`. Na primeira vez, crie seu usuário e senha de acesso. Em instalações antigas, o usuário digitado é associado à conta no primeiro login válido.
 
 > A Web Crypto API só funciona em HTTPS ou em `localhost`. Em outros endereços, a tela mostrará um erro.
 
