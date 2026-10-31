@@ -51,7 +51,8 @@ const SEED_ENDPOINTS = [
   { rota: '/api/turing/training/promote', metodo: 'POST', auth: 'TRAINING_APPROVAL_TOKEN', verificado: false },
   { rota: '/api/turing/centro-oeste', metodo: '*', auth: 'Verificar', verificado: false },
   { rota: '/api/turing/angola', metodo: '*', auth: 'Autenticar', verificado: false },
-  { rota: '/api/turing/publico', metodo: '*', auth: 'Rate limit', verificado: false }
+  { rota: '/api/turing/publico', metodo: '*', auth: 'Rate limit', verificado: false },
+  { rota: '/api/seo/radar', metodo: 'GET', auth: 'Nenhuma', verificado: true }
 ];
 
 function configPadrao() {
@@ -333,6 +334,7 @@ function abrirTela(idTela) {
   const navMap = {
     'tela-posts': 'nav-home', 'tela-videos': 'nav-videos', 'tela-podcast': 'nav-podcast',
     'tela-patrimonio': 'nav-patrimonio', 'tela-financeiro': 'nav-financeiro', 'tela-clientes': 'nav-clientes', 'tela-senhas': 'nav-senhas',
+    'tela-satelite': 'nav-satelite',
     'tela-agro': 'nav-agro', 'tela-nexus': 'nav-nexus', 'tela-turin': 'nav-turin',
     'tela-catalogo': 'nav-catalogo', 'tela-edutech': 'nav-edutech', 'tela-angola': 'nav-angola',
     'tela-vendas': 'nav-vendas', 'tela-api': 'nav-api',
@@ -356,6 +358,8 @@ function abrirTela(idTela) {
     'tela-api': 'API / Conexão',
     'tela-treino': 'Treinamento do Turing',
     'tela-backup': 'Backup',
+    'tela-satelite': 'Sentinel-2 · NDVI',
+    'tela-patrimonio': 'Patrimônio / Imóveis',
     'tela-agro': 'Projeto: Agro Digital',
     'tela-nexus': 'Projeto: NexoTerraCore',
     'tela-turin': 'Turing · Inteligência',
@@ -397,6 +401,8 @@ function renderHeaderActions(idTela) {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('vendas')"><i class="ph ph-plus"></i> Nova página</button>`;
   } else if (idTela === 'tela-treino') {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('treino')"><i class="ph ph-plus"></i> Novo exemplo</button>`;
+  } else if (idTela === 'tela-patrimonio') {
+    container.innerHTML = `<button class="btn-action" onclick="abrirModalImovel()"><i class="ph ph-plus"></i> Novo Imóvel</button>`;
   } else if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(idTela)) {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('posts')"><i class="ph ph-plus"></i> Novo Item / Post</button>`;
   } else {
@@ -478,6 +484,9 @@ function renderCurrentView() {
   }
   if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
   if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
+  if (currentView === 'tela-patrimonio') renderPatrimonio();
+  if (currentView === 'tela-satelite') renderSatelite();
+  if (currentView === 'tela-angola') carregarResumoAngola();
 }
 
 function renderFinanceiro() {
@@ -1105,6 +1114,9 @@ async function salvarModal() {
     if (existente) { Object.assign(existente, dados); existente.enviado = false; }
     else appData.treino.push(Object.assign({ id: Date.now(), enviado: false, criado: new Date().toISOString() }, dados));
     persistData();
+  } else if (activeModalType === 'imoveis') {
+    await salvarImovel();
+    return;
   } else if (activeModalType === 'preview') {
     /* só visualização */
   } else if (activeModalType === 'financeiro') {
@@ -1948,212 +1960,677 @@ function carregarPatrimonio() {
   return JSON.parse(JSON.stringify(PATRIMONIO_SEED));
 }
 
-function salvarPatrimonio(lista) {
-  localStorage.setItem(STORAGE_PATRIMONIO, JSON.stringify(lista));
+/* ============================================================
+   Patrimônio / Imóveis — conectado à NexoTerraCore API
+   ============================================================ */
+
+let _imovelEditandoId = null;
+let _imovelModalAberto = false;
+
+function _apiBasePatrimonio() {
+  return (appData.config.apiBase || 'https://api.gustavopaulasantos.com.br').replace(/\/+$/, '');
 }
 
-function escapePatrimonio(v) {
-  return String(v ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+function _moeda(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0
+    ? n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : '—';
 }
 
-function renderPatrimonio() {
-  const root = document.getElementById('patrimonio-grid');
+async function renderPatrimonio() {
   const resumo = document.getElementById('patrimonio-resumo');
+  const tbody = document.getElementById('tbody-imoveis');
+  const statusEl = document.getElementById('patrimonio-status-api');
 
-  if (!root) return;
+  if (!tbody) return;
 
-  const lista = carregarPatrimonio();
-
-  const areaTotal = lista.reduce((acc, i) => {
-    const n = Number(i.areaHa);
-    return acc + (Number.isFinite(n) ? n : 0);
-  }, 0);
-
-  if (resumo) {
-    resumo.innerHTML = `
-      <div class="metric-card">
-        <small>Imóveis cadastrados</small>
-        <strong>${lista.length}</strong>
-      </div>
-      <div class="metric-card">
-        <small>Área confirmada</small>
-        <strong>${areaTotal.toLocaleString('pt-BR')} ha</strong>
-      </div>
-      <div class="metric-card">
-        <small>Integração</small>
-        <strong>NexoTerraCore/API</strong>
-      </div>
-    `;
+  const token = tokenDoCofre();
+  if (!token) {
+    if (statusEl) statusEl.innerHTML = '<i class="ph ph-warning"></i> Token da API não encontrado no cofre. Cadastre o token em <button class="link-inline" onclick="abrirTela(\'tela-api\')">API / Conexão</button>.';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Sem token configurado.</td></tr>';
+    return;
   }
 
-  root.innerHTML = lista.map(item => `
-    <article class="patrimonio-card">
-      <div class="patrimonio-card-head">
-        <div>
-          <h3>${escapePatrimonio(item.nome)}</h3>
-          <span>${escapePatrimonio(item.tipo)} · ${escapePatrimonio(item.status)}</span>
-        </div>
-        <button class="btn-action secondary"
-                onclick="editarPatrimonio(${item.id})">
-          <i class="ph ph-pencil"></i> Editar
-        </button>
-      </div>
-
-      <div class="patrimonio-dados">
-        <div>
-          <small>Município / UF</small>
-          <strong>${escapePatrimonio(item.municipio || 'Pendente')} / ${escapePatrimonio(item.uf || '-')}</strong>
-        </div>
-
-        <div>
-          <small>Área</small>
-          <strong>${item.areaHa !== '' ? escapePatrimonio(item.areaHa) + ' ha' : 'Pendente'}</strong>
-        </div>
-
-        <div>
-          <small>Latitude</small>
-          <strong>${escapePatrimonio(item.latitude || 'Pendente')}</strong>
-        </div>
-
-        <div>
-          <small>Longitude</small>
-          <strong>${escapePatrimonio(item.longitude || 'Pendente')}</strong>
-        </div>
-
-        <div>
-          <small>Valor</small>
-          <strong>${escapePatrimonio(item.valor || 'Não informado')}</strong>
-        </div>
-
-        <div>
-          <small>Status</small>
-          <strong>${escapePatrimonio(item.status)}</strong>
-        </div>
-      </div>
-
-      <p class="patrimonio-obs">${escapePatrimonio(item.observacoes)}</p>
-
-      <div class="patrimonio-actions">
-        <button class="btn-action secondary"
-                onclick="testarPatrimonioApi(${item.id})">
-          <i class="ph ph-plugs-connected"></i> Testar API
-        </button>
-
-        ${item.latitude && item.longitude ? `
-          <a class="btn-action secondary"
-             target="_blank"
-             rel="noopener"
-             href="https://www.google.com/maps?q=${encodeURIComponent(item.latitude)},${encodeURIComponent(item.longitude)}">
-             <i class="ph ph-map-pin"></i> Mapa
-          </a>
-        ` : ''}
-      </div>
-    </article>
-  `).join('');
-}
-
-function editarPatrimonio(id) {
-  const lista = carregarPatrimonio();
-  const item = lista.find(i => i.id === id);
-  if (!item) return;
-
-  const nome = prompt('Nome do imóvel:', item.nome);
-  if (nome === null) return;
-
-  const municipio = prompt('Município:', item.municipio);
-  if (municipio === null) return;
-
-  const uf = prompt('UF:', item.uf);
-  if (uf === null) return;
-
-  const areaHa = prompt('Área em hectares:', item.areaHa);
-  if (areaHa === null) return;
-
-  const latitude = prompt('Latitude:', item.latitude);
-  if (latitude === null) return;
-
-  const longitude = prompt('Longitude:', item.longitude);
-  if (longitude === null) return;
-
-  const valor = prompt('Valor / preço de venda:', item.valor);
-  if (valor === null) return;
-
-  const status = prompt(
-    'Status:',
-    item.status
-  );
-  if (status === null) return;
-
-  Object.assign(item, {
-    nome: nome.trim(),
-    municipio: municipio.trim(),
-    uf: uf.trim().toUpperCase(),
-    areaHa: areaHa.trim(),
-    latitude: latitude.trim(),
-    longitude: longitude.trim(),
-    valor: valor.trim(),
-    status: status.trim()
-  });
-
-  salvarPatrimonio(lista);
-  renderPatrimonio();
-}
-
-function adicionarPatrimonio() {
-  const lista = carregarPatrimonio();
-
-  lista.unshift({
-    id: Date.now(),
-    nome: 'Novo imóvel',
-    municipio: '',
-    uf: '',
-    areaHa: '',
-    latitude: '',
-    longitude: '',
-    valor: '',
-    status: 'Em cadastro',
-    tipo: 'Rural',
-    fonte: '',
-    observacoes: ''
-  });
-
-  salvarPatrimonio(lista);
-  renderPatrimonio();
-}
-
-async function testarPatrimonioApi(id) {
-  const item = carregarPatrimonio().find(i => i.id === id);
-  if (!item) return;
+  if (statusEl) statusEl.innerHTML = '<i class="ph ph-spinner"></i> Consultando API…';
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Carregando…</td></tr>';
 
   try {
-    const inicio = performance.now();
+    const resp = await fetch(_apiBasePatrimonio() + '/api/imoveis', {
+      headers: { Authorization: 'Bearer ' + token },
+      cache: 'no-store'
+    });
 
-    const resposta = await fetch(
-      'https://api.gustavopaulasantos.com.br/api/health',
+    if (!resp.ok) {
+      if (statusEl) statusEl.innerHTML = `<i class="ph ph-warning"></i> Erro HTTP ${resp.status}. Verifique o token e a URL da API.`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Erro ao consultar API (${resp.status}).</td></tr>`;
+      return;
+    }
+
+    const imoveis = await resp.json();
+
+    if (statusEl) statusEl.innerHTML = `<i class="ph ph-check-circle"></i> ${imoveis.length} imóvel(is) · NexoTerraCore API`;
+
+    const valorTotal = imoveis.reduce((s, i) => {
+      const n = Number(i.valor);
+      return s + (Number.isFinite(n) ? n : 0);
+    }, 0);
+
+    if (resumo) {
+      resumo.innerHTML = `
+        <div class="metric-card">
+          <span>Imóveis</span>
+          <h3>${imoveis.length}</h3>
+          <p class="metric-sub">cadastrados</p>
+        </div>
+        <div class="metric-card">
+          <span>Valor total</span>
+          <h3>${_moeda(valorTotal)}</h3>
+          <p class="metric-sub">portfólio</p>
+        </div>
+        <div class="metric-card">
+          <span>API</span>
+          <h3>Online</h3>
+          <p class="metric-sub">NexoTerraCore</p>
+        </div>
+      `;
+    }
+
+    if (!imoveis.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Nenhum imóvel cadastrado.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = imoveis.map(im => {
+      const end = [im.endereco, im.numero, im.cidade, im.uf].filter(Boolean).join(', ');
+      const mapsBtn = end
+        ? `<button class="btn-action secondary" onclick="abrirMapsEndereco('${end.replace(/'/g, "\\'")}')" title="Google Maps"><i class="ph ph-map-pin"></i></button>`
+        : '';
+      const earthBtn = end
+        ? `<button class="btn-action secondary" onclick="abrirEarthEndereco('${end.replace(/'/g, "\\'")}')" title="Google Earth"><i class="ph ph-globe"></i></button>`
+        : '';
+      return `
+        <tr>
+          <td><strong>${escapeHtml(im.matricula || '—')}</strong></td>
+          <td>${escapeHtml(im.titulo || im.tipo || '—')}</td>
+          <td>${escapeHtml([im.cidade, im.uf].filter(Boolean).join(' / ') || '—')}</td>
+          <td>${escapeHtml(im.tipo || '—')}</td>
+          <td>${_moeda(im.valor)}</td>
+          <td><span class="badge ${im.status === 'Ativo' ? 'green' : 'blue'}">${escapeHtml(im.status || 'Rascunho')}</span></td>
+          <td>
+            ${mapsBtn}${earthBtn}
+            <button class="btn-action secondary" onclick="abrirModalImovel(${im.id})" title="Editar"><i class="ph ph-pencil"></i></button>
+            <button class="btn-action secondary" onclick="excluirImovel(${im.id}, '${escapeHtml(im.titulo || im.matricula || 'este imóvel').replace(/'/g, "\\'")}')" title="Excluir"><i class="ph ph-trash"></i></button>
+          </td>
+        </tr>`;
+    }).join('');
+  } catch (e) {
+    if (statusEl) statusEl.innerHTML = '<i class="ph ph-warning"></i> Sem conexão com a API.';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Erro de conexão.</td></tr>';
+  }
+}
+
+function abrirModalImovel(id = null) {
+  _imovelEditandoId = id;
+  const overlay = document.getElementById('modal-container');
+  const titulo = document.getElementById('modal-titulo');
+  const body = document.getElementById('modal-body');
+  if (!overlay || !body) return;
+
+  titulo.innerText = id ? 'Editar Imóvel' : 'Novo Imóvel';
+
+  const im = { titulo: '', matricula: '', tipo: 'Casa', status: 'Rascunho', endereco: '', numero: '', bairro: '', cidade: '', uf: '', cep: '', terreno: '', area: '', valor: '', cartorio: '', titular: '', observacao: '' };
+
+  if (id) {
+    const token = tokenDoCofre();
+    if (!token) { alert('Token não configurado.'); return; }
+    fetch(_apiBasePatrimonio() + '/api/imoveis', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' })
+      .then(r => r.json())
+      .then(lista => {
+        const found = lista.find(x => x.id === id);
+        if (found) {
+          Object.assign(im, {
+            titulo: found.titulo || '',
+            matricula: found.matricula || '',
+            tipo: found.tipo || 'Casa',
+            status: found.status || 'Rascunho',
+            endereco: found.endereco || '',
+            numero: found.numero || '',
+            bairro: found.bairro || '',
+            cidade: found.cidade || '',
+            uf: found.uf || '',
+            cep: found.cep || '',
+            terreno: found.terreno || '',
+            area: found.area || '',
+            valor: found.valor || '',
+            cartorio: found.cartorio || '',
+            titular: found.titular || '',
+            observacao: found.observacao || ''
+          });
+          _preencherFormImovel(body, im);
+        }
+      })
+      .catch(() => {});
+  }
+
+  _preencherFormImovel(body, im);
+  overlay.classList.add('active');
+  activeModalType = 'imoveis';
+}
+
+function _preencherFormImovel(body, im) {
+  const tipos = ['Casa', 'Apartamento', 'Terreno', 'Fazenda', 'Comercial', 'Lote', 'Galpão', 'Outro'];
+  const statuses = ['Rascunho', 'Ativo', 'À Venda', 'Alugado', 'Vendido'];
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group" style="grid-column:1/-1"><label>Título / Identificação *</label><input id="im-titulo" class="form-control" value="${escapeHtml(im.titulo)}" required></div>
+      <div class="form-group"><label>Matrícula *</label><input id="im-matricula" class="form-control" value="${escapeHtml(im.matricula)}" required></div>
+      <div class="form-group"><label>Tipo</label><select id="im-tipo" class="form-control">${tipos.map(t => `<option${t === im.tipo ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Status</label><select id="im-status" class="form-control">${statuses.map(s => `<option${s === im.status ? ' selected' : ''}>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Valor (R$)</label><input id="im-valor" class="form-control" type="number" min="0" step="0.01" value="${escapeHtml(String(im.valor))}"></div>
+      <div class="form-group"><label>Endereço</label><input id="im-endereco" class="form-control" value="${escapeHtml(im.endereco)}"></div>
+      <div class="form-group"><label>Número</label><input id="im-numero" class="form-control" value="${escapeHtml(im.numero)}"></div>
+      <div class="form-group"><label>Bairro</label><input id="im-bairro" class="form-control" value="${escapeHtml(im.bairro)}"></div>
+      <div class="form-group"><label>Cidade</label><input id="im-cidade" class="form-control" value="${escapeHtml(im.cidade)}"></div>
+      <div class="form-group"><label>UF</label><input id="im-uf" class="form-control" maxlength="2" value="${escapeHtml(im.uf)}"></div>
+      <div class="form-group"><label>CEP</label><input id="im-cep" class="form-control" value="${escapeHtml(im.cep)}"></div>
+      <div class="form-group"><label>Terreno (m²)</label><input id="im-terreno" class="form-control" type="number" min="0" step="0.01" value="${escapeHtml(String(im.terreno))}"></div>
+      <div class="form-group"><label>Área construída (m²)</label><input id="im-area" class="form-control" type="number" min="0" step="0.01" value="${escapeHtml(String(im.area))}"></div>
+      <div class="form-group"><label>Cartório</label><input id="im-cartorio" class="form-control" value="${escapeHtml(im.cartorio)}"></div>
+      <div class="form-group"><label>Titular</label><input id="im-titular" class="form-control" value="${escapeHtml(im.titular)}"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Observação</label><textarea id="im-observacao" class="form-control" style="min-height:70px">${escapeHtml(im.observacao)}</textarea></div>
+      <div style="grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn-action secondary" onclick="abrirMapsImovelForm()"><i class="ph ph-map-pin"></i> Google Maps</button>
+        <button type="button" class="btn-action secondary" onclick="abrirEarthImovelForm()"><i class="ph ph-globe"></i> Google Earth</button>
+      </div>
+    </div>
+    <p id="im-mensagem" style="margin-top:8px;color:var(--text-secondary);font-size:13px"></p>
+  `;
+}
+
+async function salvarImovel() {
+  const token = tokenDoCofre();
+  if (!token) { alert('Token não configurado no cofre.'); return; }
+
+  const titulo = document.getElementById('im-titulo')?.value.trim();
+  const matricula = document.getElementById('im-matricula')?.value.trim();
+  if (!titulo || !matricula) { alert('Título e matrícula são obrigatórios.'); return; }
+
+  const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
+
+  const dados = {
+    titulo,
+    matricula,
+    tipo: document.getElementById('im-tipo')?.value || 'Casa',
+    status: document.getElementById('im-status')?.value || 'Rascunho',
+    endereco: document.getElementById('im-endereco')?.value.trim() || null,
+    numero: document.getElementById('im-numero')?.value.trim() || null,
+    bairro: document.getElementById('im-bairro')?.value.trim() || null,
+    cidade: document.getElementById('im-cidade')?.value.trim() || null,
+    uf: (document.getElementById('im-uf')?.value.trim() || '').toUpperCase() || null,
+    cep: document.getElementById('im-cep')?.value.trim() || null,
+    terreno: num(document.getElementById('im-terreno')?.value),
+    area: num(document.getElementById('im-area')?.value),
+    valor: num(document.getElementById('im-valor')?.value),
+    cartorio: document.getElementById('im-cartorio')?.value.trim() || null,
+    titular: document.getElementById('im-titular')?.value.trim() || null,
+    observacao: document.getElementById('im-observacao')?.value.trim() || null
+  };
+
+  const msgEl = document.getElementById('im-mensagem');
+  if (msgEl) msgEl.textContent = 'Salvando…';
+
+  try {
+    const url = _imovelEditandoId
+      ? _apiBasePatrimonio() + '/api/imoveis/' + _imovelEditandoId
+      : _apiBasePatrimonio() + '/api/imoveis';
+
+    const resp = await fetch(url, {
+      method: _imovelEditandoId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(dados)
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      if (msgEl) msgEl.textContent = 'Erro: ' + (err.erro || resp.status);
+      return;
+    }
+
+    fecharModal();
+    await renderPatrimonio();
+  } catch (e) {
+    if (msgEl) msgEl.textContent = 'Erro de conexão com a API.';
+  }
+}
+
+async function excluirImovel(id, nome) {
+  if (!confirm(`Excluir "${nome}"?\nEsta ação não pode ser desfeita.`)) return;
+
+  const token = tokenDoCofre();
+  if (!token) { alert('Token não configurado.'); return; }
+
+  try {
+    const resp = await fetch(_apiBasePatrimonio() + '/api/imoveis/' + id, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!resp.ok) { alert('Erro ao excluir: HTTP ' + resp.status); return; }
+    await renderPatrimonio();
+  } catch (e) {
+    alert('Erro de conexão ao excluir.');
+  }
+}
+
+
+
+/* ============================================================
+   Imóveis — Maps / Earth helpers
+   ============================================================ */
+
+function _enderecoImovelForm() {
+  return [
+    document.getElementById('im-endereco')?.value.trim(),
+    document.getElementById('im-numero')?.value.trim(),
+    document.getElementById('im-bairro')?.value.trim(),
+    document.getElementById('im-cidade')?.value.trim(),
+    document.getElementById('im-uf')?.value.trim()
+  ].filter(Boolean).join(', ');
+}
+
+function abrirMapsImovelForm() {
+  const end = _enderecoImovelForm();
+  if (!end) { alert('Preencha o endereço primeiro.'); return; }
+  window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(end), '_blank', 'noopener,noreferrer');
+}
+
+function abrirEarthImovelForm() {
+  const end = _enderecoImovelForm();
+  if (!end) { alert('Preencha o endereço primeiro.'); return; }
+  window.open('https://earth.google.com/web/search/' + encodeURIComponent(end), '_blank', 'noopener,noreferrer');
+}
+
+function abrirMapsEndereco(end) {
+  if (!end) return;
+  window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(end), '_blank', 'noopener,noreferrer');
+}
+
+function abrirEarthEndereco(end) {
+  if (!end) return;
+  window.open('https://earth.google.com/web/search/' + encodeURIComponent(end), '_blank', 'noopener,noreferrer');
+}
+
+/* ============================================================
+   Sentinel-2 · NDVI
+   ============================================================ */
+
+const STORAGE_NDVI_PRESETS = 'gps_ndvi_presets_v1';
+
+function renderSatelite() {
+  _renderNdviPresets();
+}
+
+function _ndviPresets() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_NDVI_PRESETS) || '[]'); } catch { return []; }
+}
+
+function _renderNdviPresets() {
+  const el = document.getElementById('ndvi-presets');
+  if (!el) return;
+  const lista = _ndviPresets();
+  if (!lista.length) { el.innerHTML = '<p class="vault-hint" style="font-size:12px">Nenhuma área salva.</p>'; return; }
+  el.innerHTML = lista.map((p, i) => `
+    <div class="metric-card" style="cursor:pointer" onclick="_carregarPreset(${i})" title="Carregar">
+      <span>${escapeHtml(p.nome)}</span>
+      <h3 style="font-size:14px">${p.lat}, ${p.lon}</h3>
+      <button class="btn-action secondary" style="margin-top:6px;padding:2px 8px;font-size:11px"
+        onclick="event.stopPropagation();_removerPreset(${i})"><i class="ph ph-trash"></i></button>
+    </div>`).join('');
+}
+
+function _carregarPreset(idx) {
+  const p = _ndviPresets()[idx];
+  if (!p) return;
+  const lat = document.getElementById('ndvi-lat');
+  const lon = document.getElementById('ndvi-lon');
+  if (lat) lat.value = p.lat;
+  if (lon) lon.value = p.lon;
+}
+
+function salvarPresetNdvi() {
+  const nome = document.getElementById('ndvi-preset-nome')?.value.trim();
+  const lat  = document.getElementById('ndvi-preset-lat')?.value.trim();
+  const lon  = document.getElementById('ndvi-preset-lon')?.value.trim();
+  if (!nome || !lat || !lon) { alert('Preencha nome, latitude e longitude.'); return; }
+  const lista = _ndviPresets();
+  lista.push({ nome, lat, lon });
+  localStorage.setItem(STORAGE_NDVI_PRESETS, JSON.stringify(lista));
+  document.getElementById('ndvi-preset-nome').value = '';
+  document.getElementById('ndvi-preset-lat').value = '';
+  document.getElementById('ndvi-preset-lon').value = '';
+  _renderNdviPresets();
+}
+
+function _removerPreset(idx) {
+  const lista = _ndviPresets();
+  lista.splice(idx, 1);
+  localStorage.setItem(STORAGE_NDVI_PRESETS, JSON.stringify(lista));
+  _renderNdviPresets();
+}
+
+async function buscarEditaisTuring() {
+  const out = document.getElementById('editais-resultado');
+  const token = tokenDoCofre();
+  if (!token) { if (out) out.innerHTML = '<i class="ph ph-warning"></i> Token não configurado.'; return; }
+  if (out) out.innerHTML = '<i class="ph ph-spinner"></i> Consultando Turing…';
+  try {
+    const r = await fetch(_apiBase() + '/api/turing/angola/sinais?setor=edital&limite=20', {
+      headers: { Authorization: 'Bearer ' + token }, cache: 'no-store'
+    });
+    if (!r.ok) { out.textContent = 'Erro HTTP ' + r.status; return; }
+    const { sinais } = await r.json();
+    if (!sinais?.length) { out.textContent = 'Nenhum edital encontrado no radar Angola.'; return; }
+    out.innerHTML = sinais.map(s => `<div style="margin:6px 0;padding:8px;background:var(--card-bg);border-radius:6px">
+      <strong>${escapeHtml(s.palavra_chave || s.tema || '—')}</strong> · ${escapeHtml(s.setor || '')}
+      <br><small>${escapeHtml(s.sinal || s.resumo || '')}${s.url ? ` · <a href="${escapeHtml(s.url)}" target="_blank" rel="noopener">Ver</a>` : ''}</small>
+    </div>`).join('');
+  } catch (e) {
+    if (out) out.textContent = 'Erro de conexão.';
+  }
+}
+
+async function consultarNdvi() {
+  const lat = document.getElementById('ndvi-lat')?.value.trim();
+  const lon = document.getElementById('ndvi-lon')?.value.trim();
+  const out = document.getElementById('ndvi-resultado');
+
+  if (!lat || !lon) { if (out) out.textContent = 'Informe latitude e longitude.'; return; }
+
+  const token = tokenDoCofre();
+  if (!token) {
+    if (out) out.innerHTML = '<i class="ph ph-warning"></i> Token não configurado no cofre.';
+    return;
+  }
+
+  if (out) out.innerHTML = '<i class="ph ph-spinner"></i> Consultando Sentinel-2…';
+
+  try {
+    const base = _apiBasePatrimonio();
+    const resp = await fetch(
+      `${base}/api/geo/ndvi?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`,
+      { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' }
+    );
+
+    if (!resp.ok) {
+      out.innerHTML = `<i class="ph ph-warning"></i> Erro HTTP ${resp.status}.`;
+      return;
+    }
+
+    const dados = await resp.json();
+    const ndvi = dados.ndvi ?? dados.value ?? dados.resultado ?? JSON.stringify(dados);
+    const data = dados.data || dados.date || dados.captura || '';
+
+    out.innerHTML = `
+      <strong>NDVI: ${typeof ndvi === 'number' ? ndvi.toFixed(4) : escapeHtml(String(ndvi))}</strong>
+      ${data ? ` · Captura: ${escapeHtml(String(data))}` : ''}
+      <br><small>Lat ${escapeHtml(lat)} · Lon ${escapeHtml(lon)}</small>
+    `;
+  } catch (e) {
+    out.innerHTML = '<i class="ph ph-warning"></i> Sem conexão com a API.';
+  }
+}
+
+function abrirMapsCoords() {
+  const lat = document.getElementById('ndvi-lat')?.value.trim();
+  const lon = document.getElementById('ndvi-lon')?.value.trim();
+  if (!lat || !lon) { alert('Informe as coordenadas primeiro.'); return; }
+  window.open(`https://www.google.com/maps?q=${encodeURIComponent(lat)},${encodeURIComponent(lon)}`, '_blank', 'noopener,noreferrer');
+}
+
+function abrirEarthCoords() {
+  const lat = document.getElementById('ndvi-lat')?.value.trim();
+  const lon = document.getElementById('ndvi-lon')?.value.trim();
+  if (!lat || !lon) { alert('Informe as coordenadas primeiro.'); return; }
+  window.open(`https://earth.google.com/web/search/${encodeURIComponent(lat)},${encodeURIComponent(lon)}`, '_blank', 'noopener,noreferrer');
+}
+
+/* ============================================================
+   Angola · Malanje — Radar de Palavras-chave & Oportunidades
+   ============================================================ */
+
+function _apiBase() {
+  return (appData.config?.apiBase || 'https://api.gustavopaulasantos.com.br').replace(/\/+$/, '');
+}
+
+function renderAngola() { carregarResumoAngola(); }
+
+async function carregarResumoAngola() {
+  const resumoEl = document.getElementById('angola-resumo');
+  const msg = document.getElementById('angola-status-msg');
+  const token = tokenDoCofre();
+  if (!token) {
+    if (msg) msg.innerHTML = '<i class="ph ph-warning"></i> Token não configurado no cofre.';
+    return;
+  }
+  try {
+    const r = await fetch(_apiBase() + '/api/turing/angola/resumo', {
+      headers: { Authorization: 'Bearer ' + token }, cache: 'no-store'
+    });
+    if (!r.ok) { if (msg) msg.textContent = 'Erro HTTP ' + r.status; return; }
+    const { resumo } = await r.json();
+    if (!resumo) return;
+    if (resumoEl) resumoEl.innerHTML = `
+      <div class="metric-card"><span>Total sinais</span><h3>${resumo.total_sinais ?? '—'}</h3></div>
+      <div class="metric-card"><span>Validados</span><h3>${resumo.validados ?? '—'}</h3><p class="metric-sub">confirmados</p></div>
+      <div class="metric-card"><span>Monitorando</span><h3>${resumo.monitorando ?? '—'}</h3></div>
+      <div class="metric-card"><span>Novos</span><h3>${resumo.novos ?? '—'}</h3></div>
+      <div class="metric-card"><span>Setores</span><h3>${resumo.total_setores ?? '—'}</h3></div>
+    `;
+    if (msg) msg.textContent = resumo.ultima_coleta ? 'Última coleta: ' + new Date(resumo.ultima_coleta).toLocaleString('pt-BR') : '';
+  } catch (e) {
+    if (msg) msg.textContent = 'Erro de conexão.';
+  }
+}
+
+async function buscarSinaisAngola(apenasOportunidades = false) {
+  const tbody = document.getElementById('tbody-angola');
+  const msg = document.getElementById('angola-status-msg');
+  const token = tokenDoCofre();
+  if (!token) { if (msg) msg.innerHTML = '<i class="ph ph-warning"></i> Token não configurado.'; return; }
+
+  const termo = document.getElementById('angola-termo')?.value.trim() || '';
+  const setor = document.getElementById('angola-setor')?.value.trim() || '';
+  const status = document.getElementById('angola-status')?.value || '';
+
+  const params = new URLSearchParams({ limite: '50' });
+  if (termo) params.set('termo', termo);
+  if (setor) params.set('setor', setor);
+  if (status) params.set('status', status);
+
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary)">Consultando Turing Angola…</td></tr>';
+  if (msg) msg.textContent = 'Buscando…';
+
+  try {
+    const r = await fetch(_apiBase() + '/api/turing/angola/sinais?' + params.toString(), {
+      headers: { Authorization: 'Bearer ' + token }, cache: 'no-store'
+    });
+    if (!r.ok) { if (msg) msg.textContent = 'Erro HTTP ' + r.status; return; }
+    let { sinais, total } = await r.json();
+
+    if (apenasOportunidades) {
+      sinais = sinais.filter(s => (s.relevancia >= 7) || s.status === 'validado');
+      if (msg) msg.textContent = `${sinais.length} oportunidades de alta relevância encontradas.`;
+    } else {
+      if (msg) msg.textContent = `${total ?? sinais.length} sinal(is) encontrado(s).`;
+    }
+
+    if (!sinais.length) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary)">Nenhum resultado.</td></tr>';
+      return;
+    }
+
+    const badge = s => {
+      if (s === 'validado') return 'green';
+      if (s === 'monitorando') return 'blue';
+      return 'orange';
+    };
+
+    if (tbody) tbody.innerHTML = sinais.map(s => `
+      <tr>
+        <td><strong>${escapeHtml(s.palavra_chave || '—')}</strong></td>
+        <td style="max-width:220px;white-space:normal;font-size:12px">${escapeHtml(s.sinal || s.resumo || '—')}</td>
+        <td>${escapeHtml(s.setor || '—')}</td>
+        <td>${escapeHtml(s.municipio || s.provincia || '—')}</td>
+        <td><strong>${s.relevancia ?? '—'}</strong></td>
+        <td><span class="badge ${badge(s.status)}">${escapeHtml(s.status || '—')}</span></td>
+      </tr>`).join('');
+  } catch (e) {
+    if (msg) msg.textContent = 'Erro de conexão com a API.';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Erro.</td></tr>';
+  }
+}
+
+/* ---------- Turing SEO Intelligence ---------- */
+async function executarTuringSeoRadar() {
+  const input = document.getElementById('turing-seo-query');
+  const status = document.getElementById('turing-seo-status');
+  const resultados = document.getElementById('turing-seo-resultados');
+
+  if (!input || !status || !resultados) return;
+
+  const query = input.value.trim();
+
+  if (!query) {
+    status.textContent = 'Digite uma palavra-chave para análise.';
+    resultados.innerHTML = '';
+    return;
+  }
+
+  status.textContent = 'Turing analisando sinais de busca...';
+  resultados.innerHTML = '';
+
+  try {
+    const base = (appData.config && appData.config.apiBase)
+      ? appData.config.apiBase.replace(/\/+$/, '')
+      : 'https://api.gustavopaulasantos.com.br';
+
+    const resp = await fetch(
+      base + '/api/seo/radar?q=' + encodeURIComponent(query),
       { cache: 'no-store' }
     );
 
-    const ms = Math.round(performance.now() - inicio);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
 
-    alert(
-      `${item.nome}\nNexoTerraCore/API: HTTP ${resposta.status}\nLatência: ${ms} ms`
-    );
-  } catch (erro) {
-    alert(
-      `${item.nome}\nFalha ao conectar com a NexoTerraCore/API.`
-    );
+    const dados = await resp.json();
+    const itens = Array.isArray(dados.keywords) ? dados.keywords : [];
+
+    status.textContent =
+      'SEO ao vivo · ' + itens.length + ' sinais encontrados para "' + query + '".';
+
+    resultados.innerHTML = itens.length
+      ? itens.slice(0, 10).map(item => `
+          <div class="metric-card">
+            <span>${Array.isArray(item.origem) ? escapeHtml(item.origem.join(' · ')) : 'SEO Radar'}</span>
+            <h3>${escapeHtml(String(item.keyword || ''))}</h3>
+            <p class="metric-sub">${Number(item.ocorrencias) || 0} ocorrências</p>
+          </div>
+        `).join('')
+      : '<div class="metric-card"><h3>Nenhum sinal encontrado</h3></div>';
+
+  } catch (err) {
+    console.error('Turing SEO Radar:', err);
+    status.textContent = 'Falha na consulta SEO: ' + err.message;
+    resultados.innerHTML = '';
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  carregarPatrimonio();
-});
 
+/* Radar Centro-Oeste — consulta autenticada */
+async function consultarRadarCentroOeste() {
+  const status = document.getElementById('radar-co-status');
+  const resultados = document.getElementById('radar-co-resultados');
+  if (!status || !resultados) return;
+
+  const token = tokenDoCofre();
+  resultados.replaceChildren();
+
+  if (!token) {
+    status.textContent = 'Token não encontrado no cofre.';
+    return;
+  }
+
+  const base = String(
+    appData.config?.apiBase ||
+    'https://api.gustavopaulasantos.com.br'
+  ).replace(/\/+$/, '');
+
+  if (!apiBaseValida(base)) {
+    status.textContent = 'URL da API inválida.';
+    return;
+  }
+
+  status.textContent = 'Consultando Centro-Oeste...';
+
+  try {
+    const consultar = async (rota) => {
+      const resposta = await fetch(
+        base + '/api/turing/centro-oeste/' + rota,
+        {
+          headers: { Authorization: 'Bearer ' + token },
+          cache: 'no-store'
+        }
+      );
+
+      if (!resposta.ok) {
+        throw new Error('HTTP ' + resposta.status);
+      }
+
+      return resposta.json();
+    };
+
+    const resumo = await consultar('resumo');
+    const dados = await consultar('oportunidades');
+
+    if (!resumo.ok || !dados.ok) {
+      throw new Error('Resposta inválida da API.');
+    }
+
+    status.textContent = 'Dados recebidos da API real.';
+
+    const adicionar = (titulo, valor) => {
+      const card = document.createElement('div');
+      card.className = 'metric-card';
+
+      const span = document.createElement('span');
+      span.textContent = titulo;
+
+      const h3 = document.createElement('h3');
+      h3.textContent = String(valor ?? 0);
+
+      card.append(span, h3);
+      resultados.appendChild(card);
+    };
+
+    adicionar('Oportunidades', resumo.total);
+    adicionar('Alta prioridade', resumo.alta);
+    adicionar('Fatos verificados', resumo.fatos);
+
+    for (const item of (dados.oportunidades || []).slice(0, 10)) {
+      adicionar(
+        [item.empresa, item.municipio].filter(Boolean).join(' · ') ||
+          'Oportunidade',
+        item.oportunidade || 'Sem descrição'
+      );
+    }
+  } catch (erro) {
+    status.textContent =
+      erro.message === 'HTTP 401'
+        ? 'Credencial inválida ou expirada.'
+        : erro.message === 'HTTP 403'
+        ? 'Credencial sem permissão para o Radar.'
+        : 'Consulta indisponível: ' + erro.message;
+  }
+}
 
 
 function dadosFormularioPatrimonio() {

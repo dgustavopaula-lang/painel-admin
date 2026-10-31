@@ -438,7 +438,58 @@
         <div class="review-panel"><h2>EduTech · Formação para jovens</h2><p>Planejamento de cursos para Angola: técnicas agrícolas básicas, manejo do solo, cultivo, irrigação, inglês técnico e tecnologia aplicada ao campo.</p><div class="review-actions"><a href="https://gustavopaulasantos.com.br" target="_blank" rel="noopener">Abrir site GPS.dev ↗</a></div><p class="review-note">Área de planejamento. Nenhum curso ou matrícula é publicado por esta tela.</p></div>
       </div>
       <div id="tela-angola" class="tela-interna">
-        <div class="review-panel"><h2>Angola · Malanje</h2><p>Espaço de acompanhamento de pesquisa, oportunidades e formação técnica agrícola. Dados e parcerias precisam de validação antes de divulgação.</p><p class="review-note">Sem conexão automática com agentes ou API nesta revisão.</p></div>
+
+        <div id="angola-resumo" class="metrics-grid" style="margin-bottom:16px"></div>
+
+        <div class="project-section">
+          <h3><i class="ph ph-magnifying-glass"></i> Busca de Palavras-chave &amp; Oportunidades</h3>
+          <p class="vault-hint">Turing Angola Radar · pesquise termos, setores e sinais de mercado em Malanje e Angola.</p>
+          <div class="config-grid" style="gap:8px">
+            <div class="form-group">
+              <label>Termo / palavra-chave</label>
+              <input id="angola-termo" class="form-control" placeholder="agro, soja, tecnologia, formação…"
+                onkeydown="if(event.key==='Enter') buscarSinaisAngola()">
+            </div>
+            <div class="form-group">
+              <label>Setor</label>
+              <input id="angola-setor" class="form-control" placeholder="Agro, Educação, Energia…">
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="angola-status" class="form-control">
+                <option value="">Todos</option>
+                <option value="novo">Novo</option>
+                <option value="monitorando">Monitorando</option>
+                <option value="validado">Validado</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:8px">
+            <button class="btn-action" onclick="buscarSinaisAngola()"><i class="ph ph-magnifying-glass"></i> Buscar</button>
+            <button class="btn-action secondary" onclick="buscarSinaisAngola(true)"><i class="ph ph-star"></i> Oportunidades</button>
+            <button class="btn-action secondary" onclick="carregarResumoAngola()"><i class="ph ph-chart-bar"></i> Resumo</button>
+          </div>
+          <p id="angola-status-msg" class="vault-hint" style="margin-top:10px"></p>
+        </div>
+
+        <div class="project-section">
+          <div class="data-table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Palavra-chave</th>
+                  <th>Sinal</th>
+                  <th>Setor</th>
+                  <th>Município</th>
+                  <th>Relevância</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-angola"></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
 <div id="tela-lab-conhecimento" class="tela-interna">
@@ -750,10 +801,36 @@
 
             <textarea class="editable-area" id="turing-seo-prompt"
               placeholder="Prompt operacional do Turing SEO...">Atue como Turing SEO Intelligence do NexoTerraCore. Detecte oportunidades comerciais, territoriais e editoriais reais para o ecossistema NexoTerraCore.</textarea>
+
+            <div class="form-grid" style="margin-top:16px">
+              <input id="turing-seo-query" class="form-control"
+                placeholder="Pesquisar palavra-chave...">
+              <button type="button" class="btn-primary"
+                onclick="executarTuringSeoRadar()">
+                Analisar SEO
+              </button>
+            </div>
+
+            <div id="turing-seo-status" class="review-note" style="margin-top:12px">
+              Radar SEO aguardando consulta.
+            </div>
+
+            <div id="turing-seo-resultados" class="metrics-grid" style="margin-top:14px"></div>
+
           </div>
 
           <div class="project-section">
             <h3><i class="ph ph-map-trifold"></i> Radar Centro-Oeste</h3>
+            <div style="margin:14px 0">
+              <button type="button" class="btn-primary"
+                onclick="consultarRadarCentroOeste()">
+                Consultar API Centro-Oeste
+              </button>
+              <p id="radar-co-status" class="review-note"
+                aria-live="polite">Aguardando consulta autenticada.</p>
+              <div id="radar-co-resultados" class="metrics-grid"></div>
+            </div>
+
 
             <div class="metrics-grid">
               <div class="metric-card">
@@ -831,6 +908,72 @@
         </div>
       </div>
 
+
+<div id="tela-satelite" class="tela-interna">
+        <div class="project-section">
+          <h3><i class="ph ph-satellite"></i> Sentinel-2 · NDVI</h3>
+          <p class="vault-hint">Consulta territorial via NexoTerraCore API — índice de vegetação por coordenadas.</p>
+          <div class="config-grid">
+            <div class="form-group">
+              <label>Latitude</label>
+              <input id="ndvi-lat" class="form-control" placeholder="-18.95" type="number" step="any">
+            </div>
+            <div class="form-group">
+              <label>Longitude</label>
+              <input id="ndvi-lon" class="form-control" placeholder="-48.27" type="number" step="any">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn-action" onclick="consultarNdvi()"><i class="ph ph-magnifying-glass"></i> Consultar NDVI</button>
+            <button class="btn-action secondary" onclick="abrirMapsCoords()"><i class="ph ph-map-pin"></i> Ver no Maps</button>
+            <button class="btn-action secondary" onclick="abrirEarthCoords()"><i class="ph ph-globe"></i> Ver no Earth</button>
+          </div>
+          <div id="ndvi-resultado" class="vault-hint" style="margin-top:12px"></div>
+        </div>
+        <div class="project-section">
+          <h3><i class="ph ph-sliders"></i> Coordenadas salvas</h3>
+          <p class="vault-hint">Salve coordenadas das suas propriedades para consulta rápida.</p>
+          <div id="ndvi-presets" class="metrics-grid" style="margin-bottom:12px"></div>
+          <div class="config-grid" style="gap:8px">
+            <div class="form-group">
+              <label>Nome da área</label>
+              <input id="ndvi-preset-nome" class="form-control" placeholder="Fazenda do Lago, Malanje…">
+            </div>
+            <div class="form-group">
+              <label>Latitude</label>
+              <input id="ndvi-preset-lat" class="form-control" type="number" step="any">
+            </div>
+            <div class="form-group">
+              <label>Longitude</label>
+              <input id="ndvi-preset-lon" class="form-control" type="number" step="any">
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:8px">
+            <button class="btn-action secondary" onclick="salvarPresetNdvi()"><i class="ph ph-floppy-disk"></i> Salvar área</button>
+          </div>
+        </div>
+
+        <div class="project-section">
+          <h3><i class="ph ph-newspaper"></i> Editais &amp; Oportunidades</h3>
+          <p class="vault-hint">Editais públicos, licitações e chamadas de projetos territoriais via Turing.</p>
+          <div class="btn-row">
+            <button class="btn-action" onclick="buscarEditaisTuring()"><i class="ph ph-magnifying-glass"></i> Buscar Editais via Turing</button>
+            <a class="btn-action secondary" href="https://www.comprasgovernamentais.gov.br" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i> ComprasGov</a>
+            <a class="btn-action secondary" href="https://licitacoes-e.com.br" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i> Licitações-e</a>
+          </div>
+          <div id="editais-resultado" class="vault-hint" style="margin-top:10px"></div>
+        </div>
+
+        <div class="project-section">
+          <h3><i class="ph ph-info"></i> Sobre o Sentinel-2</h3>
+          <div class="metrics-grid">
+            <div class="metric-card"><span>Satélite</span><h3>Sentinel-2</h3><p class="metric-sub">ESA · Copernicus</p></div>
+            <div class="metric-card"><span>Resolução</span><h3>10 m</h3><p class="metric-sub">por pixel</p></div>
+            <div class="metric-card"><span>Índice</span><h3>NDVI</h3><p class="metric-sub">-1 a +1</p></div>
+            <div class="metric-card"><span>Cobertura</span><h3>Global</h3><p class="metric-sub">revisita ~5 dias</p></div>
+          </div>
+        </div>
+      </div>
 
 <section id="tela-patrimonio" class="tela-interna">
   <div class="section-header">
