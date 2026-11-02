@@ -360,7 +360,7 @@ function abrirTela(idTela) {
     'tela-backup': 'Backup',
     'tela-satelite': 'Sentinel-2 · NDVI',
     'tela-patrimonio': 'Patrimônio / Imóveis',
-    'tela-agro': 'Projeto: Agro Digital',
+    'tela-agro': 'Testes de APIs e Projetos',
     'tela-nexus': 'Projeto: NexoTerraCore',
     'tela-turin': 'Turing · Inteligência',
     'tela-videos': 'Gerenciador de Vídeos',
