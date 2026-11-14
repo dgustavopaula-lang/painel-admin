@@ -8,3 +8,9 @@ node_modules/
 *.bak*
 *.pre-*
 _backup-*/
+
+# arquivos de trabalho local (não publicar)
+_comparacao-vps/
+_migracao-gps-studio/
+*.backup-*
+*.code-workspace
