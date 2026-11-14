@@ -272,6 +272,10 @@
       </a>
     </details>
     <details class="nav-group" data-grupo="NexoTerraCore" open>
+<button class="nav-item" id="nav-satelite" onclick="abrirTela('tela-satelite')">
+  <i class="ph ph-satellite"></i> Sentinel-2 · NDVI
+</button>
+
       <summary>NexoTerraCore</summary>
       <button class="nav-item" id="nav-api" onclick="abrirTela('tela-api')">
         <i class="ph ph-plugs-connected"></i> API Central
@@ -280,7 +284,7 @@
         <i class="ph ph-globe-hemisphere-west"></i> Projeto NexoTerraCore
       </button>
       <button class="nav-item" id="nav-agro" onclick="abrirTela('tela-agro')">
-        <i class="ph ph-plant"></i> Agro Digital
+        <i class="ph ph-plant"></i> Testes de APIs e Projetos
       </button>
     </details>
     <details class="nav-group" data-grupo="Comercial" open>
@@ -665,7 +669,7 @@
           <div>
             <div class="project-section">
               <h3><i class="ph ph-leaf"></i> Visão Geral & Documentação do Projeto</h3>
-              <textarea class="editable-area" id="agro-notas" placeholder="Especificações técnicas, visão geral e requisitos do Agro Digital..." oninput="salvarProjeto('agro')"></textarea>
+              <textarea class="editable-area" id="agro-notas" placeholder="Registre endpoints, métodos HTTP, autenticação e resultados dos testes da API Central..." oninput="salvarProjeto('agro')"></textarea>
             </div>
             <div class="project-section">
               <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('agro')"><i class="ph ph-plus"></i> Tarefa</button></h3>

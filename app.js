@@ -195,20 +195,10 @@ function loadPlainData() {
   appData.vendas = JSON.parse(JSON.stringify(SEED_VENDAS));
   appData.treino = [];
   appData.config = configPadrao();
-  appData.financeiro = [
-    { id: 1, desc: 'Desenvolvimento do Console', tipo: 'Receita', cat: 'Projetos', valor: 5000, data: new Date().toISOString().split('T')[0] }
-  ];
-  appData.clientes = [
-    { id: 1, nome: 'Cliente Exemplo', email: 'contato@cliente.com', tel: '(11) 99999-8888', status: 'Ativo', notas: 'Projeto NexoTerraCore' }
-  ];
-  appData.posts = [
-    { id: 1, titulo: 'Why you need to learn about AI?', tipo: 'Articles', data: new Date().toLocaleDateString('pt-BR'), desc: 'Introdução ao aprendizado prático de IA e automação.' }
-  ];
-  appData.projetos = {
-    agro: { notas: 'Sistema de monitoramento e gestão para agronegócio inteligente.', status: 'Em Andamento', tasks: [{ id: 1, texto: 'Modelagem de API e sensores', feito: true }], links: [{ id: 1, nome: 'Repositório GitHub', url: 'https://github.com' }] },
-    nexus: { notas: 'Plataforma integrada de inteligência territorial NexoTerraCore.', status: 'Em Planejamento', tasks: [{ id: 1, texto: 'Definição da estrutura do banco de dados', feito: false }], links: [] },
-    turin: { notas: 'Assistente pessoal e agente especializado com IA.', status: 'Em Andamento', tasks: [{ id: 1, texto: 'Ajuste de prompts e contextos de sistema', feito: true }], links: [] }
-  };
+  appData.financeiro = [];
+  appData.clientes = [];
+  appData.posts = [];
+  appData.projetos = {};
 }
 
 async function persistVault() {
@@ -360,7 +350,7 @@ function abrirTela(idTela) {
     'tela-backup': 'Backup',
     'tela-satelite': 'Sentinel-2 · NDVI',
     'tela-patrimonio': 'Patrimônio / Imóveis',
-    'tela-agro': 'Projeto: Agro Digital',
+    'tela-agro': 'Testes de APIs e Projetos',
     'tela-nexus': 'Projeto: NexoTerraCore',
     'tela-turin': 'Turing · Inteligência',
     'tela-videos': 'Gerenciador de Vídeos',
@@ -1839,7 +1829,13 @@ async function carregarDadosReaisApi() {
         }
       );
 
+      if (!r.ok) {
+        throw new Error('Consulta Turing: HTTP ' + r.status);
+      }
       conhecimentos = await r.json();
+      if (!conhecimentos?.ok) {
+        throw new Error('Resposta inválida da API Turing');
+      }
     }
 
     const lista =
@@ -1864,7 +1860,7 @@ async function carregarDadosReaisApi() {
 
         <div class="metric-card">
           <span>Conhecimentos Turing</span>
-          <h3>${lista.length}</h3>
+          <h3>${token && conhecimentos?.ok ? lista.length : 'Não consultado'}</h3>
         </div>
 
         <div class="metric-card">
