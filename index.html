@@ -138,6 +138,14 @@
 .gps-status-dot.off { background: #e5484d; }
 .gps-status-dot.wait { background: #8492a6; }
 #gps-api-status { width: 100%; margin-top: 4px; font-size: 11px; color: #96a4b5; }
+/* sidebar v3: links externos e itens futuros */
+.gps-sidebar-nav .nav-externo::after { content: "\2197"; margin-left: auto; font-size: 11px; opacity: .45; }
+.gps-sidebar-nav .nav-futuro { cursor: default; opacity: .55; }
+.gps-sidebar-nav .nav-futuro:hover { background: transparent; color: inherit; }
+.gps-sidebar-nav .nav-badge {
+  margin-left: auto; padding: 1px 7px; border-radius: 10px; font-size: 9px; font-style: normal;
+  letter-spacing: .5px; text-transform: uppercase; border: 1px solid currentColor; opacity: .8;
+}
 </style>
 
 <style id="gps-patrimonio-css-v1">
@@ -256,6 +264,7 @@
     <button class="nav-item active-menu" id="nav-home" onclick="abrirTela('tela-posts')">
       <i class="ph ph-house"></i> Início
     </button>
+
     <details class="nav-group" data-grupo="Turing · IA" open>
       <summary>Turing · IA</summary>
       <button class="nav-item" id="nav-turin" onclick="abrirTela('tela-turin')">
@@ -268,11 +277,21 @@
         <i class="ph ph-flask"></i> Laboratório
       </button>
     </details>
-    <details class="nav-group" data-grupo="NexoTerraCore" open>
-<button class="nav-item" id="nav-satelite" onclick="abrirTela('tela-satelite')">
-  <i class="ph ph-satellite"></i> Sentinel-2 · NDVI
-</button>
 
+    <details class="nav-group" data-grupo="Treinamento futuro">
+      <summary>Treinamento futuro</summary>
+      <span class="nav-item nav-futuro" title="Tela turing-seg.js pronta, ainda não ligada ao painel">
+        <i class="ph ph-shield-check"></i> Turing · Segurança <em class="nav-badge">em breve</em>
+      </span>
+      <span class="nav-item nav-futuro" title="Automações e treino contínuo do Turing">
+        <i class="ph ph-lightning"></i> Automação 24h <em class="nav-badge">em breve</em>
+      </span>
+      <span class="nav-item nav-futuro" title="Trazer o Raiz Energia para dentro do painel">
+        <i class="ph ph-solar-panel"></i> Raiz Energia no painel <em class="nav-badge">em breve</em>
+      </span>
+    </details>
+
+    <details class="nav-group" data-grupo="NexoTerraCore" open>
       <summary>NexoTerraCore</summary>
       <button class="nav-item" id="nav-api" onclick="abrirTela('tela-api')">
         <i class="ph ph-plugs-connected"></i> API Central
@@ -280,13 +299,36 @@
       <button class="nav-item" id="nav-nexus" onclick="abrirTela('tela-nexus')">
         <i class="ph ph-globe-hemisphere-west"></i> Projeto NexoTerraCore
       </button>
+      <button class="nav-item" id="nav-satelite" onclick="abrirTela('tela-satelite')">
+        <i class="ph ph-planet"></i> Sentinel-2 · NDVI
+      </button>
       <button class="nav-item" id="nav-agro" onclick="abrirTela('tela-agro')">
-        <i class="ph ph-plant"></i> Testes de APIs e Projetos
+        <i class="ph ph-test-tube"></i> Testes de APIs e Projetos
       </button>
     </details>
-    <details class="nav-group" data-grupo="Comercial" open>
+
+    <details class="nav-group" data-grupo="Projetos" open>
+      <summary>Projetos</summary>
+      <a class="nav-item nav-externo" id="nav-minifazenda" href="https://minifazenda.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-tractor"></i> Mini Fazenda Premium
+      </a>
+      <a class="nav-item nav-externo" id="nav-energia" href="https://energia.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-sun"></i> Raiz Energia
+      </a>
+      <a class="nav-item nav-externo" id="nav-registro" href="https://registro.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-notebook"></i> Registro de Projetos
+      </a>
+      <a class="nav-item nav-externo" id="nav-central" href="https://central.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-command"></i> Central (antiga)
+      </a>
+      <a class="nav-item nav-externo" id="nav-paranagel" href="https://paranagel.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+        <i class="ph ph-warehouse"></i> Paranagel
+      </a>
+    </details>
+
+    <details class="nav-group" data-grupo="Comercial">
       <summary>Comercial</summary>
-      <a class="nav-item" id="nav-gps-vendas" href="https://conecta.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
+      <a class="nav-item nav-externo" id="nav-gps-vendas" href="https://conecta.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
         <i class="ph ph-storefront"></i> GPS.dev Vendas
       </a>
       <button class="nav-item" id="nav-vendas" onclick="abrirTela('tela-vendas')">
@@ -299,7 +341,8 @@
         <i class="ph ph-users"></i> Clientes
       </button>
     </details>
-    <details class="nav-group" data-grupo="Gestão" open>
+
+    <details class="nav-group" data-grupo="Gestão">
       <summary>Gestão</summary>
       <button class="nav-item" id="nav-financeiro" onclick="abrirTela('tela-financeiro')">
         <i class="ph ph-currency-dollar"></i> Financeiro
@@ -308,7 +351,8 @@
         <i class="ph ph-buildings"></i> Patrimônio / Imóveis
       </button>
     </details>
-    <details class="nav-group" data-grupo="Segurança" open>
+
+    <details class="nav-group" data-grupo="Segurança">
       <summary>Segurança</summary>
       <button class="nav-item" id="nav-senhas" onclick="abrirTela('tela-senhas')">
         <i class="ph ph-vault"></i> Cofre de Senhas
@@ -317,19 +361,12 @@
         <i class="ph ph-cloud-arrow-up"></i> Backup
       </button>
     </details>
+
     <details class="nav-group" data-grupo="Educação">
       <summary>Educação</summary>
       <button class="nav-item" id="nav-edutech" onclick="abrirTela('tela-edutech')">
         <i class="ph ph-graduation-cap"></i> EduTech
       </button>
-    </details>
-    <details class="nav-group" data-grupo="Conteúdo">
-      <summary>Conteúdo</summary>
-      <a class="nav-item" id="nav-paranagel"
-         href="https://paranagel.gustavopaulasantos.com.br/"
-         target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-warehouse"></i> Paranagel
-      </a>
     </details>
   </nav>
 
