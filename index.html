@@ -322,9 +322,6 @@
       <button class="nav-item" id="nav-edutech" onclick="abrirTela('tela-edutech')">
         <i class="ph ph-graduation-cap"></i> EduTech
       </button>
-      <button class="nav-item" id="nav-angola" onclick="abrirTela('tela-angola')">
-        <i class="ph ph-globe"></i> Angola
-      </button>
     </details>
     <details class="nav-group" data-grupo="Conteúdo">
       <summary>Conteúdo</summary>
@@ -437,60 +434,6 @@
 
       <div id="tela-edutech" class="tela-interna">
         <div class="review-panel"><h2>EduTech · Formação para jovens</h2><p>Planejamento de cursos para Angola: técnicas agrícolas básicas, manejo do solo, cultivo, irrigação, inglês técnico e tecnologia aplicada ao campo.</p><div class="review-actions"><a href="https://gustavopaulasantos.com.br" target="_blank" rel="noopener">Abrir site GPS.dev ↗</a></div><p class="review-note">Área de planejamento. Nenhum curso ou matrícula é publicado por esta tela.</p></div>
-      </div>
-      <div id="tela-angola" class="tela-interna">
-
-        <div id="angola-resumo" class="metrics-grid" style="margin-bottom:16px"></div>
-
-        <div class="project-section">
-          <h3><i class="ph ph-magnifying-glass"></i> Busca de Palavras-chave &amp; Oportunidades</h3>
-          <p class="vault-hint">Turing Angola Radar · pesquise termos, setores e sinais de mercado em Malanje e Angola.</p>
-          <div class="config-grid" style="gap:8px">
-            <div class="form-group">
-              <label>Termo / palavra-chave</label>
-              <input id="angola-termo" class="form-control" placeholder="agro, soja, tecnologia, formação…"
-                onkeydown="if(event.key==='Enter') buscarSinaisAngola()">
-            </div>
-            <div class="form-group">
-              <label>Setor</label>
-              <input id="angola-setor" class="form-control" placeholder="Agro, Educação, Energia…">
-            </div>
-            <div class="form-group">
-              <label>Status</label>
-              <select id="angola-status" class="form-control">
-                <option value="">Todos</option>
-                <option value="novo">Novo</option>
-                <option value="monitorando">Monitorando</option>
-                <option value="validado">Validado</option>
-              </select>
-            </div>
-          </div>
-          <div class="btn-row" style="margin-top:8px">
-            <button class="btn-action" onclick="buscarSinaisAngola()"><i class="ph ph-magnifying-glass"></i> Buscar</button>
-            <button class="btn-action secondary" onclick="buscarSinaisAngola(true)"><i class="ph ph-star"></i> Oportunidades</button>
-            <button class="btn-action secondary" onclick="carregarResumoAngola()"><i class="ph ph-chart-bar"></i> Resumo</button>
-          </div>
-          <p id="angola-status-msg" class="vault-hint" style="margin-top:10px"></p>
-        </div>
-
-        <div class="project-section">
-          <div class="data-table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Palavra-chave</th>
-                  <th>Sinal</th>
-                  <th>Setor</th>
-                  <th>Município</th>
-                  <th>Relevância</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-angola"></tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
 
 <div id="tela-lab-conhecimento" class="tela-interna">
@@ -780,113 +723,6 @@
             </div>
           </div>
 
-          <div class="project-section">
-            <h3><i class="ph ph-brain"></i> Turing SEO Intelligence</h3>
-
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span>Região</span>
-                <h3>Centro-Oeste</h3>
-              </div>
-
-              <div class="metric-card">
-                <span>Motor</span>
-                <h3>SEO Intelligence</h3>
-              </div>
-
-              <div class="metric-card">
-                <span>Regra</span>
-                <h3>Sem dados inventados</h3>
-              </div>
-            </div>
-
-            <textarea class="editable-area" id="turing-seo-prompt"
-              placeholder="Prompt operacional do Turing SEO...">Atue como Turing SEO Intelligence do NexoTerraCore. Detecte oportunidades comerciais, territoriais e editoriais reais para o ecossistema NexoTerraCore.</textarea>
-
-            <div class="form-grid" style="margin-top:16px">
-              <input id="turing-seo-query" class="form-control"
-                placeholder="Pesquisar palavra-chave...">
-              <button type="button" class="btn-primary"
-                onclick="executarTuringSeoRadar()">
-                Analisar SEO
-              </button>
-            </div>
-
-            <div id="turing-seo-status" class="review-note" style="margin-top:12px">
-              Radar SEO aguardando consulta.
-            </div>
-
-            <div id="turing-seo-resultados" class="metrics-grid" style="margin-top:14px"></div>
-
-          </div>
-
-          <div class="project-section">
-            <h3><i class="ph ph-map-trifold"></i> Radar Centro-Oeste</h3>
-            <div style="margin:14px 0">
-              <button type="button" class="btn-primary"
-                onclick="consultarRadarCentroOeste()">
-                Consultar API Centro-Oeste
-              </button>
-              <p id="radar-co-status" class="review-note"
-                aria-live="polite">Aguardando consulta autenticada.</p>
-              <div id="radar-co-resultados" class="metrics-grid"></div>
-            </div>
-
-
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span>Paranaiguara</span>
-                <h3>Agro · Ativos · Energia</h3>
-                <span class="badge green">Radar</span>
-              </div>
-
-              <div class="metric-card">
-                <span>São Simão</span>
-                <h3>Agro · Logística</h3>
-                <span class="badge green">Radar</span>
-              </div>
-
-              <div class="metric-card">
-                <span>Quirinópolis</span>
-                <h3>Agroindústria · Bioenergia</h3>
-                <span class="badge green">Radar</span>
-              </div>
-
-              <div class="metric-card">
-                <span>Rio Verde</span>
-                <h3>Mercado · Grãos · Tecnologia</h3>
-                <span class="badge green">Radar</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="project-section">
-            <h3><i class="ph ph-globe-hemisphere-east"></i> Radar Angola / Malanje</h3>
-
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span>Território</span>
-                <h3>Malanje · Cacuso · Fazenda PIPE</h3>
-                <span class="badge orange" id="angola-api-status">API pendente</span>
-              </div>
-
-              <div class="metric-card">
-                <span>SEO</span>
-                <h3>Angola Search Radar</h3>
-                <span id="angola-seo-status">aguardando API</span>
-              </div>
-
-              <div class="metric-card">
-                <span>Produtos</span>
-                <h3>Digital + Offline-first</h3>
-              </div>
-
-              <div class="metric-card">
-                <span>Turing</span>
-                <h3>Intelligence Layer</h3>
-              </div>
-            </div>
-          </div>
 
           <div class="project-section">
             <h3><i class="ph ph-globe"></i> Geo Intelligence</h3>
