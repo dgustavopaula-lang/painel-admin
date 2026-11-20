@@ -148,6 +148,11 @@
 }
 .gps-sidebar-nav .nav-badge.api { color: #34c77b; }
 .gps-sidebar-nav .nav-badge.local { color: #8492a6; }
+.gps-sidebar-nav .nav-app { min-height: 34px; padding: 6px 12px 6px 22px; font-size: 12.5px; }
+.gps-sidebar-nav .nav-app-cat { padding: 10px 12px 2px 22px; font-size: 9.5px; letter-spacing: 1.2px; text-transform: uppercase; color: #6f7d90; }
+.app-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #8492a6; flex-shrink: 0; }
+.app-dot.ok { background: #34c77b; }
+.app-dot.erro { background: #e5484d; }
 .gps-sidebar-nav .nav-badge.api.ok { background: rgba(52,199,123,.18); }
 .gps-sidebar-nav .nav-badge.api.erro { color: #e5484d; background: rgba(229,72,77,.15); }
 </style>
@@ -269,17 +274,14 @@
       <i class="ph ph-house"></i> Início
     </button>
 
-    <!-- Etiquetas: API = lê/grava na NexoTerraCore API · local = só neste navegador · ↗ = abre outro site -->
-    <details class="nav-group" data-grupo="Turing · IA" open>
-      <summary>Turing · IA</summary>
+    <!-- Etiquetas: API = lê/grava na NexoTerraCore API (verde = acesso OK, vermelho = sem acesso) -->
+    <details class="nav-group" data-grupo="Turing" open>
+      <summary>Turing</summary>
       <button class="nav-item" id="nav-lab-conhecimento" onclick="abrirTela('tela-lab-conhecimento')">
-        <i class="ph ph-flask"></i> Laboratório do Turing <em class="nav-badge api">API</em>
-      </button>
-      <button class="nav-item" id="nav-treino" onclick="abrirTela('tela-treino')">
-        <i class="ph ph-tray"></i> Fila de exemplos <em class="nav-badge local">local</em>
+        <i class="ph ph-flask"></i> Laboratório <em class="nav-badge api">API</em>
       </button>
       <button class="nav-item" id="nav-turin" onclick="abrirTela('tela-turin')">
-        <i class="ph ph-robot"></i> Turing · Visão geral <em class="nav-badge api">API</em>
+        <i class="ph ph-robot"></i> Visão geral <em class="nav-badge api">API</em>
       </button>
     </details>
 
@@ -291,56 +293,20 @@
       <button class="nav-item" id="nav-satelite" onclick="abrirTela('tela-satelite')">
         <i class="ph ph-planet"></i> Sentinel-2 · NDVI <em class="nav-badge api">API</em>
       </button>
-      <button class="nav-item" id="nav-nexus" onclick="abrirTela('tela-nexus')">
-        <i class="ph ph-globe-hemisphere-west"></i> Notas NexoTerraCore <em class="nav-badge local">local</em>
-      </button>
-      <button class="nav-item" id="nav-agro" onclick="abrirTela('tela-agro')">
-        <i class="ph ph-test-tube"></i> Notas de testes <em class="nav-badge local">local</em>
-      </button>
     </details>
 
-    <details class="nav-group" data-grupo="Gestão">
-      <summary>Gestão</summary>
-      <button class="nav-item" id="nav-patrimonio" onclick="abrirTela('tela-patrimonio')">
-        <i class="ph ph-buildings"></i> Patrimônio / Imóveis <em class="nav-badge api">API</em>
-      </button>
-      <button class="nav-item" id="nav-financeiro" onclick="abrirTela('tela-financeiro')">
-        <i class="ph ph-currency-dollar"></i> Financeiro <em class="nav-badge local">local</em>
-      </button>
-    </details>
-
-    <details class="nav-group" data-grupo="Comercial">
-      <summary>Comercial</summary>
+    <details class="nav-group" data-grupo="Apps">
+      <summary>Apps</summary>
       <button class="nav-item" id="nav-catalogo" onclick="abrirTela('tela-catalogo')">
-        <i class="ph ph-squares-four"></i> Mini-softwares <em class="nav-badge local">local</em>
+        <i class="ph ph-squares-four"></i> Catálogo de apps <em class="nav-badge api">API</em>
       </button>
-      <button class="nav-item" id="nav-vendas" onclick="abrirTela('tela-vendas')">
-        <i class="ph ph-shopping-cart"></i> Páginas de venda <em class="nav-badge local">local</em>
-      </button>
-      <button class="nav-item" id="nav-clientes" onclick="abrirTela('tela-clientes')">
-        <i class="ph ph-users"></i> Clientes <em class="nav-badge local">local</em>
-      </button>
-      <a class="nav-item nav-externo" id="nav-gps-vendas" href="https://conecta.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-storefront"></i> Conecta (GPS.dev)
-      </a>
+      <div id="nav-apps-lista"></div>
     </details>
 
-    <details class="nav-group" data-grupo="Projetos">
-      <summary>Projetos</summary>
-      <a class="nav-item nav-externo" id="nav-energia" href="https://energia.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-sun"></i> Raiz Energia
-      </a>
-      <a class="nav-item nav-externo" id="nav-minifazenda" href="https://minifazenda.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-tractor"></i> Mini Fazenda Premium
-      </a>
-      <a class="nav-item nav-externo" id="nav-registro" href="https://registro.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-notebook"></i> Registro de Projetos
-      </a>
-      <a class="nav-item nav-externo" id="nav-paranagel" href="https://paranagel.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-warehouse"></i> Paranagel
-      </a>
-      <button class="nav-item" id="nav-edutech" onclick="abrirTela('tela-edutech')">
-        <i class="ph ph-graduation-cap"></i> EduTech <em class="nav-badge local">local</em>
+    <details class="nav-group" data-grupo="Patrimônio">
+      <summary>Patrimônio</summary>
+      <button class="nav-item" id="nav-patrimonio" onclick="abrirTela('tela-patrimonio')">
+        <i class="ph ph-buildings"></i> Imóveis <em class="nav-badge api">API</em>
       </button>
     </details>
 
@@ -352,9 +318,6 @@
       <button class="nav-item" id="nav-backup" onclick="abrirTela('tela-backup')">
         <i class="ph ph-cloud-arrow-up"></i> Backup <em class="nav-badge local">local</em>
       </button>
-      <a class="nav-item nav-externo" id="nav-central" href="https://central.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-archive"></i> Central (antiga)
-      </a>
     </details>
   </nav>
 
@@ -583,7 +546,8 @@
       </div>
 
       <div id="tela-catalogo" class="tela-interna">
-        <p class="vault-hint"><i class="ph ph-info"></i> Clique em qualquer campo para editar. As alterações são salvas ao sair do campo.</p>
+        <p class="vault-hint"><i class="ph ph-info"></i> Lista oficial da NexoTerraCore API (tabela <code>apps</code>). <strong>Verificar agora</strong> pede à VPS para testar cada app: verde = no ar, vermelho = fora do ar ou com erro.</p>
+        <div id="catalogo-resumo" class="metrics-grid"></div>
         <div id="grid-catalogo"></div>
       </div>
 

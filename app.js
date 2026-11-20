@@ -307,6 +307,7 @@ function entrarNoApp() {
   abrirTela('tela-posts');
   if (typeof window.carregarHistoricoTuring === 'function') window.carregarHistoricoTuring();
   if (typeof verificarIntegracaoSidebar === 'function') verificarIntegracaoSidebar();
+  if (typeof carregarAppsApi === 'function') carregarAppsApi();
 }
 
 function sair() {
@@ -349,7 +350,7 @@ function abrirTela(idTela) {
     'tela-financeiro': 'Administração Financeira',
     'tela-clientes': 'Base de Clientes',
     'tela-senhas': 'Cofre de Senhas & Acessos',
-    'tela-catalogo': 'Mini-softwares',
+    'tela-catalogo': 'Catálogo de apps',
     'tela-vendas': 'Vendas / WordPress',
     'tela-api': 'API / Conexão',
     'tela-treino': 'Fila de exemplos do Turing (local)',
@@ -392,7 +393,7 @@ function renderHeaderActions(idTela) {
   } else if (idTela === 'tela-senhas') {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('senhas')"><i class="ph ph-key"></i> Nova Credencial</button>`;
   } else if (idTela === 'tela-catalogo') {
-    container.innerHTML = `<button class="btn-action" onclick="adicionarMini()"><i class="ph ph-plus"></i> Novo Mini-software</button>`;
+    container.innerHTML = `<button class="btn-action" id="btn-verificar-apps" onclick="verificarApps()"><i class="ph ph-pulse"></i> Verificar agora</button>`;
   } else if (idTela === 'tela-vendas') {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('vendas')"><i class="ph ph-plus"></i> Nova página</button>`;
   } else if (idTela === 'tela-treino') {
@@ -412,7 +413,7 @@ function renderCurrentView() {
   if (currentView === 'tela-financeiro') renderFinanceiro();
   if (currentView === 'tela-clientes') renderClientes();
   if (currentView === 'tela-senhas') renderSenhas();
-  if (currentView === 'tela-catalogo') renderCatalogo();
+  if (currentView === 'tela-catalogo') renderCatalogoApi();
   if (currentView === 'tela-vendas') renderVendas();
   if (currentView === 'tela-api') { renderApi(); carregarDadosReaisApi(); }
   if (currentView === 'tela-treino') renderTreino();
@@ -2506,6 +2507,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const ROTAS_SIDEBAR = {
   'nav-lab-conhecimento': '/api/turing/conhecimento/listar',
   'nav-turin': '/api/turing/conhecimento/aprovados',
+  'nav-catalogo': '/api/apps',
   'nav-api': '/api/health',
   'nav-patrimonio': '/api/imoveis',
   'nav-satelite': '/api/geo/ndvi'
@@ -2594,5 +2596,141 @@ async function consultarTuring(ev) {
       </article>`).join('');
   } catch (e) {
     out.textContent = 'Erro na consulta: ' + e.message;
+  }
+}
+
+
+/* ---------------- Catálogo de apps (NexoTerraCore API: /api/apps) ---------------- */
+let appsApi = [];
+const TIPO_ROTULO = { pwa: 'PWA', site: 'Site', projeto: 'Projeto', pessoal: 'Pessoal' };
+const STATUS_APP = ['ativo', 'em_desenvolvimento', 'pausado', 'arquivado'];
+
+function classeSaude(a) {
+  if (a.ultimo_http == null) return '';
+  return (a.ultimo_http >= 200 && a.ultimo_http < 400) ? 'ok' : 'erro';
+}
+
+function textoSaude(a) {
+  if (a.ultimo_http == null) return 'ainda não verificado';
+  const quando = a.ultimo_check_em ? new Date(a.ultimo_check_em).toLocaleString('pt-BR') : '';
+  if (a.ultimo_http === 0) return 'sem resposta · ' + quando;
+  return 'HTTP ' + a.ultimo_http + (a.ultimo_ms != null ? ' · ' + a.ultimo_ms + ' ms' : '') + ' · ' + quando;
+}
+
+async function apiApps(caminho, opcoes) {
+  const tk = tokenDoCofre();
+  if (!tk) throw new Error('Token não encontrado no cofre.');
+  const o = Object.assign({ cache: 'no-store' }, opcoes || {});
+  o.headers = Object.assign({ Authorization: 'Bearer ' + tk }, o.headers || {});
+  const r = await fetch(_baseTuring() + '/api/apps' + (caminho || ''), o);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.ok) throw new Error(d.erro || 'HTTP ' + r.status);
+  return d;
+}
+
+async function carregarAppsApi() {
+  try {
+    const d = await apiApps('');
+    appsApi = d.apps || [];
+  } catch (e) {
+    appsApi = [];
+    const box = document.getElementById('nav-apps-lista');
+    if (box) box.innerHTML = '<p class="nav-app-cat">Apps: ' + escapeHtml(e.message) + '</p>';
+    return;
+  }
+  montarSidebarApps();
+  if (currentView === 'tela-catalogo') desenharCatalogo();
+}
+
+function montarSidebarApps() {
+  const box = document.getElementById('nav-apps-lista');
+  if (!box) return;
+  const porCat = {};
+  appsApi.filter(a => a.status !== 'arquivado').forEach(a => { (porCat[a.categoria] = porCat[a.categoria] || []).push(a); });
+  box.innerHTML = Object.keys(porCat).sort().map(cat =>
+    `<div class="nav-app-cat">${escapeHtml(cat)}</div>` +
+    porCat[cat].map(a => {
+      const href = urlSegura(a.url);
+      return href ? `<a class="nav-item nav-externo nav-app" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(textoSaude(a))}"><span class="app-dot ${classeSaude(a)}"></span> ${escapeHtml(a.nome)}</a>` : '';
+    }).join('')
+  ).join('');
+}
+
+async function renderCatalogoApi() {
+  const root = document.getElementById('grid-catalogo');
+  if (!root) return;
+  root.innerHTML = '<p class="vault-hint">Carregando catálogo da API…</p>';
+  await carregarAppsApi();
+  desenharCatalogo();
+}
+
+function desenharCatalogo() {
+  const root = document.getElementById('grid-catalogo');
+  const resumo = document.getElementById('catalogo-resumo');
+  if (!root) return;
+  if (!appsApi.length) { root.innerHTML = '<p class="vault-hint">Nenhum app retornado pela API. Confira o token e o escopo apps.read.</p>'; return; }
+  const noAr = appsApi.filter(a => classeSaude(a) === 'ok').length;
+  const fora = appsApi.filter(a => classeSaude(a) === 'erro').length;
+  if (resumo) resumo.innerHTML =
+    `<div class="metric-card"><span>Apps</span><h3>${appsApi.length}</h3></div>` +
+    `<div class="metric-card"><span>No ar</span><h3 style="color:var(--success-green)">${noAr}</h3></div>` +
+    `<div class="metric-card"><span>Com problema</span><h3 style="color:var(--danger-red)">${fora}</h3></div>`;
+  const porCat = {};
+  appsApi.forEach(a => { (porCat[a.categoria] = porCat[a.categoria] || []).push(a); });
+  root.innerHTML = Object.keys(porCat).sort().map(cat => `
+    <section class="catalogo-secao">
+      <h2 class="catalogo-secao-titulo">${escapeHtml(cat)} <span>${porCat[cat].length}</span></h2>
+      <div class="catalogo-grid">${porCat[cat].map(cartaoApp).join('')}</div>
+    </section>`).join('');
+}
+
+function cartaoApp(a) {
+  const href = urlSegura(a.url);
+  const opts = STATUS_APP.map(s => `<option value="${s}" ${s === a.status ? 'selected' : ''}>${s.replace('_', ' ')}</option>`).join('');
+  return `
+    <article class="mini-card">
+      <div class="mini-card-top">
+        <strong class="venda-nome"><span class="app-dot ${classeSaude(a)}"></span> ${escapeHtml(a.nome)}</strong>
+        <span class="badge ${a.tipo === 'pwa' ? 'green' : a.tipo === 'pessoal' ? 'red' : 'blue'}">${escapeHtml(TIPO_ROTULO[a.tipo] || a.tipo)}</span>
+      </div>
+      <p class="venda-desc">${a.descricao ? escapeHtml(a.descricao) : '<span class="mini-sem-link">sem descrição</span>'}</p>
+      <div class="mini-link-row"><i class="ph ph-pulse"></i> <span class="mini-sem-link">${escapeHtml(textoSaude(a))}</span></div>
+      <div class="mini-card-footer">
+        ${href ? `<a class="btn-action secondary mini-abrir" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"><i class="ph ph-arrow-square-out"></i> Abrir</a>` : '<span></span>'}
+        <select class="form-control mini-status" title="Status" onchange="alterarApp(${a.id}, {status: this.value})">${opts}</select>
+        <button class="btn-icon" title="Editar descrição" onclick="editarDescricaoApp(${a.id})"><i class="ph ph-pencil"></i></button>
+      </div>
+      <p class="mini-sem-link" style="margin-top:6px">${a.publico ? 'Pode aparecer em vitrine' : 'Privado (não aparece em vitrine)'}</p>
+    </article>`;
+}
+
+async function alterarApp(id, dados) {
+  try {
+    await apiApps('/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+    await carregarAppsApi();
+  } catch (e) {
+    alert('Não foi possível salvar na API: ' + e.message);
+    desenharCatalogo();
+  }
+}
+
+function editarDescricaoApp(id) {
+  const a = appsApi.find(x => x.id === id);
+  if (!a) return;
+  const nova = prompt('Descrição de "' + a.nome + '" (até 2000 caracteres):', a.descricao || '');
+  if (nova === null) return;
+  alterarApp(id, { descricao: nova.slice(0, 2000) });
+}
+
+async function verificarApps() {
+  const btn = document.getElementById('btn-verificar-apps');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ph ph-hourglass"></i> Verificando…'; }
+  try {
+    await apiApps('/verificar', { method: 'POST' });
+    await carregarAppsApi();
+  } catch (e) {
+    alert('Falha na verificação: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph ph-pulse"></i> Verificar agora'; }
   }
 }
