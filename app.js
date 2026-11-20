@@ -354,7 +354,7 @@ function abrirTela(idTela) {
     'tela-financeiro': 'Administração Financeira',
     'tela-clientes': 'Base de Clientes',
     'tela-senhas': 'Cofre de Senhas & Acessos',
-    'tela-catalogo': 'Catálogo de apps',
+    'tela-catalogo': 'Mini-softwares',
     'tela-plantas': 'Plantas do morro',
     'tela-plantas-fila': 'Identificar plantas',
     'tela-plantas-toxicas': 'Plantas tóxicas',
@@ -2661,15 +2661,11 @@ async function carregarAppsApi() {
 function montarSidebarApps() {
   const box = document.getElementById('nav-apps-lista');
   if (!box) return;
-  const porCat = {};
-  appsApi.filter(a => a.status !== 'arquivado').forEach(a => { (porCat[a.categoria] = porCat[a.categoria] || []).push(a); });
-  box.innerHTML = Object.keys(porCat).sort().map(cat =>
-    `<div class="nav-app-cat">${escapeHtml(cat)}</div>` +
-    porCat[cat].map(a => {
-      const href = urlSegura(a.url);
-      return href ? `<a class="nav-item nav-externo nav-app" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(textoSaude(a))}"><span class="app-dot ${classeSaude(a)}"></span> ${escapeHtml(a.nome)}</a>` : '';
-    }).join('')
-  ).join('');
+  const ativos = appsApi.filter(a => a.status !== 'arquivado');
+  const noAr = ativos.filter(a => classeSaude(a) === 'ok').length;
+  const fora = ativos.filter(a => classeSaude(a) === 'erro');
+  box.innerHTML = `<div class="nav-app-cat">${ativos.length} apps · ${noAr} no ar${fora.length ? ' · ' + fora.length + ' com problema' : ''}</div>` +
+    fora.map(a => `<a class="nav-item nav-externo nav-app" href="#" onclick="abrirTela('tela-catalogo');return false" title="${escapeHtml(textoSaude(a))}"><span class="app-dot erro"></span> ${escapeHtml(a.nome)}</a>`).join('');
 }
 
 async function renderCatalogoApi() {
@@ -2678,6 +2674,8 @@ async function renderCatalogoApi() {
   root.innerHTML = '<p class="vault-hint">Carregando catálogo da API…</p>';
   await carregarAppsApi();
   desenharCatalogo();
+  const ultimo = Math.max(0, ...appsApi.map(a => a.ultimo_check_em ? Date.parse(a.ultimo_check_em) : 0));
+  if (appsApi.length && Date.now() - ultimo > 15 * 60 * 1000) verificarApps();
 }
 
 function desenharCatalogo() {
@@ -2691,8 +2689,16 @@ function desenharCatalogo() {
     `<div class="metric-card"><span>Apps</span><h3>${appsApi.length}</h3></div>` +
     `<div class="metric-card"><span>No ar</span><h3 style="color:var(--success-green)">${noAr}</h3></div>` +
     `<div class="metric-card"><span>Com problema</span><h3 style="color:var(--danger-red)">${fora}</h3></div>`;
+  const q = ((document.getElementById('catalogo-busca') || {}).value || '').trim().toLowerCase();
+  const tipo = (document.getElementById('catalogo-tipo') || {}).value || '';
+  const saude = (document.getElementById('catalogo-saude') || {}).value || '';
+  const lista = appsApi.filter(a =>
+    (!q || [a.nome, a.slug, a.categoria, a.descricao].some(v => String(v || '').toLowerCase().includes(q))) &&
+    (!tipo || a.tipo === tipo) &&
+    (!saude || (saude === 'nv' ? classeSaude(a) === '' : classeSaude(a) === saude)));
+  if (!lista.length) { root.innerHTML = '<p class="vault-hint">Nenhum app com esse filtro.</p>'; return; }
   const porCat = {};
-  appsApi.forEach(a => { (porCat[a.categoria] = porCat[a.categoria] || []).push(a); });
+  lista.forEach(a => { (porCat[a.categoria] = porCat[a.categoria] || []).push(a); });
   root.innerHTML = Object.keys(porCat).sort().map(cat => `
     <section class="catalogo-secao">
       <h2 class="catalogo-secao-titulo">${escapeHtml(cat)} <span>${porCat[cat].length}</span></h2>

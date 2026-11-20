@@ -298,7 +298,7 @@
     <details class="nav-group" data-grupo="Apps">
       <summary>Apps</summary>
       <button class="nav-item" id="nav-catalogo" onclick="abrirTela('tela-catalogo')">
-        <i class="ph ph-squares-four"></i> Catálogo de apps <em class="nav-badge api">API</em>
+        <i class="ph ph-squares-four"></i> Mini-softwares <em class="nav-badge api">API</em>
       </button>
       <div id="nav-apps-lista"></div>
     </details>
@@ -567,6 +567,15 @@
       <div id="tela-catalogo" class="tela-interna">
         <p class="vault-hint"><i class="ph ph-info"></i> Lista oficial da NexoTerraCore API (tabela <code>apps</code>). <strong>Verificar agora</strong> pede à VPS para testar cada app: verde = no ar, vermelho = fora do ar ou com erro.</p>
         <div id="catalogo-resumo" class="metrics-grid"></div>
+        <div class="btn-row" id="catalogo-filtros" style="flex-wrap:wrap;gap:8px;margin:12px 0">
+          <input id="catalogo-busca" class="form-control" style="max-width:260px" placeholder="Buscar app…" oninput="desenharCatalogo()">
+          <select id="catalogo-tipo" class="form-control" style="max-width:200px" onchange="desenharCatalogo()">
+            <option value="">Todos os tipos</option><option value="pwa">PWA</option><option value="site">Site</option><option value="projeto">Projeto</option><option value="pessoal">Pessoal</option>
+          </select>
+          <select id="catalogo-saude" class="form-control" style="max-width:200px" onchange="desenharCatalogo()">
+            <option value="">Qualquer situação</option><option value="ok">No ar</option><option value="erro">Com problema</option><option value="nv">Não verificado</option>
+          </select>
+        </div>
         <div id="grid-catalogo"></div>
       </div>
 
