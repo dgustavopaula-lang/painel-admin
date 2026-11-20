@@ -308,6 +308,12 @@
       <button class="nav-item" id="nav-plantas" onclick="abrirTela('tela-plantas')">
         <i class="ph ph-plant"></i> Plantas do morro <em class="nav-badge api">API</em>
       </button>
+      <button class="nav-item" id="nav-plantas-fila" onclick="abrirTela('tela-plantas-fila')">
+        <i class="ph ph-magnifying-glass"></i> Identificar plantas <em class="nav-badge api">API</em>
+      </button>
+      <a class="nav-item" href="/plantas/" target="_blank" rel="noopener">
+        <i class="ph ph-device-mobile"></i> App de campo (fotos) ↗
+      </a>
     </details>
 
     <details class="nav-group" data-grupo="Patrimônio">
@@ -895,6 +901,31 @@
     <h3><i class="ph ph-list"></i> Plantas registradas</h3>
     <div id="plantas-resumo" class="metrics-grid"></div>
     <div id="plantas-lista"></div>
+  </div>
+</div>
+
+<div id="tela-plantas-fila" class="tela-interna">
+  <div class="project-section">
+    <h3><i class="ph ph-list-plus"></i> Anotar nomes rápido</h3>
+    <p class="vault-hint"><i class="ph ph-info"></i> Escreva um nome por linha, do jeito que você conhece a planta. Todas entram na API como <strong>A identificar</strong>. Depois você completa o nome científico e a família na lista abaixo.</p>
+    <div class="form-group"><label for="fila-nomes">Nomes populares (um por linha)</label>
+      <textarea id="fila-nomes" class="form-control" rows="5" maxlength="4000" placeholder="Ex.:&#10;Mulungu&#10;Folha larga da beira da represa&#10;Cipó de flor roxa"></textarea></div>
+    <div class="form-group"><label for="fila-local">Onde estavam (opcional, vale para todas)</label>
+      <input id="fila-local" class="form-control" maxlength="300" placeholder="Ex.: encosta do morro"></div>
+    <div class="btn-row">
+      <button type="button" class="btn-action" onclick="adicionarFilaPlantas()"><i class="ph ph-plus"></i> Adicionar à fila na API</button>
+    </div>
+    <p id="fila-msg" class="vault-hint" role="status"></p>
+  </div>
+  <div class="project-section">
+    <h3><i class="ph ph-magnifying-glass"></i> Fila de identificação</h3>
+    <p class="vault-hint"><i class="ph ph-info"></i> Use as fotos no <a href="https://identify.plantnet.org/pt-br" target="_blank" rel="noopener">Pl@ntNet</a> e confira o nome no GBIF. Ao salvar com nome científico, a planta passa para <strong>Identificada</strong>. Confirme com um especialista antes de considerar certo.</p>
+    <div id="fila-identificar"></div>
+  </div>
+  <div class="project-section">
+    <h3><i class="ph ph-brain"></i> Identificadas · treino do Turing</h3>
+    <p class="vault-hint"><i class="ph ph-info"></i> "Enviar ao Turing" cria um exemplo <strong>pendente</strong> no Laboratório do Turing (nome popular, científico, família e parentes no catálogo). Nada vira resposta do Turing sem sua aprovação.</p>
+    <div id="fila-identificadas"></div>
   </div>
 </div>
 

@@ -337,7 +337,8 @@ function abrirTela(idTela) {
     'tela-vendas': 'nav-vendas', 'tela-api': 'nav-api',
     'tela-treino': 'nav-treino', 'tela-backup': 'nav-backup',
     'tela-lab-conhecimento': 'nav-lab-conhecimento',
-    'tela-plantas': 'nav-plantas'
+    'tela-plantas': 'nav-plantas',
+    'tela-plantas-fila': 'nav-plantas-fila'
   };
   const navEl = document.getElementById(navMap[idTela]);
   if (navEl) {
@@ -353,6 +354,7 @@ function abrirTela(idTela) {
     'tela-senhas': 'Cofre de Senhas & Acessos',
     'tela-catalogo': 'Catálogo de apps',
     'tela-plantas': 'Plantas do morro',
+    'tela-plantas-fila': 'Identificar plantas',
     'tela-vendas': 'Vendas / WordPress',
     'tela-api': 'API / Conexão',
     'tela-treino': 'Fila de exemplos do Turing (local)',
@@ -417,6 +419,7 @@ function renderCurrentView() {
   if (currentView === 'tela-senhas') renderSenhas();
   if (currentView === 'tela-catalogo') renderCatalogoApi();
   if (currentView === 'tela-plantas') renderPlantas();
+  if (currentView === 'tela-plantas-fila') renderFilaPlantas();
   if (currentView === 'tela-vendas') renderVendas();
   if (currentView === 'tela-api') { renderApi(); carregarDadosReaisApi(); }
   if (currentView === 'tela-treino') renderTreino();
@@ -2512,6 +2515,7 @@ const ROTAS_SIDEBAR = {
   'nav-turin': '/api/turing/conhecimento/aprovados',
   'nav-catalogo': '/api/apps',
   'nav-plantas': '/api/plantas',
+  'nav-plantas-fila': '/api/plantas',
   'nav-api': '/api/health',
   'nav-patrimonio': '/api/imoveis',
   'nav-satelite': '/api/geo/ndvi'
@@ -2853,4 +2857,114 @@ function usarLocalizacaoPlanta() {
     msg.textContent = 'Localização preenchida (precisão de ~' + Math.round(pos.coords.accuracy) + ' m).';
   }, () => { msg.textContent = 'Não foi possível obter a localização (permita o acesso no navegador).'; },
   { enableHighAccuracy: true, timeout: 15000 });
+}
+
+
+/* ---------------- Identificar plantas: fila + treino do Turing ---------------- */
+const _gen = p => ((p.nome_cientifico || '').trim().split(/\s+/)[0] || '').toLowerCase();
+const _fam = p => (p.familia || '').trim().toLowerCase();
+
+async function adicionarFilaPlantas() {
+  const msg = document.getElementById('fila-msg');
+  const nomes = [...new Set(document.getElementById('fila-nomes').value.split('\n').map(n => n.trim()).filter(Boolean))];
+  const local = document.getElementById('fila-local').value.trim();
+  if (!nomes.length) { msg.textContent = 'Escreva pelo menos um nome.'; return; }
+  if (nomes.length > 50) { msg.textContent = 'Máximo de 50 nomes por vez.'; return; }
+  let ok = 0; const falhas = [];
+  for (const nome of nomes) {
+    msg.textContent = `Enviando ${ok + falhas.length + 1}/${nomes.length}…`;
+    try {
+      await apiPlantas('', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome_popular: nome.slice(0, 160), status: 'a_identificar', local_descricao: local }) });
+      ok++;
+    } catch (e) { falhas.push(nome + ' (' + e.message + ')'); }
+  }
+  msg.textContent = `${ok} planta(s) adicionada(s) à fila.` + (falhas.length ? ' Falharam: ' + falhas.join('; ') : '');
+  if (ok) document.getElementById('fila-nomes').value = '';
+  await renderFilaPlantas();
+}
+
+async function renderFilaPlantas() {
+  const caixa = document.getElementById('fila-identificar');
+  const caixaId = document.getElementById('fila-identificadas');
+  if (!caixa || !caixaId) return;
+  caixa.innerHTML = '<p class="vault-hint">Carregando da API…</p>';
+  try { plantasApi = (await apiPlantas('')).plantas || []; }
+  catch (e) { caixa.innerHTML = '<p class="vault-hint">Erro: ' + escapeHtml(e.message) + '</p>'; caixaId.innerHTML = ''; return; }
+
+  const fila = plantasApi.filter(p => p.status === 'a_identificar');
+  caixa.innerHTML = fila.length ? fila.map(p => `
+    <div class="mini-card" style="margin-bottom:10px">
+      <div class="mini-card-top"><strong class="venda-nome">#${p.id} · ${escapeHtml(p.nome_popular)}</strong>
+        ${p.local_descricao ? `<span class="mini-sem-link">${escapeHtml(p.local_descricao)}</span>` : ''}</div>
+      <div class="config-grid">
+        <div class="form-group"><label for="fi-c-${p.id}">Nome científico</label><input id="fi-c-${p.id}" class="form-control" maxlength="200" value="${escapeHtml(p.nome_cientifico || '')}" placeholder="Gênero espécie"></div>
+        <div class="form-group"><label for="fi-f-${p.id}">Família</label><input id="fi-f-${p.id}" class="form-control" maxlength="120" value="${escapeHtml(p.familia || '')}" placeholder="Ex.: Fabaceae"></div>
+        <div class="form-group"><label for="fi-p-${p.id}">Parte observada</label><input id="fi-p-${p.id}" class="form-control" maxlength="120" value="${escapeHtml(p.parte_usada || '')}" placeholder="folha, caule, flor"></div>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn-action" onclick="salvarIdentificacao(${p.id})"><i class="ph ph-floppy-disk"></i> Salvar</button>
+        <a class="btn-action secondary" href="https://www.gbif.org/species/search?q=${encodeURIComponent(p.nome_cientifico || p.nome_popular)}" target="_blank" rel="noopener noreferrer"><i class="ph ph-globe"></i> GBIF</a>
+        <button type="button" class="btn-action secondary" onclick="abrirTela('tela-plantas'); setTimeout(() => editarPlanta(${p.id}), 300)"><i class="ph ph-pencil"></i> Ficha completa</button>
+      </div>
+      <p id="fi-msg-${p.id}" class="vault-hint" role="status"></p>
+    </div>`).join('') : '<p class="vault-hint">Fila vazia. Anote nomes acima ou registre pelo app de campo.</p>';
+
+  const ident = plantasApi.filter(p => p.status === 'identificada' || p.status === 'enviada_pesquisa');
+  caixaId.innerHTML = ident.length ? '<div class="catalogo-grid">' + ident.map(p => {
+    const parentes = plantasApi.filter(o => o.id !== p.id && ((_gen(p) && _gen(o) === _gen(p)) || (_fam(p) && _fam(o) === _fam(p))));
+    const toxParente = parentes.some(o => o.toxica);
+    return `<article class="mini-card">
+      <div class="mini-card-top"><strong class="venda-nome">${escapeHtml(p.nome_popular)}</strong>
+        <span class="badge ${p.status === 'identificada' ? 'green' : 'blue'}">${escapeHtml(STATUS_PLANTA[p.status])}</span></div>
+      <p class="venda-desc"><em>${escapeHtml(p.nome_cientifico || '')}</em>${p.familia ? ' · ' + escapeHtml(p.familia) : ''}</p>
+      <p class="mini-sem-link">Parentes no catálogo: ${parentes.length ? parentes.map(o => escapeHtml(o.nome_popular)).join(', ') : 'nenhum ainda'}</p>
+      ${p.toxica || toxParente ? `<p class="venda-desc" style="color:var(--danger-red)"><i class="ph ph-warning"></i> ${p.toxica ? 'Marcada com risco de toxicidade' : 'Tem parente marcado como tóxico'}</p>` : ''}
+      <div class="mini-card-footer"><span></span>
+        <button class="btn-action secondary" onclick="enviarPlantaTuring(${p.id})"><i class="ph ph-brain"></i> Enviar ao Turing</button></div>
+      <p id="fi-msg-${p.id}" class="vault-hint" role="status"></p>
+    </article>`;
+  }).join('') + '</div>' : '<p class="vault-hint">Nenhuma planta identificada ainda.</p>';
+}
+
+async function salvarIdentificacao(id) {
+  const msg = document.getElementById('fi-msg-' + id);
+  const cientifico = document.getElementById('fi-c-' + id).value.trim().replace(/\s+/g, ' ');
+  const dados = {
+    nome_cientifico: cientifico,
+    familia: document.getElementById('fi-f-' + id).value.trim(),
+    parte_usada: document.getElementById('fi-p-' + id).value.trim()
+  };
+  if (cientifico) dados.status = 'identificada';
+  msg.textContent = 'Salvando…';
+  try {
+    await apiPlantas('/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+    msg.textContent = cientifico ? 'Salvo e marcada como identificada ✅' : 'Salvo (continua na fila até ter nome científico).';
+    if (cientifico) setTimeout(renderFilaPlantas, 600);
+  } catch (e) { msg.textContent = 'Não foi possível salvar: ' + e.message; }
+}
+
+async function enviarPlantaTuring(id) {
+  const p = plantasApi.find(x => x.id === id);
+  const msg = document.getElementById('fi-msg-' + id);
+  if (!p || !p.nome_cientifico) return;
+  const tk = tokenDoCofre();
+  if (!tk) { msg.textContent = 'Token não encontrado no cofre.'; return; }
+  const parentes = plantasApi.filter(o => o.id !== p.id && _fam(p) && _fam(o) === _fam(p)).map(o => o.nome_popular + (o.nome_cientifico ? ' (' + o.nome_cientifico + ')' : ''));
+  const resposta = [
+    `No catálogo Plantas do morro, "${p.nome_popular}" está registrada como ${p.nome_cientifico}` + (p.familia ? `, família ${p.familia}.` : '.'),
+    parentes.length ? `Outras plantas da mesma família no catálogo: ${parentes.join(', ')}.` : '',
+    p.toxica ? `Atenção: marcada com risco de toxicidade${p.alerta ? ' (' + p.alerta + ')' : ''}.` : '',
+    'Identificação feita por foto e a confirmar com especialista. Este registro não indica uso, dose ou segurança da planta.'
+  ].filter(Boolean).join(' ');
+  msg.textContent = 'Enviando ao Laboratório do Turing…';
+  try {
+    const r = await fetch(_baseTuring() + '/api/turing/conhecimento/ensinar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tk },
+      body: JSON.stringify({ area: 'Agro', pergunta: `[botânica] O que é a planta "${p.nome_popular}" do catálogo Plantas do morro?`, resposta, fonte: 'Plantas do morro · painel' })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d.erro || 'HTTP ' + r.status);
+    msg.textContent = `Enviado ✅ exemplo #${d.conhecimento && d.conhecimento.id} pendente de revisão no Laboratório do Turing.`;
+  } catch (e) { msg.textContent = 'Falhou: ' + e.message; }
 }
