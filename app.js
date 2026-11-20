@@ -358,7 +358,7 @@ function abrirTela(idTela) {
     'tela-patrimonio': 'Patrimônio / Imóveis',
     'tela-agro': 'Notas de testes (local)',
     'tela-nexus': 'Notas NexoTerraCore (local)',
-    'tela-turin': 'Notas do Turing (local)',
+    'tela-turin': 'Turing · Visão geral',
     'tela-videos': 'Gerenciador de Vídeos',
     'tela-podcast': 'Gerenciador de Podcasts',
     'tela-edutech': 'EduTech · Cursos',
@@ -423,6 +423,7 @@ function renderCurrentView() {
   }
   if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
   if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
+  if (currentView === 'tela-turin') renderTuringVisao();
   if (currentView === 'tela-satelite') renderSatelite();
 }
 
@@ -2504,6 +2505,7 @@ document.addEventListener('DOMContentLoaded', () => {
    Verde = a chave tem acesso · Vermelho = sem acesso ou erro. */
 const ROTAS_SIDEBAR = {
   'nav-lab-conhecimento': '/api/turing/conhecimento/listar',
+  'nav-turin': '/api/turing/conhecimento/aprovados',
   'nav-api': '/api/health',
   'nav-patrimonio': '/api/imoveis',
   'nav-satelite': '/api/geo/ndvi'
@@ -2532,3 +2534,65 @@ async function verificarIntegracaoSidebar() {
 }
 window.verificarIntegracaoSidebar = verificarIntegracaoSidebar;
 setInterval(() => { if (vaultKey) verificarIntegracaoSidebar(); }, 300000);
+
+
+/* ---------------- Turing · Visão geral (dados reais da API) ---------------- */
+function _baseTuring() {
+  return ((appData.config && appData.config.apiBase) || 'https://api.gustavopaulasantos.com.br').replace(/\/+$/, '');
+}
+
+async function renderTuringVisao() {
+  const box = document.getElementById('turing-areas');
+  if (!box) return;
+  const tk = tokenDoCofre();
+  if (!tk) { box.textContent = 'Token "Turing API token" não encontrado no cofre.'; return; }
+  try {
+    const r = await fetch(_baseTuring() + '/api/turing/conhecimento/listar', {
+      headers: { Authorization: 'Bearer ' + tk }, cache: 'no-store'
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d.erro || 'HTTP ' + r.status);
+    const porArea = {};
+    (d.conhecimentos || []).forEach(k => {
+      const a = k.area || 'Sem área';
+      porArea[a] = porArea[a] || { aprovado: 0, rascunho: 0 };
+      if (k.status === 'aprovado') porArea[a].aprovado++;
+      if (k.status === 'rascunho') porArea[a].rascunho++;
+    });
+    const areas = Object.entries(porArea).sort((x, y) => y[1].aprovado - x[1].aprovado);
+    box.innerHTML = areas.length
+      ? areas.map(([a, c]) => `<div class="metric-card"><span>${escapeHtml(a)}</span><h3>${c.aprovado}</h3><p class="metric-sub">aprovados${c.rascunho ? ' · ' + c.rascunho + ' rascunho(s)' : ''}</p></div>`).join('')
+      : '<p class="vault-hint">Nenhum conhecimento registrado ainda.</p>';
+  } catch (e) {
+    box.textContent = 'Não foi possível consultar a API: ' + e.message;
+  }
+}
+
+async function consultarTuring(ev) {
+  if (ev) ev.preventDefault();
+  const out = document.getElementById('turing-consulta-resultado');
+  const q = (document.getElementById('turing-consulta-q').value || '').trim();
+  const tk = tokenDoCofre();
+  if (!tk) { out.textContent = 'Token não encontrado no cofre.'; return; }
+  out.textContent = 'Consultando…';
+  try {
+    const r = await fetch(_baseTuring() + '/api/turing/conhecimento/aprovados?q=' + encodeURIComponent(q), {
+      headers: { Authorization: 'Bearer ' + tk }, cache: 'no-store'
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d.erro || 'HTTP ' + r.status);
+    const lista = d.conhecimentos || [];
+    if (!lista.length) {
+      out.innerHTML = '<p class="vault-hint">O Turing ainda não tem conhecimento aprovado com essa palavra. Ensine no Laboratório.</p>';
+      return;
+    }
+    out.innerHTML = `<p class="vault-hint">${lista.length} resultado(s) — até 20, os mais recentes primeiro.</p>` +
+      lista.map(k => `<article class="lab-registro" style="margin-bottom:10px">
+        <p><strong>#${k.id} · ${escapeHtml(k.area)}</strong></p>
+        <p><strong>Situação:</strong> ${escapeHtml(k.pergunta)}</p>
+        <p><strong>O Turing responde:</strong> ${escapeHtml(k.resposta)}</p>
+      </article>`).join('');
+  } catch (e) {
+    out.textContent = 'Erro na consulta: ' + e.message;
+  }
+}

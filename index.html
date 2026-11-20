@@ -279,7 +279,7 @@
         <i class="ph ph-tray"></i> Fila de exemplos <em class="nav-badge local">local</em>
       </button>
       <button class="nav-item" id="nav-turin" onclick="abrirTela('tela-turin')">
-        <i class="ph ph-robot"></i> Notas do Turing <em class="nav-badge local">local</em>
+        <i class="ph ph-robot"></i> Turing · Visão geral <em class="nav-badge api">API</em>
       </button>
     </details>
 
@@ -739,6 +739,23 @@
       </div>
 
       <div id="tela-turin" class="tela-interna">
+        <div class="project-section">
+          <h3><i class="ph ph-magnifying-glass"></i> Pergunte ao Turing</h3>
+          <p class="vault-hint">Busca no que o Turing já aprendeu (só conhecimentos <strong>aprovados</strong> no Laboratório). Use uma palavra-chave do cenário, por exemplo: <em>login</em>, <em>varredura</em>, <em>API Key</em>.</p>
+          <form id="form-turing-consulta" class="btn-row" onsubmit="consultarTuring(event)">
+            <input id="turing-consulta-q" class="form-control" maxlength="500" placeholder="Palavra-chave (deixe vazio para ver os mais recentes)" style="flex:1;min-width:220px">
+            <button type="submit" class="btn-action"><i class="ph ph-magnifying-glass"></i> Consultar</button>
+          </form>
+          <div id="turing-consulta-resultado" style="margin-top:12px"></div>
+        </div>
+
+        <div class="project-section">
+          <h3><i class="ph ph-chart-bar"></i> O que o Turing sabe, por área</h3>
+          <div id="turing-areas" class="metrics-grid"><p class="vault-hint">Carregando da API…</p></div>
+          <p class="vault-hint">Para ensinar algo novo, use o <button class="link-inline" onclick="abrirTela('tela-lab-conhecimento')">Laboratório do Turing</button>.</p>
+        </div>
+
+        <h3 style="margin:24px 0 8px">Anotações (local, só neste navegador)</h3>
         <div class="project-grid">
           <div>
             <div class="project-section">
@@ -797,24 +814,6 @@
             </div>
           </div>
 
-
-          <div class="project-section">
-            <h3><i class="ph ph-globe"></i> Geo Intelligence</h3>
-
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span>Earth Observation</span>
-                <h3>Sentinel-2</h3>
-                <span class="badge green">Fonte gratuita</span>
-              </div>
-
-              <div class="metric-card">
-                <span>Imagem orbital</span>
-                <h3>Sentinel-2 · última captura</h3>
-                <span class="badge orange" id="sentinel-status">Aguardando conexão</span>
-              </div>
-            </div>
-          </div>
 
         </div>
       </div>
