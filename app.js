@@ -336,7 +336,8 @@ function abrirTela(idTela) {
     'tela-catalogo': 'nav-catalogo', 'tela-edutech': 'nav-edutech', 'tela-angola': 'nav-angola',
     'tela-vendas': 'nav-vendas', 'tela-api': 'nav-api',
     'tela-treino': 'nav-treino', 'tela-backup': 'nav-backup',
-    'tela-lab-conhecimento': 'nav-lab-conhecimento'
+    'tela-lab-conhecimento': 'nav-lab-conhecimento',
+    'tela-plantas': 'nav-plantas'
   };
   const navEl = document.getElementById(navMap[idTela]);
   if (navEl) {
@@ -351,6 +352,7 @@ function abrirTela(idTela) {
     'tela-clientes': 'Base de Clientes',
     'tela-senhas': 'Cofre de Senhas & Acessos',
     'tela-catalogo': 'Catálogo de apps',
+    'tela-plantas': 'Plantas do morro',
     'tela-vendas': 'Vendas / WordPress',
     'tela-api': 'API / Conexão',
     'tela-treino': 'Fila de exemplos do Turing (local)',
@@ -414,6 +416,7 @@ function renderCurrentView() {
   if (currentView === 'tela-clientes') renderClientes();
   if (currentView === 'tela-senhas') renderSenhas();
   if (currentView === 'tela-catalogo') renderCatalogoApi();
+  if (currentView === 'tela-plantas') renderPlantas();
   if (currentView === 'tela-vendas') renderVendas();
   if (currentView === 'tela-api') { renderApi(); carregarDadosReaisApi(); }
   if (currentView === 'tela-treino') renderTreino();
@@ -2508,6 +2511,7 @@ const ROTAS_SIDEBAR = {
   'nav-lab-conhecimento': '/api/turing/conhecimento/listar',
   'nav-turin': '/api/turing/conhecimento/aprovados',
   'nav-catalogo': '/api/apps',
+  'nav-plantas': '/api/plantas',
   'nav-api': '/api/health',
   'nav-patrimonio': '/api/imoveis',
   'nav-satelite': '/api/geo/ndvi'
@@ -2733,4 +2737,120 @@ async function verificarApps() {
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph ph-pulse"></i> Verificar agora'; }
   }
+}
+
+
+/* ---------------- Plantas do morro (NexoTerraCore API: /api/plantas) ---------------- */
+let plantasApi = [];
+const STATUS_PLANTA = {
+  a_identificar: 'A identificar', identificada: 'Identificada',
+  enviada_pesquisa: 'Enviada para pesquisa', descartada: 'Descartada'
+};
+const CAMPOS_PLANTA = {
+  'pl-nome': 'nome_popular', 'pl-cientifico': 'nome_cientifico', 'pl-familia': 'familia',
+  'pl-parte': 'parte_usada', 'pl-local': 'local_descricao', 'pl-uso': 'uso_tradicional',
+  'pl-alerta': 'alerta', 'pl-notas': 'notas', 'pl-status': 'status'
+};
+
+async function apiPlantas(caminho, opcoes) {
+  const tk = tokenDoCofre();
+  if (!tk) throw new Error('Token não encontrado no cofre.');
+  const o = Object.assign({ cache: 'no-store' }, opcoes || {});
+  o.headers = Object.assign({ Authorization: 'Bearer ' + tk }, o.headers || {});
+  const r = await fetch(_baseTuring() + '/api/plantas' + (caminho || ''), o);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.ok) throw new Error(d.erro || 'HTTP ' + r.status);
+  return d;
+}
+
+async function renderPlantas() {
+  const box = document.getElementById('plantas-lista');
+  if (!box) return;
+  box.innerHTML = '<p class="vault-hint">Carregando plantas da API…</p>';
+  try {
+    plantasApi = (await apiPlantas('')).plantas || [];
+  } catch (e) {
+    box.innerHTML = '<p class="vault-hint">Erro: ' + escapeHtml(e.message) + '</p>';
+    return;
+  }
+  const conta = s => plantasApi.filter(p => p.status === s).length;
+  const resumo = document.getElementById('plantas-resumo');
+  if (resumo) resumo.innerHTML = Object.keys(STATUS_PLANTA).filter(s => s !== 'descartada').map(s =>
+    `<div class="metric-card"><span>${STATUS_PLANTA[s]}</span><h3>${conta(s)}</h3></div>`).join('') +
+    `<div class="metric-card"><span>Com alerta de toxicidade</span><h3 style="color:var(--danger-red)">${plantasApi.filter(p => p.toxica).length}</h3></div>`;
+  if (!plantasApi.length) { box.innerHTML = '<p class="vault-hint">Nenhuma planta registrada ainda.</p>'; return; }
+  box.innerHTML = '<div class="catalogo-grid">' + plantasApi.map(p => {
+    const coords = (p.latitude != null && p.longitude != null) ? `${Number(p.latitude).toFixed(5)}, ${Number(p.longitude).toFixed(5)}` : '';
+    const mapa = coords ? `<a class="btn-action secondary mini-abrir" href="https://www.google.com/maps?q=${encodeURIComponent(coords)}" target="_blank" rel="noopener noreferrer"><i class="ph ph-map-pin"></i> Mapa</a>` : '<span></span>';
+    return `<article class="mini-card">
+      <div class="mini-card-top">
+        <strong class="venda-nome">${escapeHtml(p.nome_popular)}</strong>
+        <span class="badge ${p.status === 'identificada' ? 'green' : p.status === 'enviada_pesquisa' ? 'blue' : p.status === 'descartada' ? 'red' : 'orange'}">${escapeHtml(STATUS_PLANTA[p.status] || p.status)}</span>
+      </div>
+      <p class="venda-desc"><em>${p.nome_cientifico ? escapeHtml(p.nome_cientifico) : 'nome científico a confirmar'}</em>${p.familia ? ' · ' + escapeHtml(p.familia) : ''}</p>
+      ${p.toxica ? `<p class="venda-desc" style="color:var(--danger-red)"><i class="ph ph-warning"></i> Risco de toxicidade${p.alerta ? ': ' + escapeHtml(p.alerta) : ''}</p>` : ''}
+      <p class="mini-sem-link">${[p.parte_usada ? 'Parte: ' + escapeHtml(p.parte_usada) : '', p.quantidade != null ? p.quantidade + ' pé(s)' : '', p.local_descricao ? escapeHtml(p.local_descricao) : ''].filter(Boolean).join(' · ')}</p>
+      <div class="mini-card-footer">${mapa}<button class="btn-icon" title="Editar" onclick="editarPlanta(${p.id})"><i class="ph ph-pencil"></i></button></div>
+    </article>`;
+  }).join('') + '</div>';
+}
+
+function limparFormPlanta() {
+  const f = document.getElementById('form-planta');
+  if (f) f.reset();
+  document.getElementById('pl-id').value = '';
+  document.getElementById('pl-salvar').innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar na API';
+  document.getElementById('pl-msg').textContent = '';
+}
+
+function editarPlanta(id) {
+  const p = plantasApi.find(x => x.id === id);
+  if (!p) return;
+  limparFormPlanta();
+  document.getElementById('pl-id').value = p.id;
+  for (const [el, campo] of Object.entries(CAMPOS_PLANTA)) document.getElementById(el).value = p[campo] ?? '';
+  document.getElementById('pl-qtd').value = p.quantidade ?? '';
+  document.getElementById('pl-lat').value = p.latitude ?? '';
+  document.getElementById('pl-lon').value = p.longitude ?? '';
+  document.getElementById('pl-toxica').checked = !!p.toxica;
+  document.getElementById('pl-salvar').innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar alterações';
+  document.getElementById('pl-nome').focus();
+}
+
+async function salvarPlanta(ev) {
+  if (ev) ev.preventDefault();
+  const msg = document.getElementById('pl-msg');
+  const dados = {};
+  for (const [el, campo] of Object.entries(CAMPOS_PLANTA)) dados[campo] = document.getElementById(el).value.trim();
+  dados.quantidade = document.getElementById('pl-qtd').value;
+  dados.latitude = document.getElementById('pl-lat').value;
+  dados.longitude = document.getElementById('pl-lon').value;
+  dados.toxica = document.getElementById('pl-toxica').checked;
+  if (!dados.nome_popular) { msg.textContent = 'Informe o nome popular.'; return; }
+  const id = document.getElementById('pl-id').value;
+  msg.textContent = 'Salvando na API…';
+  try {
+    const r = await apiPlantas(id ? '/' + id : '', {
+      method: id ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+    limparFormPlanta();
+    document.getElementById('pl-msg').textContent = 'Salvo na API: #' + r.planta.id + ' · ' + r.planta.nome_popular;
+    await renderPlantas();
+  } catch (e) {
+    msg.textContent = 'Não foi possível salvar: ' + e.message;
+  }
+}
+
+function usarLocalizacaoPlanta() {
+  const msg = document.getElementById('pl-msg');
+  if (!navigator.geolocation) { msg.textContent = 'Este aparelho não informa localização.'; return; }
+  msg.textContent = 'Obtendo localização…';
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById('pl-lat').value = pos.coords.latitude.toFixed(6);
+    document.getElementById('pl-lon').value = pos.coords.longitude.toFixed(6);
+    msg.textContent = 'Localização preenchida (precisão de ~' + Math.round(pos.coords.accuracy) + ' m).';
+  }, () => { msg.textContent = 'Não foi possível obter a localização (permita o acesso no navegador).'; },
+  { enableHighAccuracy: true, timeout: 15000 });
 }

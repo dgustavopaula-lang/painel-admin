@@ -303,6 +303,13 @@
       <div id="nav-apps-lista"></div>
     </details>
 
+    <details class="nav-group" data-grupo="Natureza">
+      <summary>Natureza</summary>
+      <button class="nav-item" id="nav-plantas" onclick="abrirTela('tela-plantas')">
+        <i class="ph ph-plant"></i> Plantas do morro <em class="nav-badge api">API</em>
+      </button>
+    </details>
+
     <details class="nav-group" data-grupo="Patrimônio">
       <summary>Patrimônio</summary>
       <button class="nav-item" id="nav-patrimonio" onclick="abrirTela('tela-patrimonio')">
@@ -848,6 +855,48 @@
           </div>
         </div>
       </div>
+
+<div id="tela-plantas" class="tela-interna">
+  <div class="project-section">
+    <h3><i class="ph ph-plant"></i> Registrar planta</h3>
+    <p class="vault-hint"><i class="ph ph-info"></i> Catálogo para <strong>pesquisa botânica</strong> (NexoTerraCore API). Registrar uma planta aqui não significa que ela é segura para consumo. Nunca consuma planta sem identificação confirmada.</p>
+    <form id="form-planta" onsubmit="salvarPlanta(event)">
+      <input type="hidden" id="pl-id">
+      <div class="config-grid">
+        <div class="form-group"><label for="pl-nome">Nome popular *</label><input id="pl-nome" class="form-control" maxlength="160" required placeholder="Ex.: Mulungu"></div>
+        <div class="form-group"><label for="pl-cientifico">Nome científico</label><input id="pl-cientifico" class="form-control" maxlength="200" placeholder="Ex.: Erythrina mulungu"></div>
+        <div class="form-group"><label for="pl-familia">Família</label><input id="pl-familia" class="form-control" maxlength="120" placeholder="Ex.: Fabaceae"></div>
+        <div class="form-group"><label for="pl-parte">Parte de interesse</label><input id="pl-parte" class="form-control" maxlength="120" placeholder="Ex.: casca, folha, flor"></div>
+        <div class="form-group"><label for="pl-qtd">Quantidade de pés</label><input id="pl-qtd" class="form-control" type="number" min="0" step="1"></div>
+        <div class="form-group"><label for="pl-status">Status</label>
+          <select id="pl-status" class="form-control">
+            <option value="a_identificar">A identificar</option>
+            <option value="identificada">Identificada</option>
+            <option value="enviada_pesquisa">Enviada para pesquisa</option>
+            <option value="descartada">Descartada</option>
+          </select></div>
+        <div class="form-group"><label for="pl-local">Onde está</label><input id="pl-local" class="form-control" maxlength="300" placeholder="Ex.: encosta do morro, perto da represa"></div>
+        <div class="form-group"><label for="pl-lat">Latitude</label><input id="pl-lat" class="form-control" type="number" step="any"></div>
+        <div class="form-group"><label for="pl-lon">Longitude</label><input id="pl-lon" class="form-control" type="number" step="any"></div>
+      </div>
+      <div class="form-group"><label for="pl-uso">Uso tradicional relatado (o que se diz da planta)</label><textarea id="pl-uso" class="form-control" rows="2" maxlength="4000"></textarea></div>
+      <div class="form-group"><label><input type="checkbox" id="pl-toxica"> Tem risco de toxicidade conhecido</label></div>
+      <div class="form-group"><label for="pl-alerta">Alerta de segurança</label><input id="pl-alerta" class="form-control" maxlength="2000" placeholder="Ex.: sementes tóxicas"></div>
+      <div class="form-group"><label for="pl-notas">Notas</label><textarea id="pl-notas" class="form-control" rows="2" maxlength="4000"></textarea></div>
+      <div class="btn-row">
+        <button type="button" class="btn-action secondary" onclick="usarLocalizacaoPlanta()"><i class="ph ph-map-pin"></i> Usar minha localização</button>
+        <button type="submit" class="btn-action" id="pl-salvar"><i class="ph ph-floppy-disk"></i> Salvar na API</button>
+        <button type="button" class="btn-action secondary" onclick="limparFormPlanta()">Limpar</button>
+      </div>
+      <p id="pl-msg" class="vault-hint" role="status"></p>
+    </form>
+  </div>
+  <div class="project-section">
+    <h3><i class="ph ph-list"></i> Plantas registradas</h3>
+    <div id="plantas-resumo" class="metrics-grid"></div>
+    <div id="plantas-lista"></div>
+  </div>
+</div>
 
 <section id="tela-patrimonio" class="tela-interna">
   <div class="section-header">
