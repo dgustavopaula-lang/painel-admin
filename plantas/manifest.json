@@ -1,0 +1,13 @@
+{
+  "name": "Laboratório de Plantas · NexoTerraCore",
+  "short_name": "Lab Plantas",
+  "start_url": "/plantas/",
+  "scope": "/plantas/",
+  "display": "standalone",
+  "background_color": "#0f1410",
+  "theme_color": "#1f6f3b",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

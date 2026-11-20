@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratório de Plantas</title>
+<meta name="theme-color" content="#1f6f3b">
+<link rel="manifest" href="/plantas/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<style>
+  :root { --bg:#0f1410; --card:#18201a; --line:#2a352c; --txt:#e8efe9; --sub:#9fb0a3; --verde:#3fb26a; --verm:#e5484d; --laranja:#e8a33d; --azul:#4d8fe5; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--txt); font-size:16px; }
+  header { position:sticky; top:0; z-index:5; background:#132017; border-bottom:1px solid var(--line); padding:12px 16px; display:flex; align-items:center; gap:10px; }
+  header h1 { font-size:18px; margin:0; flex:1; }
+  .pill { font-size:12px; padding:3px 9px; border-radius:20px; border:1px solid currentColor; white-space:nowrap; }
+  .on { color:var(--verde); } .off { color:var(--laranja); }
+  nav { display:flex; gap:6px; padding:10px 16px; background:#132017; border-bottom:1px solid var(--line); }
+  nav button { flex:1; padding:10px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--sub); font:inherit; font-size:14px; }
+  nav button.ativo { background:var(--verde); color:#06120a; border-color:var(--verde); font-weight:600; }
+  main { padding:16px; max-width:760px; margin:0 auto; }
+  .tela { display:none; } .tela.ativa { display:block; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+  label { display:block; font-size:13px; color:var(--sub); margin:12px 0 5px; }
+  input, select, textarea { width:100%; padding:12px; border-radius:10px; border:1px solid var(--line); background:#0c110d; color:var(--txt); font:inherit; }
+  textarea { min-height:70px; }
+  .linha { display:flex; gap:10px; } .linha > * { flex:1; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:13px 16px; border-radius:10px; border:0; background:var(--verde); color:#06120a; font:inherit; font-weight:600; width:100%; margin-top:12px; }
+  .btn.sec { background:transparent; color:var(--txt); border:1px solid var(--line); }
+  .aviso { font-size:13px; color:var(--sub); line-height:1.45; }
+  .alerta { background:rgba(229,72,77,.12); border:1px solid rgba(229,72,77,.4); color:#ffb4b6; border-radius:10px; padding:10px 12px; font-size:14px; margin-top:10px; }
+  .fotos { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .fotos img { width:84px; height:84px; object-fit:cover; border-radius:10px; border:1px solid var(--line); }
+  .item { display:flex; gap:12px; align-items:center; padding:12px; border:1px solid var(--line); border-radius:12px; margin-bottom:10px; background:var(--card); }
+  .item img, .item .semfoto { width:64px; height:64px; border-radius:10px; object-fit:cover; flex-shrink:0; background:#0c110d; display:flex; align-items:center; justify-content:center; color:var(--sub); font-size:22px; }
+  .item .info { flex:1; min-width:0; }
+  .item strong { display:block; }
+  .item em { color:var(--sub); font-size:14px; }
+  .badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; margin-top:4px; margin-right:4px; border:1px solid currentColor; }
+  .b-verde { color:var(--verde); } .b-azul { color:var(--azul); } .b-laranja { color:var(--laranja); } .b-verm { color:var(--verm); }
+  .rel h4 { margin:14px 0 6px; font-size:14px; color:var(--sub); text-transform:uppercase; letter-spacing:.5px; }
+  .rel ul { margin:0; padding-left:18px; } .rel li { margin:4px 0; }
+  .msg { margin-top:10px; font-size:14px; color:var(--sub); min-height:18px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌿 Laboratório de Plantas</h1>
+  <span id="rede" class="pill">…</span>
+  <span id="pendentes" class="pill off" hidden></span>
+</header>
+<nav>
+  <button data-tela="t-registrar" class="ativo">Registrar</button>
+  <button data-tela="t-plantas">Plantas</button>
+  <button data-tela="t-config">Config</button>
+</nav>
+<main>
+
+  <section id="t-registrar" class="tela ativa">
+    <div class="card">
+      <p class="aviso">Registro para <strong>pesquisa botânica</strong>. Registrar uma planta <strong>não</strong> significa que ela é segura para consumo. Nunca consuma planta sem identificação confirmada por especialista.</p>
+      <form id="form">
+        <input type="hidden" id="f-local">
+        <label for="f-foto">Fotos (folha, flor, casca, árvore inteira)</label>
+        <input id="f-foto" type="file" accept="image/*" capture="environment" multiple>
+        <div id="f-fotos" class="fotos"></div>
+
+        <label for="f-nome">Nome popular *</label>
+        <input id="f-nome" required maxlength="160" placeholder="Ex.: Mulungu">
+        <label for="f-cientifico">Nome científico</label>
+        <input id="f-cientifico" maxlength="200" placeholder="Ex.: Erythrina mulungu (confirme no Pl@ntNet)">
+        <div class="linha">
+          <div><label for="f-familia">Família</label><input id="f-familia" maxlength="120" placeholder="Ex.: Fabaceae"></div>
+          <div><label for="f-parte">Parte de interesse</label><input id="f-parte" maxlength="120" placeholder="casca, folha…"></div>
+        </div>
+        <div class="linha">
+          <div><label for="f-qtd">Nº de pés</label><input id="f-qtd" type="number" min="0" step="1" inputmode="numeric"></div>
+          <div><label for="f-status">Status</label>
+            <select id="f-status">
+              <option value="a_identificar">A identificar</option>
+              <option value="identificada">Identificada</option>
+              <option value="enviada_pesquisa">Enviada p/ pesquisa</option>
+              <option value="descartada">Descartada</option>
+            </select></div>
+        </div>
+        <label for="f-local-desc">Onde está</label>
+        <input id="f-local-desc" maxlength="300" placeholder="Ex.: encosta do morro, lado da represa">
+        <div class="linha">
+          <div><label for="f-lat">Latitude</label><input id="f-lat" type="number" step="any" inputmode="decimal"></div>
+          <div><label for="f-lon">Longitude</label><input id="f-lon" type="number" step="any" inputmode="decimal"></div>
+        </div>
+        <button type="button" class="btn sec" id="b-gps">📍 Usar minha localização</button>
+        <label for="f-uso">Uso tradicional relatado (o que se diz da planta)</label>
+        <textarea id="f-uso" maxlength="4000"></textarea>
+        <label><input type="checkbox" id="f-toxica" style="width:auto"> Tem risco de toxicidade conhecido</label>
+        <label for="f-alerta">Alerta de segurança</label>
+        <input id="f-alerta" maxlength="2000" placeholder="Ex.: sementes tóxicas">
+        <label for="f-notas">Notas de campo</label>
+        <textarea id="f-notas" maxlength="4000"></textarea>
+        <button type="submit" class="btn" id="b-salvar">💾 Salvar (funciona sem internet)</button>
+        <button type="button" class="btn sec" id="b-limpar">Limpar formulário</button>
+        <div id="f-msg" class="msg" role="status"></div>
+      </form>
+    </div>
+  </section>
+
+  <section id="t-plantas" class="tela">
+    <div class="card">
+      <input id="busca" placeholder="Buscar por nome, gênero, família, uso…">
+      <button class="btn sec" id="b-sync">🔄 Sincronizar com a API</button>
+      <div id="sync-msg" class="msg"></div>
+    </div>
+    <div id="lista"></div>
+    <div id="detalhe" class="card" hidden></div>
+  </section>
+
+  <section id="t-config" class="tela">
+    <div class="card">
+      <h3 style="margin-top:0">Conexão com a NexoTerraCore API</h3>
+      <p class="aviso">Use uma API Key <strong>só para este app</strong>, com os escopos <code>plantas.read</code> e <code>plantas.write</code>. Ela fica guardada apenas neste aparelho.</p>
+      <label for="c-chave">API Key (começa com ntc_live_)</label>
+      <input id="c-chave" type="password" autocomplete="off" placeholder="ntc_live_…">
+      <button class="btn" id="b-chave">Salvar chave</button>
+      <button class="btn sec" id="b-testar">Testar conexão</button>
+      <div id="c-msg" class="msg"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Como funciona</h3>
+      <p class="aviso">1. Tire as fotos e registre, mesmo sem internet: tudo fica guardado no celular.<br>
+      2. Quando a internet voltar, toque em <strong>Sincronizar</strong>: os dados vão para a API.<br>
+      3. Em <strong>Plantas</strong>, toque numa planta para ver a <strong>análise comparativa</strong> (mesmo gênero, mesma família, mesma parte, usos parecidos e alertas).<br>
+      As fotos ficam no celular nesta versão; o envio das fotos para a VPS vem na próxima etapa.</p>
+    </div>
+  </section>
+</main>
+<script src="/plantas/app.js"></script>
+</body>
+</html>
