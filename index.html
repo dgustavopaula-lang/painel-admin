@@ -311,6 +311,9 @@
       <button class="nav-item" id="nav-plantas-fila" onclick="abrirTela('tela-plantas-fila')">
         <i class="ph ph-magnifying-glass"></i> Identificar plantas <em class="nav-badge api">API</em>
       </button>
+      <button class="nav-item" id="nav-plantas-toxicas" onclick="abrirTela('tela-plantas-toxicas')">
+        <i class="ph ph-warning"></i> Plantas tóxicas <em class="nav-badge api">API</em>
+      </button>
       <a class="nav-item" href="/plantas/" target="_blank" rel="noopener">
         <i class="ph ph-device-mobile"></i> App de campo (fotos) ↗
       </a>
@@ -926,6 +929,19 @@
     <h3><i class="ph ph-brain"></i> Identificadas · treino do Turing</h3>
     <p class="vault-hint"><i class="ph ph-info"></i> "Enviar ao Turing" cria um exemplo <strong>pendente</strong> no Laboratório do Turing (nome popular, científico, família e parentes no catálogo). Nada vira resposta do Turing sem sua aprovação.</p>
     <div id="fila-identificadas"></div>
+  </div>
+</div>
+
+<div id="tela-plantas-toxicas" class="tela-interna">
+  <div class="project-section">
+    <h3><i class="ph ph-warning"></i> Plantas tóxicas · referência de precaução</h3>
+    <p class="vault-hint"><i class="ph ph-info"></i> Plantas tóxicas comuns no Brasil, incluindo as que intoxicam gado no Cerrado. Inserir na API cria um registro marcado como <strong>tóxico</strong>, com o local "Referência (não confirmada na propriedade)". Assim o catálogo avisa quando você registrar uma planta da mesma família.</p>
+    <p class="vault-hint" style="color:var(--danger-red)"><i class="ph ph-phone"></i> Em caso de intoxicação: <strong>Disque-Intoxicação 0800 722 6001</strong> (gratuito, 24 h) ou SAMU 192. Leve a planta ou uma foto.</p>
+    <div class="btn-row">
+      <button type="button" class="btn-action" onclick="inserirToxicas()"><i class="ph ph-upload-simple"></i> Inserir as que faltam na API</button>
+    </div>
+    <p id="tox-msg" class="vault-hint" role="status"></p>
+    <div id="tox-lista"></div>
   </div>
 </div>
 

@@ -338,7 +338,8 @@ function abrirTela(idTela) {
     'tela-treino': 'nav-treino', 'tela-backup': 'nav-backup',
     'tela-lab-conhecimento': 'nav-lab-conhecimento',
     'tela-plantas': 'nav-plantas',
-    'tela-plantas-fila': 'nav-plantas-fila'
+    'tela-plantas-fila': 'nav-plantas-fila',
+    'tela-plantas-toxicas': 'nav-plantas-toxicas'
   };
   const navEl = document.getElementById(navMap[idTela]);
   if (navEl) {
@@ -355,6 +356,7 @@ function abrirTela(idTela) {
     'tela-catalogo': 'Catálogo de apps',
     'tela-plantas': 'Plantas do morro',
     'tela-plantas-fila': 'Identificar plantas',
+    'tela-plantas-toxicas': 'Plantas tóxicas',
     'tela-vendas': 'Vendas / WordPress',
     'tela-api': 'API / Conexão',
     'tela-treino': 'Fila de exemplos do Turing (local)',
@@ -420,6 +422,7 @@ function renderCurrentView() {
   if (currentView === 'tela-catalogo') renderCatalogoApi();
   if (currentView === 'tela-plantas') renderPlantas();
   if (currentView === 'tela-plantas-fila') renderFilaPlantas();
+  if (currentView === 'tela-plantas-toxicas') renderToxicas();
   if (currentView === 'tela-vendas') renderVendas();
   if (currentView === 'tela-api') { renderApi(); carregarDadosReaisApi(); }
   if (currentView === 'tela-treino') renderTreino();
@@ -2516,6 +2519,7 @@ const ROTAS_SIDEBAR = {
   'nav-catalogo': '/api/apps',
   'nav-plantas': '/api/plantas',
   'nav-plantas-fila': '/api/plantas',
+  'nav-plantas-toxicas': '/api/plantas',
   'nav-api': '/api/health',
   'nav-patrimonio': '/api/imoveis',
   'nav-satelite': '/api/geo/ndvi'
@@ -2967,4 +2971,69 @@ async function enviarPlantaTuring(id) {
     if (!r.ok || !d.ok) throw new Error(d.erro || 'HTTP ' + r.status);
     msg.textContent = `Enviado ✅ exemplo #${d.conhecimento && d.conhecimento.id} pendente de revisão no Laboratório do Turing.`;
   } catch (e) { msg.textContent = 'Falhou: ' + e.message; }
+}
+
+
+/* ---------------- Plantas tóxicas: referência de precaução ---------------- */
+const TOXICAS_REF = [
+  ['Comigo-ninguém-pode', 'Dieffenbachia spp.', 'Araceae', 'toda a planta', 'Seiva queima boca e garganta; inchaço pode dificultar a respiração.'],
+  ['Copo-de-leite', 'Zantedeschia aethiopica', 'Araceae', 'toda a planta', 'Irritação intensa de boca e garganta.'],
+  ['Tinhorão', 'Caladium bicolor', 'Araceae', 'toda a planta', 'Irritação intensa de boca e garganta.'],
+  ['Antúrio', 'Anthurium spp.', 'Araceae', 'toda a planta', 'Irritação de boca e garganta.'],
+  ['Mamona', 'Ricinus communis', 'Euphorbiaceae', 'sementes', 'Sementes contêm ricina; poucas sementes mastigadas podem ser graves.'],
+  ['Pinhão-roxo', 'Jatropha gossypiifolia', 'Euphorbiaceae', 'sementes, látex', 'Sementes causam vômito e diarreia intensos.'],
+  ['Pinhão-manso', 'Jatropha curcas', 'Euphorbiaceae', 'sementes, látex', 'Sementes causam vômito e diarreia intensos.'],
+  ['Mandioca-brava', 'Manihot esculenta (variedades bravas)', 'Euphorbiaceae', 'raiz e folhas cruas', 'Libera cianeto se consumida crua ou mal processada; perigosa para animais.'],
+  ['Coroa-de-cristo', 'Euphorbia milii', 'Euphorbiaceae', 'látex', 'Látex irrita pele e olhos.'],
+  ['Avelós', 'Euphorbia tirucalli', 'Euphorbiaceae', 'látex', 'Látex causa queimadura na pele e lesão grave nos olhos.'],
+  ['Bico-de-papagaio', 'Euphorbia pulcherrima', 'Euphorbiaceae', 'látex', 'Látex irritante para pele, olhos e boca.'],
+  ['Espirradeira', 'Nerium oleander', 'Apocynaceae', 'toda a planta', 'Afeta o coração; perigosa para pessoas e animais.'],
+  ['Chapéu-de-napoleão', 'Cascabela thevetia (Thevetia peruviana)', 'Apocynaceae', 'toda a planta, sementes', 'Afeta o coração; sementes muito perigosas.'],
+  ['Oficial-de-sala', 'Asclepias curassavica', 'Apocynaceae', 'toda a planta, látex', 'Afeta o coração.'],
+  ['Saia-branca (trombeteira)', 'Brugmansia suaveolens', 'Solanaceae', 'toda a planta', 'Causa delírio, alucinação e taquicardia.'],
+  ['Figueira-do-inferno (estramônio)', 'Datura stramonium', 'Solanaceae', 'toda a planta, sementes', 'Causa delírio, alucinação e taquicardia.'],
+  ['Jequiriti', 'Abrus precatorius', 'Fabaceae', 'sementes', 'Sementes vermelhas e pretas contêm abrina; muito perigosas se mastigadas.'],
+  ['Fedegoso', 'Senna occidentalis', 'Fabaceae', 'sementes', 'Intoxica gado, cavalos e aves (lesão muscular).'],
+  ['Barbatimão', 'Stryphnodendron spp.', 'Fabaceae', 'frutos (vagens)', 'Vagens intoxicam gado e podem causar aborto.'],
+  ['Erva-de-rato', 'Palicourea marcgravii', 'Rubiaceae', 'folhas', 'Principal causa de morte súbita de gado no Brasil.'],
+  ['Samambaia-do-campo', 'Pteridium esculentum subsp. arachnoideum', 'Dennstaedtiaceae', 'folhas', 'Intoxica gado (sangue na urina, tumores) com consumo prolongado.'],
+  ['Cambará (lantana)', 'Lantana camara', 'Verbenaceae', 'folhas, frutos verdes', 'Lesão no fígado e sensibilidade ao sol em gado; frutos verdes perigosos para crianças.']
+];
+const _norm = t => String(t || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/spp\.?/g, '').trim().split(/\s+/).slice(0, 2).join(' ');
+
+async function renderToxicas() {
+  const caixa = document.getElementById('tox-lista');
+  if (!caixa) return;
+  try { plantasApi = (await apiPlantas('')).plantas || []; } catch (e) { document.getElementById('tox-msg').textContent = 'Erro ao ler a API: ' + e.message; }
+  const naApi = new Set(plantasApi.map(p => _norm(p.nome_cientifico)));
+  const naPropriedade = plantasApi.filter(p => p.toxica && !/^Referência/.test(p.local_descricao || ''));
+  caixa.innerHTML = (naPropriedade.length ? `<p class="vault-hint" style="color:var(--danger-red)"><i class="ph ph-warning"></i> Registradas na propriedade com risco: ${naPropriedade.map(p => escapeHtml(p.nome_popular)).join(', ')}</p>` : '') +
+    '<div class="catalogo-grid">' + TOXICAS_REF.map(([pop, cient, fam, parte, alerta]) => `
+    <article class="mini-card">
+      <div class="mini-card-top"><strong class="venda-nome">${escapeHtml(pop)}</strong>
+        <span class="badge ${naApi.has(_norm(cient)) ? 'green' : 'orange'}">${naApi.has(_norm(cient)) ? 'na API' : 'não inserida'}</span></div>
+      <p class="venda-desc"><em>${escapeHtml(cient)}</em> · ${escapeHtml(fam)}</p>
+      <p class="venda-desc" style="color:var(--danger-red)"><i class="ph ph-warning"></i> ${escapeHtml(parte)}: ${escapeHtml(alerta)}</p>
+    </article>`).join('') + '</div>';
+}
+
+async function inserirToxicas() {
+  const msg = document.getElementById('tox-msg');
+  const naApi = new Set(plantasApi.map(p => _norm(p.nome_cientifico)));
+  const faltam = TOXICAS_REF.filter(t => !naApi.has(_norm(t[1])));
+  if (!faltam.length) { msg.textContent = 'Todas já estão na API.'; return; }
+  if (!confirm(`Inserir ${faltam.length} planta(s) tóxica(s) de referência na API?`)) return;
+  let ok = 0; const falhas = [];
+  for (const [pop, cient, fam, parte, alerta] of faltam) {
+    msg.textContent = `Inserindo ${ok + falhas.length + 1}/${faltam.length}…`;
+    try {
+      await apiPlantas('', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        nome_popular: pop, nome_cientifico: cient, familia: fam, parte_usada: parte, status: 'identificada',
+        toxica: true, alerta, local_descricao: 'Referência (não confirmada na propriedade)',
+        notas: 'Lista de precaução do painel. Fontes de referência: SINITOX/Fiocruz e Embrapa (plantas tóxicas para animais).' }) });
+      ok++;
+    } catch (e) { falhas.push(pop + ' (' + e.message + ')'); }
+  }
+  msg.textContent = `${ok} inserida(s).` + (falhas.length ? ' Falharam: ' + falhas.join('; ') : '');
+  await renderToxicas();
 }
