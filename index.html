@@ -314,6 +314,9 @@
       <button class="nav-item" id="nav-plantas-toxicas" onclick="abrirTela('tela-plantas-toxicas')">
         <i class="ph ph-warning"></i> Plantas tóxicas <em class="nav-badge api">API</em>
       </button>
+      <button class="nav-item" id="nav-plantas-uteis" onclick="abrirTela('tela-plantas-uteis')">
+        <i class="ph ph-leaf"></i> Plantas medicinais <em class="nav-badge api">API</em>
+      </button>
       <a class="nav-item" href="/plantas/" target="_blank" rel="noopener">
         <i class="ph ph-device-mobile"></i> App de campo (fotos) ↗
       </a>
@@ -942,6 +945,19 @@
     </div>
     <p id="tox-msg" class="vault-hint" role="status"></p>
     <div id="tox-lista"></div>
+  </div>
+</div>
+
+<div id="tela-plantas-uteis" class="tela-interna">
+  <div class="project-section">
+    <h3><i class="ph ph-leaf"></i> Plantas medicinais · referência</h3>
+    <p class="vault-hint"><i class="ph ph-info"></i> Plantas de uso tradicional no Brasil e no Cerrado, com nome científico e família. Use para comparar com as que você encontrar na propriedade. Conferir a monografia no <strong>Formulário de Fitoterápicos da ANVISA (3ª ed.)</strong>, que está na sua pasta Biblioteca/Plantas.</p>
+    <p class="vault-hint" style="color:var(--danger-red)"><i class="ph ph-warning"></i> "Uso tradicional" é o que se relata, não prova de efeito. Os alertas mostram interações conhecidas: <strong>converse com o médico</strong> antes de usar qualquer planta junto com remédios.</p>
+    <div class="btn-row">
+      <button type="button" class="btn-action" onclick="inserirUteis()"><i class="ph ph-upload-simple"></i> Inserir as que faltam na API</button>
+    </div>
+    <p id="uteis-msg" class="vault-hint" role="status"></p>
+    <div id="uteis-lista"></div>
   </div>
 </div>
 

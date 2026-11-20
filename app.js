@@ -339,7 +339,8 @@ function abrirTela(idTela) {
     'tela-lab-conhecimento': 'nav-lab-conhecimento',
     'tela-plantas': 'nav-plantas',
     'tela-plantas-fila': 'nav-plantas-fila',
-    'tela-plantas-toxicas': 'nav-plantas-toxicas'
+    'tela-plantas-toxicas': 'nav-plantas-toxicas',
+    'tela-plantas-uteis': 'nav-plantas-uteis'
   };
   const navEl = document.getElementById(navMap[idTela]);
   if (navEl) {
@@ -357,6 +358,7 @@ function abrirTela(idTela) {
     'tela-plantas': 'Plantas do morro',
     'tela-plantas-fila': 'Identificar plantas',
     'tela-plantas-toxicas': 'Plantas tóxicas',
+    'tela-plantas-uteis': 'Plantas medicinais',
     'tela-vendas': 'Vendas / WordPress',
     'tela-api': 'API / Conexão',
     'tela-treino': 'Fila de exemplos do Turing (local)',
@@ -423,6 +425,7 @@ function renderCurrentView() {
   if (currentView === 'tela-plantas') renderPlantas();
   if (currentView === 'tela-plantas-fila') renderFilaPlantas();
   if (currentView === 'tela-plantas-toxicas') renderToxicas();
+  if (currentView === 'tela-plantas-uteis') renderUteis();
   if (currentView === 'tela-vendas') renderVendas();
   if (currentView === 'tela-api') { renderApi(); carregarDadosReaisApi(); }
   if (currentView === 'tela-treino') renderTreino();
@@ -2520,6 +2523,7 @@ const ROTAS_SIDEBAR = {
   'nav-plantas': '/api/plantas',
   'nav-plantas-fila': '/api/plantas',
   'nav-plantas-toxicas': '/api/plantas',
+  'nav-plantas-uteis': '/api/plantas',
   'nav-api': '/api/health',
   'nav-patrimonio': '/api/imoveis',
   'nav-satelite': '/api/geo/ndvi'
@@ -3036,4 +3040,71 @@ async function inserirToxicas() {
   }
   msg.textContent = `${ok} inserida(s).` + (falhas.length ? ' Falharam: ' + falhas.join('; ') : '');
   await renderToxicas();
+}
+
+
+/* ---------------- Plantas medicinais: referência (não tóxicas) ----------------
+   [popular, científico, família, parte, uso tradicional relatado, alerta] */
+const UTEIS_REF = [
+  ['Erva-cidreira (melissa)', 'Melissa officinalis', 'Lamiaceae', 'folhas', 'calmante, digestão', ''],
+  ['Erva-cidreira-brasileira', 'Lippia alba', 'Verbenaceae', 'folhas', 'calmante, digestão', ''],
+  ['Capim-santo (capim-limão)', 'Cymbopogon citratus', 'Poaceae', 'folhas', 'calmante, digestão', ''],
+  ['Hortelã', 'Mentha spp.', 'Lamiaceae', 'folhas', 'digestão, gases', ''],
+  ['Boldo-brasileiro', 'Plectranthus barbatus', 'Lamiaceae', 'folhas', 'digestão, fígado', 'Evitar na gravidez e em uso prolongado.'],
+  ['Camomila', 'Matricaria chamomilla', 'Asteraceae', 'flores', 'calmante, digestão', 'Pode dar alergia em quem tem alergia a margaridas.'],
+  ['Erva-doce (funcho)', 'Foeniculum vulgare', 'Apiaceae', 'frutos', 'digestão, gases', ''],
+  ['Alecrim', 'Salvia rosmarinus', 'Lamiaceae', 'folhas', 'digestão, circulação', 'Evitar na gravidez e em pressão alta.'],
+  ['Gengibre', 'Zingiber officinale', 'Zingiberaceae', 'rizoma', 'náusea, garganta', 'Cuidado junto com anticoagulantes.'],
+  ['Açafrão-da-terra', 'Curcuma longa', 'Zingiberaceae', 'rizoma', 'inflamação, digestão', 'Cuidado junto com anticoagulantes e com problemas de vesícula.'],
+  ['Guaco', 'Mikania glomerata', 'Asteraceae', 'folhas', 'tosse, garganta', 'Contém cumarina: não usar junto com anticoagulantes.'],
+  ['Espinheira-santa', 'Monteverdia ilicifolia (Maytenus ilicifolia)', 'Celastraceae', 'folhas', 'azia, estômago', 'Evitar na gravidez e na amamentação.'],
+  ['Carqueja', 'Baccharis crispa', 'Asteraceae', 'partes aéreas', 'digestão, fígado', 'Evitar na gravidez; pode baixar a glicose.'],
+  ['Pata-de-vaca', 'Bauhinia forficata', 'Fabaceae', 'folhas', 'glicose (relato popular)', 'Pode somar efeito com remédios e insulina para diabetes: só com orientação médica.'],
+  ['Maracujá', 'Passiflora edulis', 'Passifloraceae', 'folhas', 'calmante, sono', 'Efeito sedativo: não combinar com remédios para dormir ou ansiedade sem orientação médica.'],
+  ['Mulungu', 'Erythrina mulungu', 'Fabaceae', 'casca', 'calmante, sono', 'Efeito sedativo: não combinar com remédios para dormir ou ansiedade sem orientação médica.'],
+  ['Calêndula', 'Calendula officinalis', 'Asteraceae', 'flores', 'pele, cicatrização (uso externo)', ''],
+  ['Babosa', 'Aloe vera', 'Asphodelaceae', 'gel das folhas', 'queimaduras, pele (uso externo)', 'O suco amarelo da folha é laxante forte: não ingerir.'],
+  ['Tanchagem', 'Plantago major', 'Plantaginaceae', 'folhas', 'garganta, pele', ''],
+  ['Quebra-pedra', 'Phyllanthus niruri', 'Phyllanthaceae', 'planta inteira', 'rins, cálculo (relato popular)', 'Evitar na gravidez.'],
+  ['Pequi', 'Caryocar brasiliense', 'Caryocaraceae', 'fruto', 'alimento do Cerrado', 'Caroço tem espinhos: nunca morder.'],
+  ['Copaíba', 'Copaifera langsdorffii', 'Fabaceae', 'óleo-resina', 'pele, inflamação (uso externo)', 'Não ingerir sem orientação.'],
+  ['Sucupira', 'Pterodon emarginatus', 'Fabaceae', 'sementes', 'dores, garganta (relato popular)', 'Uso interno sem estudos suficientes.'],
+  ['Jatobá-do-cerrado', 'Hymenaea stigonocarpa', 'Fabaceae', 'casca, fruto', 'tosse; fruto é alimento', '']
+];
+
+async function renderUteis() {
+  const caixa = document.getElementById('uteis-lista');
+  if (!caixa) return;
+  try { plantasApi = (await apiPlantas('')).plantas || []; } catch (e) { document.getElementById('uteis-msg').textContent = 'Erro ao ler a API: ' + e.message; }
+  const naApi = new Set(plantasApi.map(p => _norm(p.nome_cientifico)));
+  caixa.innerHTML = '<div class="catalogo-grid">' + UTEIS_REF.map(([pop, cient, fam, parte, uso, alerta]) => `
+    <article class="mini-card">
+      <div class="mini-card-top"><strong class="venda-nome">${escapeHtml(pop)}</strong>
+        <span class="badge ${naApi.has(_norm(cient)) ? 'green' : 'orange'}">${naApi.has(_norm(cient)) ? 'na API' : 'não inserida'}</span></div>
+      <p class="venda-desc"><em>${escapeHtml(cient)}</em> · ${escapeHtml(fam)}</p>
+      <p class="mini-sem-link">Parte: ${escapeHtml(parte)} · uso relatado: ${escapeHtml(uso)}</p>
+      ${alerta ? `<p class="venda-desc" style="color:var(--danger-red)"><i class="ph ph-warning"></i> ${escapeHtml(alerta)}</p>` : ''}
+    </article>`).join('') + '</div>';
+}
+
+async function inserirUteis() {
+  const msg = document.getElementById('uteis-msg');
+  const naApi = new Set(plantasApi.map(p => _norm(p.nome_cientifico)));
+  const faltam = UTEIS_REF.filter(t => !naApi.has(_norm(t[1])));
+  if (!faltam.length) { msg.textContent = 'Todas já estão na API.'; return; }
+  if (!confirm(`Inserir ${faltam.length} planta(s) medicinal(is) de referência na API?`)) return;
+  let ok = 0; const falhas = [];
+  for (const [pop, cient, fam, parte, uso, alerta] of faltam) {
+    msg.textContent = `Inserindo ${ok + falhas.length + 1}/${faltam.length}…`;
+    try {
+      await apiPlantas('', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        nome_popular: pop, nome_cientifico: cient, familia: fam, parte_usada: parte, status: 'identificada',
+        toxica: false, uso_tradicional: 'Relatado: ' + uso, alerta,
+        local_descricao: 'Referência (não confirmada na propriedade)',
+        notas: 'Lista de referência do painel. Conferir monografia no Formulário de Fitoterápicos da ANVISA (3ª ed.). Não é indicação de uso.' }) });
+      ok++;
+    } catch (e) { falhas.push(pop + ' (' + e.message + ')'); }
+  }
+  msg.textContent = `${ok} inserida(s).` + (falhas.length ? ' Falharam: ' + falhas.join('; ') : '');
+  await renderUteis();
 }
