@@ -297,6 +297,7 @@ function entrarNoApp() {
   document.getElementById('tela-login').hidden = true;
   document.getElementById('app-root').hidden = false;
   abrirTela('tela-posts');
+  if (typeof window.carregarHistoricoTuring === 'function') window.carregarHistoricoTuring();
 }
 
 function sair() {
@@ -342,18 +343,18 @@ function abrirTela(idTela) {
     'tela-catalogo': 'Mini-softwares',
     'tela-vendas': 'Vendas / WordPress',
     'tela-api': 'API / Conexão',
-    'tela-treino': 'Treinamento do Turing',
+    'tela-treino': 'Fila de exemplos do Turing (local)',
     'tela-backup': 'Backup',
     'tela-satelite': 'Sentinel-2 · NDVI',
     'tela-patrimonio': 'Patrimônio / Imóveis',
-    'tela-agro': 'Testes de APIs e Projetos',
-    'tela-nexus': 'Projeto: NexoTerraCore',
-    'tela-turin': 'Turing · Inteligência',
+    'tela-agro': 'Notas de testes (local)',
+    'tela-nexus': 'Notas NexoTerraCore (local)',
+    'tela-turin': 'Notas do Turing (local)',
     'tela-videos': 'Gerenciador de Vídeos',
     'tela-podcast': 'Gerenciador de Podcasts',
     'tela-edutech': 'EduTech · Cursos',
     'tela-angola': 'Angola · Formação e oportunidades',
-    'tela-lab-conhecimento': 'Laboratório Turing',
+    'tela-lab-conhecimento': 'Laboratório do Turing',
     'tela-patrimonio': 'Patrimônio / Imóveis'
   };
 
@@ -464,6 +465,7 @@ function renderCurrentView() {
   if (currentView === 'tela-vendas') renderVendas();
   if (currentView === 'tela-api') renderApi();
   if (currentView === 'tela-treino') renderTreino();
+  if (currentView === 'tela-lab-conhecimento' && typeof window.carregarHistoricoTuring === 'function') window.carregarHistoricoTuring();
   if (currentView === 'tela-posts') {
     renderMetricasHome();
     if (!apiChecadaNaSessao) { apiChecadaNaSessao = true; checarSaudeApi(); }
@@ -1221,7 +1223,7 @@ function renderMetricasHome() {
   // Turing em destaque: primeiro e em largura total no topo
   const cardsTuring = [
     ['API / Turing', est.curto, statusApi.ms != null ? `${statusApi.ms} ms` : est.sub, 'tela-api', 'turing'],
-    ['Fila do Turing', `${fila}`, 'exemplos aguardando envio', 'tela-treino', 'turing']
+    ['Fila local do Turing', `${fila}`, 'exemplos neste navegador', 'tela-treino', 'turing']
   ];
   const cardsSecundarios = [
     ['Mini-softwares', `${minis.length}`, `${publicados} publicado(s) · ${comLink} com link`, 'tela-catalogo', ''],
@@ -1303,7 +1305,7 @@ function renderHomeApi() {
         <span class="btn-row-inline">
           <button class="btn-action secondary" onclick="checarSaudeApi()"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
           <button class="btn-action secondary" onclick="abrirTela('tela-api')"><i class="ph ph-gear"></i> Configurar</button>
-          <button class="btn-action secondary" onclick="abrirTela('tela-treino')"><i class="ph ph-brain"></i> Treinar</button>
+          <button class="btn-action secondary" onclick="abrirTela('tela-lab-conhecimento')"><i class="ph ph-flask"></i> Treinar</button>
         </span>
       </div>
       <div class="api-status-grid">
@@ -1324,8 +1326,8 @@ function renderHomeApi() {
           <strong>${statusApi.ms != null ? statusApi.ms + ' ms' : '—'}${statusApi.http ? ' · HTTP ' + statusApi.http : ''}</strong>
         </div>
         <div class="api-status-item">
-          <span>Fila de treino</span>
-          <strong>${fila} exemplo(s) aguardando</strong>
+          <span>Fila local</span>
+          <strong>${fila} exemplo(s) neste navegador</strong>
         </div>
         <div class="api-status-item">
           <span>Última checagem</span>
@@ -1388,7 +1390,7 @@ function apiBaseValida(v) {
 
 function tokenDoCofre() {
   const it = (appData.senhas || []).find(s => String(s.servico || '').trim().toLowerCase() === TOKEN_SERVICO);
-  return it && it.pass ? it.pass : '';
+  return it && it.pass ? String(it.pass).replace(/^\s*Bearer\s+/i, '').trim() : '';
 }
 
 const resultadosTeste = {};
@@ -2518,3 +2520,13 @@ async function verificarStatusApi() {
 }
 verificarStatusApi();
 setInterval(verificarStatusApi, 60000);
+
+
+/* ---------------- Sidebar: um grupo aberto por vez ---------------- */
+document.addEventListener('DOMContentLoaded', () => {
+  const grupos = document.querySelectorAll('.gps-sidebar-nav details.nav-group');
+  grupos.forEach(g => g.addEventListener('toggle', () => {
+    if (!g.open) return;
+    grupos.forEach(outro => { if (outro !== g) outro.open = false; });
+  }));
+});

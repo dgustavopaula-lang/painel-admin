@@ -1,947 +1,183 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Painel | NXTC</title>
-<meta name="theme-color" content="#0f0f0f" />
-<link rel="manifest" href="manifest.json" />
-<link rel="icon" type="image/png" href="icon-192.png" />
-<link rel="apple-touch-icon" href="icon-192.png" />
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
-<link rel="stylesheet" href="style.css" />
-<style id="gps-sidebar-v2">
-.sidebar {
-  width: 252px;
-  max-width: 85vw;
-  display: flex;
-  flex-direction: column;
-  background: #0c111b;
-  color: #e9edf5;
-  border-right: 1px solid #263044;
-  overflow: hidden;
-}
-.gps-sidebar-header {
-  padding: 21px 18px 16px;
-  border-bottom: 1px solid #263044;
-}
-.gps-brand {
-  font-size: 25px;
-  font-weight: 800;
-  letter-spacing: -1px;
-}
-.gps-brand span { color: #eab94b; }
-.gps-sidebar-header small {
-  color: #8492a6;
-  letter-spacing: 2px;
-  font-size: 10px;
-}
-.gps-sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 14px 10px;
-  overflow-y: auto;
-  min-height: 0;
-  flex: 1;
-}
-.gps-sidebar-nav .nav-section-title {
-  padding: 15px 11px 6px;
-  color: #8f9caf;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-.gps-sidebar-nav .nav-item {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 41px;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: #c6d0df;
-  font: inherit;
-  font-size: 13px;
-  line-height: 1.35;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-.gps-sidebar-nav .nav-item i {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.gps-sidebar-nav .nav-item:hover,
-.gps-sidebar-nav .nav-item:focus-visible {
-  background: #1d2939;
-  color: #fff;
-}
-.gps-sidebar-nav .nav-item.active-menu,
-.gps-sidebar-nav .nav-item.nav-itemactive-menu {
-  background: #302819;
-  color: #f3c454;
-}
-.gps-sidebar-footer {
-  padding: 14px 18px;
-  border-top: 1px solid #263044;
-  color: #96a4b5;
-  font-size: 11px;
-}
-.gps-status-dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 7px;
-  border-radius: 50%;
-  background: #34c77b;
-}
-@media (max-width: 768px) {
-  .sidebar {
-    width: min(280px, 85vw);
-    max-height: 100dvh;
-  }
-  .gps-sidebar-nav .nav-item {
-    min-height: 44px;
-    font-size: 14px;
-  }
-}
-
-.gps-sidebar-nav details.nav-group { margin: 0; }
-.gps-sidebar-nav details.nav-group > summary {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px 11px 6px;
-  color: #8f9caf;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  user-select: none;
-}
-.gps-sidebar-nav details.nav-group > summary::-webkit-details-marker { display: none; }
-.gps-sidebar-nav details.nav-group > summary::after {
-  content: "\203A";
-  font-size: 15px;
-  transition: transform .15s ease;
-}
-.gps-sidebar-nav details.nav-group[open] > summary::after { transform: rotate(90deg); }
-.gps-sidebar-nav details.nav-group > summary:hover { color: #fff; }
-.gps-sidebar-footer { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
-.gps-status-dot.off { background: #e5484d; }
-.gps-status-dot.wait { background: #8492a6; }
-#gps-api-status { width: 100%; margin-top: 4px; font-size: 11px; color: #96a4b5; }
-/* sidebar v3: links externos e itens futuros */
-.gps-sidebar-nav .nav-externo::after { content: "\2197"; margin-left: auto; font-size: 11px; opacity: .45; }
-.gps-sidebar-nav .nav-futuro { cursor: default; opacity: .55; }
-.gps-sidebar-nav .nav-futuro:hover { background: transparent; color: inherit; }
-.gps-sidebar-nav .nav-badge {
-  margin-left: auto; padding: 1px 7px; border-radius: 10px; font-size: 9px; font-style: normal;
-  letter-spacing: .5px; text-transform: uppercase; border: 1px solid currentColor; opacity: .8;
-}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carregando...</title>
+<meta name="description" content="">
+<meta property="og:type" content="website">
+<style>
+  :root { --cor: #e8590c; --cor-texto: #fff; --fundo: #121212; --card: #1e1e1e; --texto: #f1f1f1; --suave: #a8a8a8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fundo); color: var(--texto); line-height: 1.5; padding-bottom: 90px; }
+  header { background: var(--cor); color: var(--cor-texto); padding: 32px 20px 28px; text-align: center; }
+  header .tipo { font-size: .85rem; letter-spacing: .12em; text-transform: uppercase; opacity: .9; }
+  header h1 { font-size: 2rem; line-height: 1.15; margin: 6px 0 8px; }
+  header p { opacity: .95; }
+  .status { display: inline-block; margin-top: 14px; padding: 5px 14px; border-radius: 999px; font-size: .9rem; font-weight: 600; background: rgba(0,0,0,.25); }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+  h2 { font-size: 1.2rem; margin: 26px 0 12px; }
+  .itens { display: grid; gap: 10px; }
+  .item { background: var(--card); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .item .info { flex: 1; }
+  .item .nome { font-weight: 600; }
+  .item .desc { color: var(--suave); font-size: .9rem; }
+  .item .preco { font-weight: 700; color: var(--cor); white-space: nowrap; }
+  .qtd { display: flex; align-items: center; gap: 8px; }
+  .qtd button { width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--cor); color: var(--cor-texto); font-size: 1.2rem; font-weight: 700; cursor: pointer; }
+  .qtd span { min-width: 18px; text-align: center; font-weight: 700; }
+  .bloco { background: var(--card); border-radius: 12px; padding: 16px; display: grid; gap: 8px; }
+  .bloco a { color: var(--cor); font-weight: 600; text-decoration: none; }
+  .barra { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px; background: rgba(18,18,18,.96); border-top: 1px solid #2a2a2a; }
+  .barra a { display: block; max-width: 760px; margin: 0 auto; text-align: center; background: #25d366; color: #fff; font-weight: 700; font-size: 1.05rem; padding: 14px; border-radius: 12px; text-decoration: none; }
+  footer { text-align: center; color: var(--suave); font-size: .8rem; margin-top: 30px; }
+  footer a { color: var(--suave); }
 </style>
-
-<style id="gps-patrimonio-css-v1">
-#tela-patrimonio {
-  max-width: 1500px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-#tela-patrimonio .section-header {
-  margin-bottom: 28px;
-}
-
-#tela-patrimonio .card {
-  background: #1b1b1b;
-  border: 1px solid #333;
-  border-radius: 14px;
-  padding: 28px;
-  margin-bottom: 24px;
-}
-
-#form-patrimonio .grid-form {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-  margin: 22px 0;
-}
-
-#form-patrimonio label {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 14px;
-  color: #ccc;
-  min-width: 0;
-}
-
-#form-patrimonio input,
-#form-patrimonio select {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  background: #101010;
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 12px 14px;
-  min-height: 44px;
-  font: inherit;
-}
-
-#form-patrimonio input:focus,
-#form-patrimonio select:focus {
-  outline: 2px solid #ff6a00;
-  outline-offset: 1px;
-}
-
-#form-patrimonio button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: auto;
-  min-height: 44px;
-  margin: 6px 8px 6px 0;
-  padding: 10px 18px;
-  border-radius: 8px;
-}
-
-@media (max-width: 1000px) {
-  #form-patrimonio .grid-form {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 650px) {
-  #tela-patrimonio { padding: 12px; }
-  #tela-patrimonio .card { padding: 16px; }
-  #form-patrimonio .grid-form {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
-  }
-}
-</style>
-
-<link rel="stylesheet" href="gps-command-center.css?v=20261030" />
 </head>
 <body>
 
-  <!-- TELA DE ACESSO: gate local com cofre criptografado. Não é um login de servidor — veja o README. -->
-  <div id="tela-login" class="login-overlay">
-    <form id="form-login" class="login-box">
-      <h1>Painel</h1>
-      <p class="login-subtitle" id="login-subtitle">GPS Command Center • Acesso administrativo</p>
-      <div class="login-identidade">
-        <strong>Gustavo Santos</strong>
-        <span>gustavosantosdev@proton.me</span>
-      </div>
-      <div id="login-campos"></div>
-      <button type="submit" class="btn-action" style="width:100%; justify-content:center; margin-top:12px;">Entrar</button>
-      <p id="login-erro" class="login-erro"></p>
-      <p id="login-aviso" class="login-aviso" hidden>
-        <strong>Importante:</strong> esta senha criptografa o cofre de "Cofre · Senhas e Acessos" no seu navegador.
-        Se você esquecê-la, não existe recuperação — o conteúdo do cofre fica irrecuperável.
-      </p>
-    </form>
-  </div>
-
-  <div id="app-root" class="app-root" hidden>
-    <aside class="sidebar" aria-label="Navegação principal">
-  <div class="gps-sidebar-header">
-    <div class="gps-brand">GPS<span>.dev</span></div>
-    <small>GPS COMMAND CENTER</small>
-  </div>
-
-  <nav class="gps-sidebar-nav" aria-label="Menu principal">
-    <button class="nav-item active-menu" id="nav-home" onclick="abrirTela('tela-posts')">
-      <i class="ph ph-house"></i> Início
-    </button>
-
-    <details class="nav-group" data-grupo="Turing · IA" open>
-      <summary>Turing · IA</summary>
-      <button class="nav-item" id="nav-turin" onclick="abrirTela('tela-turin')">
-        <i class="ph ph-robot"></i> Turing · Inteligência
-      </button>
-      <button class="nav-item" id="nav-treino" onclick="abrirTela('tela-treino')">
-        <i class="ph ph-brain"></i> Treinamento
-      </button>
-      <button class="nav-item" id="nav-lab-conhecimento" onclick="abrirTela('tela-lab-conhecimento')">
-        <i class="ph ph-flask"></i> Laboratório
-      </button>
-    </details>
-
-    <details class="nav-group" data-grupo="Treinamento futuro">
-      <summary>Treinamento futuro</summary>
-      <span class="nav-item nav-futuro" title="Tela turing-seg.js pronta, ainda não ligada ao painel">
-        <i class="ph ph-shield-check"></i> Turing · Segurança <em class="nav-badge">em breve</em>
-      </span>
-      <span class="nav-item nav-futuro" title="Automações e treino contínuo do Turing">
-        <i class="ph ph-lightning"></i> Automação 24h <em class="nav-badge">em breve</em>
-      </span>
-      <span class="nav-item nav-futuro" title="Trazer o Raiz Energia para dentro do painel">
-        <i class="ph ph-solar-panel"></i> Raiz Energia no painel <em class="nav-badge">em breve</em>
-      </span>
-    </details>
-
-    <details class="nav-group" data-grupo="NexoTerraCore" open>
-      <summary>NexoTerraCore</summary>
-      <button class="nav-item" id="nav-api" onclick="abrirTela('tela-api')">
-        <i class="ph ph-plugs-connected"></i> API Central
-      </button>
-      <button class="nav-item" id="nav-nexus" onclick="abrirTela('tela-nexus')">
-        <i class="ph ph-globe-hemisphere-west"></i> Projeto NexoTerraCore
-      </button>
-      <button class="nav-item" id="nav-satelite" onclick="abrirTela('tela-satelite')">
-        <i class="ph ph-planet"></i> Sentinel-2 · NDVI
-      </button>
-      <button class="nav-item" id="nav-agro" onclick="abrirTela('tela-agro')">
-        <i class="ph ph-test-tube"></i> Testes de APIs e Projetos
-      </button>
-    </details>
-
-    <details class="nav-group" data-grupo="Projetos" open>
-      <summary>Projetos</summary>
-      <a class="nav-item nav-externo" id="nav-minifazenda" href="https://minifazenda.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-tractor"></i> Mini Fazenda Premium
-      </a>
-      <a class="nav-item nav-externo" id="nav-energia" href="https://energia.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-sun"></i> Raiz Energia
-      </a>
-      <a class="nav-item nav-externo" id="nav-registro" href="https://registro.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-notebook"></i> Registro de Projetos
-      </a>
-      <a class="nav-item nav-externo" id="nav-central" href="https://central.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-command"></i> Central (antiga)
-      </a>
-      <a class="nav-item nav-externo" id="nav-paranagel" href="https://paranagel.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-warehouse"></i> Paranagel
-      </a>
-    </details>
-
-    <details class="nav-group" data-grupo="Comercial">
-      <summary>Comercial</summary>
-      <a class="nav-item nav-externo" id="nav-gps-vendas" href="https://conecta.gustavopaulasantos.com.br/" target="_blank" rel="noopener noreferrer">
-        <i class="ph ph-storefront"></i> GPS.dev Vendas
-      </a>
-      <button class="nav-item" id="nav-vendas" onclick="abrirTela('tela-vendas')">
-        <i class="ph ph-shopping-cart"></i> Vendas · WordPress
-      </button>
-      <button class="nav-item" id="nav-catalogo" onclick="abrirTela('tela-catalogo')">
-        <i class="ph ph-squares-four"></i> Mini-softwares
-      </button>
-      <button class="nav-item" id="nav-clientes" onclick="abrirTela('tela-clientes')">
-        <i class="ph ph-users"></i> Clientes
-      </button>
-    </details>
-
-    <details class="nav-group" data-grupo="Gestão">
-      <summary>Gestão</summary>
-      <button class="nav-item" id="nav-financeiro" onclick="abrirTela('tela-financeiro')">
-        <i class="ph ph-currency-dollar"></i> Financeiro
-      </button>
-      <button class="nav-item" id="nav-patrimonio" onclick="abrirTela('tela-patrimonio')">
-        <i class="ph ph-buildings"></i> Patrimônio / Imóveis
-      </button>
-    </details>
-
-    <details class="nav-group" data-grupo="Segurança">
-      <summary>Segurança</summary>
-      <button class="nav-item" id="nav-senhas" onclick="abrirTela('tela-senhas')">
-        <i class="ph ph-vault"></i> Cofre de Senhas
-      </button>
-      <button class="nav-item" id="nav-backup" onclick="abrirTela('tela-backup')">
-        <i class="ph ph-cloud-arrow-up"></i> Backup
-      </button>
-    </details>
-
-    <details class="nav-group" data-grupo="Educação">
-      <summary>Educação</summary>
-      <button class="nav-item" id="nav-edutech" onclick="abrirTela('tela-edutech')">
-        <i class="ph ph-graduation-cap"></i> EduTech
-      </button>
-    </details>
-  </nav>
-
-  <div class="gps-sidebar-footer">
-    <span class="gps-status-dot wait" id="gps-api-dot"></span>
-    Painel · NexoTerraCore
-    <div id="gps-api-status">Verificando API…</div>
-  </div>
-</aside>
-    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="alternarMenu(false)"></div>
-
-    <main class="main-content">
-      <header class="top-header">
-        <button class="btn-menu" onclick="alternarMenu()" aria-label="Abrir menu"><i class="ph ph-list"></i></button>
-        <h1 id="titulo-pagina">Home</h1>
-        <div class="header-actions" id="header-actions"></div>
-      </header>
-
-      <div id="tela-posts" class="tela-interna ativa">
-
-        <section id="home-turing-card" class="home-turing-card">
-
-          <div class="home-turing-head">
-            <div class="home-turing-ident">
-              <div class="home-turing-face">
-                <i class="ph ph-shield-check"></i>
-              </div>
-
-              <div>
-                <h2>Turing</h2>
-                <p>NexoTerraCore Intelligence Layer</p>
-              </div>
-            </div>
-
-            <span id="home-turing-badge" class="home-turing-badge">
-              <span class="home-turing-dot"></span>
-              VERIFICANDO
-            </span>
-          </div>
-
-          <div class="home-turing-body">
-
-            <div class="home-turing-avatar">
-              <div class="home-turing-orbit">
-                <i class="ph ph-shield-chevron"></i>
-              </div>
-
-              <strong>TURING</strong>
-              <small>SEGURANÇA · INTELIGÊNCIA</small>
-            </div>
-
-            <div class="home-turing-info">
-
-              <div class="home-turing-row">
-                <span>Status</span>
-                <strong id="home-turing-status">VERIFICANDO</strong>
-              </div>
-
-              <div class="home-turing-row">
-                <span>API</span>
-                <strong id="home-turing-api">NexoTerraCore API</strong>
-              </div>
-
-              <div class="home-turing-row">
-                <span>Função</span>
-                <strong>Segurança · Intelligence Layer</strong>
-              </div>
-
-              <div class="home-turing-row">
-                <span>Proteção</span>
-                <strong>API Core · Sistema · Proprietário</strong>
-              </div>
-
-            </div>
-
-            <div class="home-turing-runtime">
-
-              <span class="home-turing-label">OPERAÇÃO</span>
-              <h3>API Central</h3>
-
-              <div class="home-turing-runtime-box">
-                <strong id="home-turing-health">Consultando API...</strong>
-                <span id="home-turing-latency">latência -- ms</span>
-              </div>
-
-              <div class="home-turing-runtime-box">
-                <strong>Treinamento em andamento</strong>
-                <span>SEO · segurança · radares · contexto</span>
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
-
-
-        <div class="metrics-grid" id="home-metricas"></div>
-        <div id="home-api"></div>
-        <div id="container-posts"></div>
-      </div>
-
-      <div id="tela-edutech" class="tela-interna">
-        <div class="review-panel"><h2>EduTech · Formação para jovens</h2><p>Planejamento de cursos para Angola: técnicas agrícolas básicas, manejo do solo, cultivo, irrigação, inglês técnico e tecnologia aplicada ao campo.</p><div class="review-actions"><a href="https://gustavopaulasantos.com.br" target="_blank" rel="noopener">Abrir site GPS.dev ↗</a></div><p class="review-note">Área de planejamento. Nenhum curso ou matrícula é publicado por esta tela.</p></div>
-      </div>
-
-<div id="tela-lab-conhecimento" class="tela-interna">
-  <div class="lab-conhecimento">
-    <h2>Laboratório Gustavo + Turing</h2>
-    <p>Base de Conhecimento · Edutech Angola · Edutech Brasil · Agro</p>
-    <p class="lab-aviso">API real conectada · conhecimentos enviados ao PostgreSQL para revisão.</p>
-    <form id="form-lab-conhecimento">
-      <label for="lab-area">Área de conhecimento</label>
-      <select id="lab-area" required>
-        <option value="Edutech Angola">Edutech Angola</option>
-        <option value="Edutech Brasil">Edutech Brasil</option>
-        <option value="Agro">Agro</option>
-        <option value="Filosofia GPS.dev">Filosofia GPS.dev</option>
-      </select>
-      <label for="lab-pergunta">Pergunta</label>
-      <textarea id="lab-pergunta" rows="3" maxlength="2000" required></textarea>
-      <label for="lab-orientacao">Sua orientação para o Turing</label>
-      <textarea id="lab-orientacao" rows="5" maxlength="5000" required></textarea>
-      <button type="submit" class="btn-action" id="lab-enviar">Enviar para API</button>
-    </form>
-    <p id="lab-mensagem" role="status"></p>
-    <h3>Conhecimentos registrados na API</h3>
-    <div id="lab-historico"></div>
-  </div>
-</div>
-<div id="tela-financeiro" class="tela-interna">
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <span>Receitas</span>
-            <h3 id="fin-receita" style="color: var(--success-green)">R$ 0,00</h3>
-          </div>
-          <div class="metric-card">
-            <span>Despesas</span>
-            <h3 id="fin-despesa" style="color: var(--danger-red)">R$ 0,00</h3>
-          </div>
-          <div class="metric-card">
-            <span>Saldo Total</span>
-            <h3 id="fin-saldo">R$ 0,00</h3>
-          </div>
-        </div>
-        <div class="data-table-container">
-          <table>
-            <thead>
-              <tr><th>Descrição</th><th>Tipo</th><th>Categoria</th><th>Valor</th><th>Data</th><th>Ações</th></tr>
-            </thead>
-            <tbody id="tbody-financeiro"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tela-clientes" class="tela-interna">
-        <div class="data-table-container">
-          <table>
-            <thead>
-              <tr><th>Nome</th><th>Email</th><th>Telefone</th><th>Status</th><th>Notas</th><th>Ações</th></tr>
-            </thead>
-            <tbody id="tbody-clientes"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tela-senhas" class="tela-interna">
-        <p class="vault-hint"><i class="ph ph-shield-check"></i> Cofre criptografado com a sua senha de acesso (AES-GCM). Veja o README para entender o que isso protege e o que não protege.</p>
-        <div class="data-table-container">
-          <table>
-            <thead>
-              <tr><th>Serviço / Aplicação</th><th>Usuário / Chave</th><th>Senha / Key</th><th>Categoria</th><th>Ações</th></tr>
-            </thead>
-            <tbody id="tbody-senhas"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tela-catalogo" class="tela-interna">
-        <p class="vault-hint"><i class="ph ph-info"></i> Clique em qualquer campo para editar. As alterações são salvas ao sair do campo.</p>
-        <div id="grid-catalogo"></div>
-      </div>
-
-      <div id="tela-vendas" class="tela-interna">
-        <p class="vault-hint"><i class="ph ph-info"></i> Cadastre aqui os links das páginas de venda do WordPress. Os campos começam vazios: preencha com as URLs reais e use o lápis para editar.</p>
-        <div id="grid-vendas" class="catalogo-grid"></div>
-      </div>
-
-      <div id="tela-api" class="tela-interna">
-        <div class="project-section">
-          <h3><i class="ph ph-plugs-connected"></i> Conexão com a NexoTerraCore API</h3>
-          <div class="config-grid">
-            <div class="form-group">
-              <label>URL base da API (https)</label>
-              <input id="cfg-apibase" class="form-control" placeholder="https://..." onchange="salvarConfig()">
-            </div>
-            <div class="form-group">
-              <label>Rota de envio do treinamento</label>
-              <input id="cfg-treinopath" class="form-control" placeholder="/api/turing/training/feedback" onchange="salvarConfig()">
-            </div>
-          </div>
-          <p class="vault-hint" id="api-token-status"></p>
-          <div class="btn-row">
-            <button class="btn-action secondary" onclick="cadastrarTokenNoCofre()"><i class="ph ph-key"></i> Cadastrar token no cofre</button>
-          </div>
-        </div>
-        <div class="project-section">
-          <h3><i class="ph ph-list-checks"></i> Endpoints do Turing</h3>
-          <p class="vault-hint"><i class="ph ph-shield-warning"></i> Marque "Auth verificada" só depois de confirmar que a rota exige autenticação. O envio de treinamento fica bloqueado enquanto a rota não estiver marcada.</p>
-          <div class="data-table-container">
-            <table>
-              <thead><tr><th>Rota</th><th>Método</th><th>Auth</th><th>Verificada</th><th>Teste</th></tr></thead>
-              <tbody id="tbody-endpoints"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="project-section">
-          <h3><i class="ph ph-database"></i> Dados reais da API</h3>
-          <div id="api-dados-reais">
-            <p class="vault-hint">Carregando dados reais...</p>
-          </div>
-          <div class="btn-row">
-            <button class="btn-action secondary" onclick="carregarDadosReaisApi()">
-              <i class="ph ph-arrows-clockwise"></i> Atualizar dados
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="tela-treino" class="tela-interna">
-        <div class="project-grid">
-          <div>
-            <div class="project-section">
-              <h3><i class="ph ph-brain"></i> Exemplos de treinamento (fila local)</h3>
-              <div class="data-table-container">
-                <table>
-                  <thead><tr><th>Texto</th><th>Rótulo</th><th>Origem</th><th>Autorizado</th><th>Envio</th><th>Ações</th></tr></thead>
-                  <tbody id="tbody-treino"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div class="project-section">
-              <h3>Checklist de envio</h3>
-              <div id="treino-checks" class="check-list"></div>
-              <div class="btn-row">
-                <button class="btn-action secondary" onclick="exportarTreino()"><i class="ph ph-download-simple"></i> Exportar lote</button>
-                <button class="btn-action secondary" onclick="previewTreino()"><i class="ph ph-eye"></i> Pré-visualizar</button>
-                <button class="btn-action" id="btn-enviar-treino" onclick="enviarTreino()"><i class="ph ph-paper-plane-tilt"></i> Enviar</button>
-              </div>
-            </div>
-            <div class="project-section">
-              <h3>Regra de dados</h3>
-              <p class="regra-texto">Exemplos com origem <strong>Fazenda PIPE / Malanje</strong> só entram no lote depois que o Altair avaliar a proposta e autorizar o uso. Sem a marca "Autorizado", ficam retidos na fila local.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="tela-backup" class="tela-interna">
-        <div class="project-section">
-          <h3><i class="ph ph-floppy-disk"></i> Backup dos dados do painel</h3>
-          <p class="regra-texto">Exporta catálogo, projetos, vendas, fila do Turing, financeiro, clientes e posts em um arquivo JSON. O cofre de senhas <strong>não</strong> entra no backup.</p>
-          <div class="btn-row">
-            <button class="btn-action" onclick="exportarBackup()"><i class="ph ph-download-simple"></i> Exportar backup</button>
-            <label class="btn-action secondary" style="cursor:pointer;"><i class="ph ph-upload-simple"></i> Importar backup
-              <input type="file" accept=".json,application/json" hidden onchange="importarBackup(event)">
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div id="tela-agro" class="tela-interna">
-        <div class="project-grid">
-          <div>
-            <div class="project-section">
-              <h3><i class="ph ph-leaf"></i> Visão Geral & Documentação do Projeto</h3>
-              <textarea class="editable-area" id="agro-notas" placeholder="Registre endpoints, métodos HTTP, autenticação e resultados dos testes da API Central..." oninput="salvarProjeto('agro')"></textarea>
-            </div>
-            <div class="project-section">
-              <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('agro')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-              <div id="tasks-agro" class="task-list"></div>
-            </div>
-          </div>
-          <div>
-            <div class="project-section">
-              <h3>Status do Projeto</h3>
-              <select id="agro-status" class="form-control" onchange="salvarProjeto('agro')">
-                <option value="Em Planejamento">Em Planejamento</option>
-                <option value="Em Andamento">Em Andamento</option>
-                <option value="Concluído">Concluído</option>
-                <option value="Pausado">Pausado</option>
-              </select>
-            </div>
-            <div class="project-section">
-              <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('agro')"><i class="ph ph-plus"></i> Link</button></h3>
-              <div id="links-agro" class="link-list"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="tela-nexus" class="tela-interna">
-        <div class="project-grid">
-          <div>
-            <div class="project-section">
-              <h3><i class="ph ph-planet"></i> Visão Geral & Arquitetura NexoTerraCore</h3>
-              <textarea class="editable-area" id="nexus-notas" placeholder="Detalhes e especificações do NexoTerraCore..." oninput="salvarProjeto('nexus')"></textarea>
-            </div>
-            <div class="project-section">
-              <h3>Checklist de Tarefas <button class="btn-action" onclick="adicionarTask('nexus')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-              <div id="tasks-nexus" class="task-list"></div>
-            </div>
-          </div>
-          <div>
-            <div class="project-section">
-              <h3>Status do Projeto</h3>
-              <select id="nexus-status" class="form-control" onchange="salvarProjeto('nexus')">
-                <option value="Em Planejamento">Em Planejamento</option>
-                <option value="Em Andamento">Em Andamento</option>
-                <option value="Concluído">Concluído</option>
-                <option value="Pausado">Pausado</option>
-              </select>
-            </div>
-            <div class="project-section">
-              <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('nexus')"><i class="ph ph-plus"></i> Link</button></h3>
-              <div id="links-nexus" class="link-list"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="tela-turin" class="tela-interna">
-        <div class="project-grid">
-          <div>
-            <div class="project-section">
-              <h3><i class="ph ph-robot"></i> Prompts & Arquitetura da IA Turing</h3>
-              <textarea class="editable-area" id="turin-notas" placeholder="Instruções de sistema, prompts e especificações da IA Turing..." oninput="salvarProjeto('turin')"></textarea>
-            </div>
-            <div class="project-section">
-              <h3>Checklist de Desenvolvimento <button class="btn-action" onclick="adicionarTask('turin')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-              <div id="tasks-turin" class="task-list"></div>
-            </div>
-          </div>
-          <div>
-            <div class="project-section">
-              <h3>Status do Projeto</h3>
-              <select id="turin-status" class="form-control" onchange="salvarProjeto('turin')">
-                <option value="Em Planejamento">Em Planejamento</option>
-                <option value="Em Andamento">Em Andamento</option>
-                <option value="Concluído">Concluído</option>
-                <option value="Pausado">Pausado</option>
-              </select>
-            </div>
-            <div class="project-section">
-              <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('turin')"><i class="ph ph-plus"></i> Link</button></h3>
-              <div id="links-turin" class="link-list"></div>
-            </div>
-          </div>
-
-        </div>
-
-        <div id="turing-lab-consolidado">
-
-          <div class="project-section">
-            <h3><i class="ph ph-robot"></i> Turing · Status Operacional</h3>
-
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span>Status</span>
-                <h3>ONLINE</h3>
-                <span class="badge green">Ativo</span>
-              </div>
-
-              <div class="metric-card">
-                <span>Integração</span>
-                <h3>NexoTerraCore API</h3>
-              </div>
-
-              <div class="metric-card">
-                <span>Função</span>
-                <h3>Intelligence Layer</h3>
-              </div>
-
-              <div class="metric-card">
-                <span>Treinamento</span>
-                <h3>Laboratório ativo</h3>
-              </div>
-            </div>
-          </div>
-
-
-          <div class="project-section">
-            <h3><i class="ph ph-globe"></i> Geo Intelligence</h3>
-
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span>Earth Observation</span>
-                <h3>Sentinel-2</h3>
-                <span class="badge green">Fonte gratuita</span>
-              </div>
-
-              <div class="metric-card">
-                <span>Imagem orbital</span>
-                <h3>Sentinel-2 · última captura</h3>
-                <span class="badge orange" id="sentinel-status">Aguardando conexão</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-
-<div id="tela-satelite" class="tela-interna">
-        <div class="project-section">
-          <h3><i class="ph ph-satellite"></i> Sentinel-2 · NDVI</h3>
-          <p class="vault-hint">Consulta territorial via NexoTerraCore API — índice de vegetação por coordenadas.</p>
-          <div class="config-grid">
-            <div class="form-group">
-              <label>Latitude</label>
-              <input id="ndvi-lat" class="form-control" placeholder="-18.95" type="number" step="any">
-            </div>
-            <div class="form-group">
-              <label>Longitude</label>
-              <input id="ndvi-lon" class="form-control" placeholder="-48.27" type="number" step="any">
-            </div>
-          </div>
-          <div class="btn-row">
-            <button class="btn-action" onclick="consultarNdvi()"><i class="ph ph-magnifying-glass"></i> Consultar NDVI</button>
-            <button class="btn-action secondary" onclick="abrirMapsCoords()"><i class="ph ph-map-pin"></i> Ver no Maps</button>
-            <button class="btn-action secondary" onclick="abrirEarthCoords()"><i class="ph ph-globe"></i> Ver no Earth</button>
-          </div>
-          <div id="ndvi-resultado" class="vault-hint" style="margin-top:12px"></div>
-        </div>
-        <div class="project-section">
-          <h3><i class="ph ph-sliders"></i> Coordenadas salvas</h3>
-          <p class="vault-hint">Salve coordenadas das suas propriedades para consulta rápida.</p>
-          <div id="ndvi-presets" class="metrics-grid" style="margin-bottom:12px"></div>
-          <div class="config-grid" style="gap:8px">
-            <div class="form-group">
-              <label>Nome da área</label>
-              <input id="ndvi-preset-nome" class="form-control" placeholder="Fazenda do Lago, Malanje…">
-            </div>
-            <div class="form-group">
-              <label>Latitude</label>
-              <input id="ndvi-preset-lat" class="form-control" type="number" step="any">
-            </div>
-            <div class="form-group">
-              <label>Longitude</label>
-              <input id="ndvi-preset-lon" class="form-control" type="number" step="any">
-            </div>
-          </div>
-          <div class="btn-row" style="margin-top:8px">
-            <button class="btn-action secondary" onclick="salvarPresetNdvi()"><i class="ph ph-floppy-disk"></i> Salvar área</button>
-          </div>
-        </div>
-
-        <div class="project-section">
-          <h3><i class="ph ph-newspaper"></i> Editais &amp; Oportunidades</h3>
-          <p class="vault-hint">Editais públicos, licitações e chamadas de projetos territoriais via Turing.</p>
-          <div class="btn-row">
-            <button class="btn-action" onclick="buscarEditaisTuring()"><i class="ph ph-magnifying-glass"></i> Buscar Editais via Turing</button>
-            <a class="btn-action secondary" href="https://www.comprasgovernamentais.gov.br" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i> ComprasGov</a>
-            <a class="btn-action secondary" href="https://licitacoes-e.com.br" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i> Licitações-e</a>
-          </div>
-          <div id="editais-resultado" class="vault-hint" style="margin-top:10px"></div>
-        </div>
-
-        <div class="project-section">
-          <h3><i class="ph ph-info"></i> Sobre o Sentinel-2</h3>
-          <div class="metrics-grid">
-            <div class="metric-card"><span>Satélite</span><h3>Sentinel-2</h3><p class="metric-sub">ESA · Copernicus</p></div>
-            <div class="metric-card"><span>Resolução</span><h3>10 m</h3><p class="metric-sub">por pixel</p></div>
-            <div class="metric-card"><span>Índice</span><h3>NDVI</h3><p class="metric-sub">-1 a +1</p></div>
-            <div class="metric-card"><span>Cobertura</span><h3>Global</h3><p class="metric-sub">revisita ~5 dias</p></div>
-          </div>
-        </div>
-      </div>
-
-<section id="tela-patrimonio" class="tela-interna">
-  <div class="section-header">
-    <h2>Patrimônio / Imóveis</h2>
-    <p>Gestão de imóveis vinculada à API Central NexoTerraCore.</p>
-  </div>
-  <div class="card">
-
-<h3>Cadastro de Imóveis</h3>
-<form id="form-patrimonio">
-  <div class="grid-form">
-    <label>Identificação
-      <input name="titulo" required maxlength="180">
-    </label>
-    <label>Matrícula
-      <input name="matricula" required maxlength="100">
-    </label>
-    <label>Tipo
-      <select name="tipo">
-        <option>Casa</option>
-        <option>Apartamento</option>
-        <option>Terreno</option>
-        <option>Fazenda</option>
-        <option>Comercial</option>
-      </select>
-    </label>
-    <label>Rua / Endereço
-      <input name="endereco">
-    </label>
-    <label>Número
-      <input name="numero">
-    </label>
-    <label>Bairro
-      <input name="bairro">
-    </label>
-    <label>Cidade
-      <input name="cidade">
-    </label>
-    <label>UF
-      <input name="uf" maxlength="2">
-    </label>
-    <label>CEP
-      <input name="cep">
-    </label>
-    <label>Área do terreno (m²)
-      <input name="terreno" type="number" min="0" step="0.01">
-    </label>
-    <label>Área construída (m²)
-      <input name="area" type="number" min="0" step="0.01">
-    </label>
-    <label>Valor do imóvel (R$)
-      <input name="valor" type="number" min="0" step="0.01">
-    </label>
-  </div>
-  <p id="patrimonio-valor-m2">Valor por m²: —</p>
-  <button type="button" class="btn-action"
-    onclick="abrirMapaPatrimonio()">Google Maps</button>
-  <button type="button" class="btn-action secondary"
-    onclick="abrirEarthPatrimonio()">Google Earth</button>
-  <button type="button" class="btn-action"
-    onclick="salvarPatrimonio()">Salvar na API</button>
-  <p id="patrimonio-mensagem" role="status"></p>
-</form>
-
-    <p>Consulta e cadastro autenticados pela rota /api/imoveis.</p>
-    <p>Endereço, matrícula, valores, Google Maps e Google Earth.</p>
-    <p>Os registros existentes serão preservados.</p>
-  </div>
-  <div id="patrimonio-lista" class="card"></div>
-</section>
-
+<header>
+  <div class="tipo" id="tipo"></div>
+  <h1 id="nome"></h1>
+  <p id="destaque"></p>
+  <div class="status" id="status"></div>
+</header>
+
+<main>
+  <h2 id="tituloItens"></h2>
+  <div class="itens" id="itens"></div>
+
+  <h2>Onde estamos</h2>
+  <div class="bloco" id="contato"></div>
+
+  <footer>
+    © <span id="ano"></span> <span id="rodapeNome"></span> · Site por <a href="https://gustavopaulasantos.com.br" target="_blank" rel="noopener">GPS.dev</a>
+  </footer>
 </main>
 
-    <div id="modal-container" class="modal-overlay">
-      <div class="modal-box">
-        <h3 id="modal-titulo">Adicionar Registro</h3>
-        <div id="modal-body"></div>
-        <div class="modal-footer">
-          <button class="btn-action secondary" onclick="fecharModal()">Cancelar</button>
-          <button class="btn-action" onclick="salvarModal()">Salvar Dados</button>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="barra"><a id="botaoWhats" target="_blank" rel="noopener"></a></div>
 
-  <link rel="stylesheet" href="lab-conhecimento.css">
-  <script src="app.js"></script>
-  <script src="lab-conhecimento.js"></script>
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js');
-  });
+/* =====================================================================
+   CONFIGURAÇÃO DO CLIENTE — troque SÓ este bloco para cada comércio.
+   ===================================================================== */
+const CONFIG = {
+  nome: "Borracharia do Zé",
+  tipo: "Borracharia",                 // Lanchonete, Depósito de Gás, Bar, Barbearia...
+  destaque: "Atendimento rápido, perto de você.",
+  whatsapp: "5562999999999",           // 55 + DDD + número, só dígitos
+  endereco: "Rua das Flores, 120 - Centro, Cidade/GO",
+  mapa: "",                            // link do Google Maps (vazio = busca pelo endereço)
+  instagram: "",                       // ex.: "borrachariadoze" (sem @)
+  cor: "#e8590c",                      // cor principal
+  corTexto: "#ffffff",
+
+  // Horário: dia da semana (0 = domingo ... 6 = sábado) → [abre, fecha]. Vazio = fechado.
+  horario: {
+    0: [],
+    1: ["07:00", "18:00"], 2: ["07:00", "18:00"], 3: ["07:00", "18:00"],
+    4: ["07:00", "18:00"], 5: ["07:00", "18:00"], 6: ["07:00", "12:00"]
+  },
+  horarioTexto: "Seg a Sex 7h–18h · Sáb 7h–12h",
+
+  // modo "lista":  só mostra serviços/preços; o botão chama no WhatsApp.
+  // modo "pedido": cada item tem + e −, e o botão envia o pedido montado.
+  modo: "lista",
+  tituloItens: "Serviços e preços",
+
+  itens: [
+    { nome: "Remendo de pneu (carro)", preco: 30, desc: "" },
+    { nome: "Calibragem", preco: 5, desc: "" },
+    { nome: "Troca de pneu", preco: 40, desc: "Mão de obra" }
+  ]
+};
+/* ===================== FIM DA CONFIGURAÇÃO ===================== */
+
+/* --- Exemplos prontos para copiar no lugar de "itens" e "modo" ---
+Lanchonete  (modo: "pedido", tituloItens: "Cardápio"):
+  { nome: "X-Burguer", preco: 18, desc: "Pão, carne, queijo e salada" },
+  { nome: "Coxinha", preco: 7, desc: "" },
+  { nome: "Refrigerante lata", preco: 6, desc: "" }
+Depósito de Gás  (modo: "pedido", tituloItens: "Produtos"):
+  { nome: "Botijão P13", preco: 120, desc: "Entrega no bairro" },
+  { nome: "Galão de água 20L", preco: 15, desc: "" }
+Bar da Rodoviária  (modo: "pedido", tituloItens: "Cardápio"):
+  { nome: "Café", preco: 4, desc: "" },
+  { nome: "Pão de queijo", preco: 5, desc: "" },
+  { nome: "Prato feito", preco: 25, desc: "Almoço" }
+*/
+
+const $ = (id) => document.getElementById(id);
+const real = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const qtd = CONFIG.itens.map(() => 0);
+
+document.documentElement.style.setProperty("--cor", CONFIG.cor);
+document.documentElement.style.setProperty("--cor-texto", CONFIG.corTexto);
+document.title = `${CONFIG.nome} · ${CONFIG.tipo}`;
+document.querySelector('meta[name="description"]').content = `${CONFIG.tipo} em ${CONFIG.endereco}. ${CONFIG.destaque}`;
+$("tipo").textContent = CONFIG.tipo;
+$("nome").textContent = CONFIG.nome;
+$("destaque").textContent = CONFIG.destaque;
+$("tituloItens").textContent = CONFIG.tituloItens;
+$("rodapeNome").textContent = CONFIG.nome;
+$("ano").textContent = new Date().getFullYear();
+
+function abertoAgora() {
+  const agora = new Date();
+  const h = CONFIG.horario[agora.getDay()] || [];
+  if (h.length !== 2) return false;
+  const min = agora.getHours() * 60 + agora.getMinutes();
+  const [a, f] = h.map((t) => { const [hh, mm] = t.split(":").map(Number); return hh * 60 + mm; });
+  return min >= a && min < f;
 }
+$("status").textContent = abertoAgora() ? "● Aberto agora" : "● Fechado agora";
+
+function renderItens() {
+  $("itens").innerHTML = CONFIG.itens.map((it, i) => `
+    <div class="item">
+      <div class="info">
+        <div class="nome">${esc(it.nome)}</div>
+        ${it.desc ? `<div class="desc">${esc(it.desc)}</div>` : ""}
+        <div class="preco">${real(it.preco)}</div>
+      </div>
+      ${CONFIG.modo === "pedido" ? `
+      <div class="qtd">
+        <button aria-label="Remover" onclick="mudar(${i},-1)">−</button>
+        <span>${qtd[i]}</span>
+        <button aria-label="Adicionar" onclick="mudar(${i},1)">+</button>
+      </div>` : ""}
+    </div>`).join("");
+  atualizarBotao();
+}
+
+function mudar(i, d) { qtd[i] = Math.max(0, qtd[i] + d); renderItens(); }
+
+function atualizarBotao() {
+  const escolhidos = CONFIG.itens.map((it, i) => ({ ...it, q: qtd[i] })).filter((it) => it.q > 0);
+  let texto, rotulo;
+  if (CONFIG.modo === "pedido" && escolhidos.length) {
+    const total = escolhidos.reduce((s, it) => s + it.q * it.preco, 0);
+    texto = `Olá, ${CONFIG.nome}! Quero fazer um pedido:\n` +
+      escolhidos.map((it) => `• ${it.q}x ${it.nome} — ${real(it.q * it.preco)}`).join("\n") +
+      `\nTotal: ${real(total)}`;
+    rotulo = `Enviar pedido · ${real(total)}`;
+  } else {
+    texto = `Olá, ${CONFIG.nome}! Vi a página de vocês e gostaria de mais informações.`;
+    rotulo = "Chamar no WhatsApp";
+  }
+  $("botaoWhats").href = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(texto)}`;
+  $("botaoWhats").textContent = rotulo;
+}
+
+const mapa = CONFIG.mapa || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONFIG.endereco)}`;
+$("contato").innerHTML = `
+  <div>📍 ${esc(CONFIG.endereco)}</div>
+  <div>🕒 ${esc(CONFIG.horarioTexto)}</div>
+  <a href="${mapa}" target="_blank" rel="noopener">Abrir no mapa →</a>
+  ${CONFIG.instagram ? `<a href="https://instagram.com/${esc(CONFIG.instagram)}" target="_blank" rel="noopener">Instagram @${esc(CONFIG.instagram)} →</a>` : ""}`;
+
+renderItens();
 </script>
 </body>
 </html>
