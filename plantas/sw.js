@@ -1,5 +1,5 @@
 /* Laboratório de Plantas — funciona offline. A API nunca é guardada em cache. */
-const CACHE = 'lab-plantas-v1';
+const CACHE = 'lab-plantas-v2';
 const SHELL = ['/plantas/', '/plantas/index.html', '/plantas/app.js', '/plantas/manifest.json', '/icon-192.png'];
 
 self.addEventListener('install', e => {
