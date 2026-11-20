@@ -44,21 +44,29 @@ const SEED_VENDAS = [
   { id: 4, nome: 'Turing Agro — proposta', desc: 'Inteligência e gestão para fazendas: insumos, estoque, máquinas, custos e alertas.', url: '', status: 'A configurar' }
 ];
 
+// Rotas reais usadas pelo painel (conferidas na API em 20/11/2026).
 const SEED_ENDPOINTS = [
-  { rota: '/api/turing/training/health', metodo: 'GET', auth: 'Nenhuma (verificar)', verificado: false },
-  { rota: '/api/turing/training/classificar', metodo: 'POST', auth: 'Verificar', verificado: false },
-  { rota: '/api/turing/training/feedback', metodo: 'POST', auth: 'Verificar', verificado: false },
-  { rota: '/api/turing/training/promote', metodo: 'POST', auth: 'TRAINING_APPROVAL_TOKEN', verificado: false },
+  { rota: '/api/health', metodo: 'GET', auth: 'Pública', verificado: true },
+  { rota: '/api/turing/conhecimento/listar', metodo: 'GET', auth: 'API Key · turing:training', verificado: true },
+  { rota: '/api/imoveis', metodo: 'GET', auth: 'API Key · assets.read', verificado: true },
+  { rota: '/api/geo/ndvi', metodo: 'GET', auth: 'Token (qualquer válido)', verificado: true },
+  { rota: '/api/turing/security/health', metodo: 'GET', auth: 'Token (qualquer válido)', verificado: true },
+  { rota: '/api/control-plane', metodo: 'GET', auth: 'API Key · control_plane.read', verificado: true },
+  { rota: '/api/turing/training/feedback', metodo: 'POST', auth: 'Token (fila local)', verificado: true }
 ];
+const ENDPOINTS_VERSAO = 2;
 
 function configPadrao() {
-  return { apiBase: 'https://api.gustavopaulasantos.com.br', treinoPath: '/api/turing/training/feedback', endpoints: JSON.parse(JSON.stringify(SEED_ENDPOINTS)) };
+  return { apiBase: 'https://api.gustavopaulasantos.com.br', treinoPath: '/api/turing/training/feedback', endpoints: JSON.parse(JSON.stringify(SEED_ENDPOINTS)), endpointsVersao: ENDPOINTS_VERSAO };
 }
 
 function normalizarConfig(cfg) {
   const base = configPadrao();
   const c = Object.assign(base, cfg || {});
-  if (!Array.isArray(c.endpoints) || !c.endpoints.length) c.endpoints = base.endpoints;
+  if (!Array.isArray(c.endpoints) || !c.endpoints.length || c.endpointsVersao !== ENDPOINTS_VERSAO) {
+    c.endpoints = base.endpoints;
+    c.endpointsVersao = ENDPOINTS_VERSAO;
+  }
   return c;
 }
 
@@ -298,6 +306,7 @@ function entrarNoApp() {
   document.getElementById('app-root').hidden = false;
   abrirTela('tela-posts');
   if (typeof window.carregarHistoricoTuring === 'function') window.carregarHistoricoTuring();
+  if (typeof verificarIntegracaoSidebar === 'function') verificarIntegracaoSidebar();
 }
 
 function sair() {
@@ -398,64 +407,6 @@ function renderHeaderActions(idTela) {
 }
 
 
-async function renderPatrimonio() {
-  const box = document.getElementById('patrimonio-lista');
-  if (!box) return;
-
-  const token = tokenDoCofre();
-  if (!token) {
-    box.textContent = 'Configure o token da API no cofre para consultar os imóveis.';
-    return;
-  }
-
-  box.textContent = 'Consultando imóveis na API Central...';
-
-  try {
-    const base = appData.config.apiBase.replace(/\/+$/, '');
-    const resposta = await fetch(base + '/api/imoveis', {
-      headers: { Authorization: 'Bearer ' + token },
-      cache: 'no-store'
-    });
-
-    if (!resposta.ok) {
-      box.textContent = 'Consulta não autorizada ou indisponível. HTTP ' + resposta.status;
-      return;
-    }
-
-    const imoveis = await resposta.json();
-    if (!Array.isArray(imoveis)) {
-      box.textContent = 'Formato de resposta inesperado.';
-      return;
-    }
-
-    box.replaceChildren();
-
-    const titulo = document.createElement('h3');
-    titulo.textContent = 'Imóveis cadastrados: ' + imoveis.length;
-    box.appendChild(titulo);
-
-    for (const imovel of imoveis) {
-      const item = document.createElement('p');
-      const valor = Number(imovel.valor);
-      const moeda = Number.isFinite(valor)
-        ? valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-        : 'Não informado';
-
-      item.textContent = [
-        imovel.titulo,
-        'Matrícula: ' + (imovel.matricula || 'Não informada'),
-        'Valor: ' + moeda,
-        [imovel.endereco, imovel.numero, imovel.cidade, imovel.uf]
-          .filter(Boolean).join(', ')
-      ].filter(Boolean).join(' | ');
-
-      box.appendChild(item);
-    }
-  } catch (erro) {
-    box.textContent = 'Não foi possível consultar a API. Verifique conexão e CORS.';
-  }
-}
-
 function renderCurrentView() {
   if (currentView === 'tela-patrimonio') renderPatrimonio();
   if (currentView === 'tela-financeiro') renderFinanceiro();
@@ -463,7 +414,7 @@ function renderCurrentView() {
   if (currentView === 'tela-senhas') renderSenhas();
   if (currentView === 'tela-catalogo') renderCatalogo();
   if (currentView === 'tela-vendas') renderVendas();
-  if (currentView === 'tela-api') renderApi();
+  if (currentView === 'tela-api') { renderApi(); carregarDadosReaisApi(); }
   if (currentView === 'tela-treino') renderTreino();
   if (currentView === 'tela-lab-conhecimento' && typeof window.carregarHistoricoTuring === 'function') window.carregarHistoricoTuring();
   if (currentView === 'tela-posts') {
@@ -472,7 +423,6 @@ function renderCurrentView() {
   }
   if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
   if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
-  if (currentView === 'tela-patrimonio') renderPatrimonio();
   if (currentView === 'tela-satelite') renderSatelite();
 }
 
@@ -1438,6 +1388,16 @@ function atualizarEndpoint(i, campo, valor) {
   persistData();
 }
 
+function significadoHttp(c) {
+  if (c >= 200 && c < 300) return 'OK';
+  if (c === 400) return 'acesso OK (faltam parâmetros)';
+  if (c === 401) return 'token inválido ou ausente';
+  if (c === 403) return 'chave sem permissão';
+  if (c === 404) return 'rota não existe';
+  if (c === 429) return 'limite de uso';
+  return c >= 500 ? 'erro na API' : 'verificar';
+}
+
 // Só GET, sem enviar dados: serve para ver se a API responde.
 async function testarEndpoint(i) {
   const e = appData.config.endpoints[i];
@@ -1447,8 +1407,12 @@ async function testarEndpoint(i) {
   out.textContent = '...';
   const t0 = performance.now();
   try {
-    const res = await fetch(appData.config.apiBase + e.rota, { method: 'GET', cache: 'no-store' });
-    resultadosTeste[i] = `HTTP ${res.status} · ${Math.round(performance.now() - t0)} ms`;
+    const tk = tokenDoCofre();
+    const res = await fetch(appData.config.apiBase + e.rota, {
+      method: 'GET', cache: 'no-store',
+      headers: tk ? { Authorization: 'Bearer ' + tk } : {}
+    });
+    resultadosTeste[i] = `HTTP ${res.status} · ${Math.round(performance.now() - t0)} ms · ${significadoHttp(res.status)}`;
   } catch (err) {
     resultadosTeste[i] = navigator.onLine ? 'sem resposta (rede ou CORS)' : 'sem internet';
   }
@@ -2000,7 +1964,9 @@ async function renderPatrimonio() {
       return;
     }
 
-    const imoveis = await resp.json();
+    const dadosImoveis = await resp.json();
+    const imoveis = Array.isArray(dadosImoveis) ? dadosImoveis
+      : (Array.isArray(dadosImoveis && dadosImoveis.imoveis) ? dadosImoveis.imoveis : []);
 
     if (statusEl) statusEl.innerHTML = `<i class="ph ph-check-circle"></i> ${imoveis.length} imóvel(is) · NexoTerraCore API`;
 
@@ -2208,6 +2174,7 @@ async function excluirImovel(id, nome) {
       method: 'DELETE',
       headers: { Authorization: 'Bearer ' + token }
     });
+    if (resp.status === 403) { alert('Exclusão bloqueada para API Key por segurança. Exclua com login de usuário.'); return; }
     if (!resp.ok) { alert('Erro ao excluir: HTTP ' + resp.status); return; }
     await renderPatrimonio();
   } catch (e) {
@@ -2530,3 +2497,38 @@ document.addEventListener('DOMContentLoaded', () => {
     grupos.forEach(outro => { if (outro !== g) outro.open = false; });
   }));
 });
+
+
+/* ---------------- Sidebar: conexão real de cada tela com a API ----------------
+   Testa com GET (sem gravar nada) usando o token do cofre.
+   Verde = a chave tem acesso · Vermelho = sem acesso ou erro. */
+const ROTAS_SIDEBAR = {
+  'nav-lab-conhecimento': '/api/turing/conhecimento/listar',
+  'nav-api': '/api/health',
+  'nav-patrimonio': '/api/imoveis',
+  'nav-satelite': '/api/geo/ndvi'
+};
+
+async function verificarIntegracaoSidebar() {
+  const tk = tokenDoCofre();
+  const base = (appData.config && appData.config.apiBase) || 'https://api.gustavopaulasantos.com.br';
+  for (const [navId, rota] of Object.entries(ROTAS_SIDEBAR)) {
+    const badge = document.querySelector('#' + navId + ' .nav-badge.api');
+    if (!badge) continue;
+    badge.classList.remove('ok', 'erro');
+    try {
+      const r = await fetch(base.replace(/\/+$/, '') + rota, {
+        cache: 'no-store',
+        headers: tk ? { Authorization: 'Bearer ' + tk } : {}
+      });
+      const ok = (r.status >= 200 && r.status < 300) || r.status === 400;
+      badge.classList.add(ok ? 'ok' : 'erro');
+      badge.title = rota + ' · HTTP ' + r.status + ' · ' + significadoHttp(r.status);
+    } catch (e) {
+      badge.classList.add('erro');
+      badge.title = rota + ' · sem resposta';
+    }
+  }
+}
+window.verificarIntegracaoSidebar = verificarIntegracaoSidebar;
+setInterval(() => { if (vaultKey) verificarIntegracaoSidebar(); }, 300000);

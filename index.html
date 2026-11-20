@@ -148,6 +148,8 @@
 }
 .gps-sidebar-nav .nav-badge.api { color: #34c77b; }
 .gps-sidebar-nav .nav-badge.local { color: #8492a6; }
+.gps-sidebar-nav .nav-badge.api.ok { background: rgba(52,199,123,.18); }
+.gps-sidebar-nav .nav-badge.api.erro { color: #e5484d; background: rgba(229,72,77,.15); }
 </style>
 
 <style id="gps-patrimonio-css-v1">
@@ -951,7 +953,17 @@
     <p>Endereço, matrícula, valores, Google Maps e Google Earth.</p>
     <p>Os registros existentes serão preservados.</p>
   </div>
-  <div id="patrimonio-lista" class="card"></div>
+  <div class="card">
+    <h3>Imóveis na API</h3>
+    <p id="patrimonio-status-api" class="vault-hint">Abra esta tela para consultar a API.</p>
+    <div id="patrimonio-resumo" class="metrics-grid"></div>
+    <div class="data-table-container">
+      <table>
+        <thead><tr><th>Matrícula</th><th>Imóvel</th><th>Cidade / UF</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="tbody-imoveis"></tbody>
+      </table>
+    </div>
+  </div>
 </section>
 
 </main>
