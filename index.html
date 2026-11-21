@@ -277,6 +277,31 @@
   .alerta-apps.aviso{border-color:rgba(234,179,8,.5);background:rgba(234,179,8,.08);cursor:default}
   .alerta-apps.aviso i{color:#eab308}
 </style>
+<style id="catalogo-v2-css">
+.cat2-filtros{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:10px;margin:16px 0}
+@media(max-width:900px){.cat2-filtros{grid-template-columns:1fr 1fr}}
+.cat2-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-items:stretch}
+.cat2-card{display:flex;flex-direction:column;gap:10px;background:var(--card-bg,#2a2722);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px;min-height:230px}
+.cat2-card:hover{border-color:rgba(52,211,153,.45)}
+.cat2-card.arq{opacity:.6}
+.cat2-topo{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cat2-nome{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:8px;min-width:0}
+.cat2-nome span.t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat2-tags{display:flex;gap:6px;flex-wrap:wrap}
+.cat2-tag{font-size:.72rem;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);color:var(--text-muted,#b8b2a7)}
+.cat2-tag.st-ativo{border-color:rgba(52,211,153,.5);color:#34d399}
+.cat2-tag.st-em_desenvolvimento{border-color:rgba(96,165,250,.5);color:#60a5fa}
+.cat2-tag.st-pausado{border-color:rgba(251,191,36,.5);color:#fbbf24}
+.cat2-tag.st-arquivado{border-color:rgba(248,113,113,.5);color:#f87171}
+.cat2-desc{color:var(--text-muted,#cfc8bc);font-size:.9rem;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:0}
+.cat2-saude{font-size:.78rem;color:var(--text-muted,#9a948a);display:flex;gap:6px;align-items:center}
+.cat2-rodape{margin-top:auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.cat2-rodape .btn-action{justify-content:center;padding:8px 6px;font-size:.82rem;width:100%}
+.cat2-msg{font-size:.75rem;min-height:1em;margin:0;color:var(--text-muted,#9a948a)}
+.cat2-form{border:1px solid rgba(52,211,153,.4)}
+.cat2-check{display:flex;align-items:center;gap:8px;margin-top:28px;text-transform:none}
+.cat2-perigo{color:#f87171 !important}
+</style>
 </head>
 <body>
 
@@ -611,14 +636,41 @@
       </div>
 
       <div id="tela-catalogo" class="tela-interna">
-        <p class="vault-hint"><i class="ph ph-info"></i> Lista oficial da NexoTerraCore API (tabela <code>apps</code>). <strong>Verificar agora</strong> pede à VPS para testar cada app: verde = no ar, vermelho = fora do ar ou com erro.</p>
+        <p class="vault-hint"><i class="ph ph-info"></i> Lista oficial da NexoTerraCore API (tabela <code>apps</code>). Verde = no ar · vermelho = fora do ar · cinza = não verificado. Arquivados ficam escondidos (filtro <strong>Status</strong>).</p>
         <div id="catalogo-resumo" class="metrics-grid"></div>
-        <div class="btn-row" id="catalogo-filtros" style="flex-wrap:wrap;gap:8px;margin:12px 0">
-          <input id="catalogo-busca" class="form-control" style="max-width:260px" placeholder="Buscar app…" oninput="desenharCatalogo()">
-          <select id="catalogo-tipo" class="form-control" style="max-width:200px" onchange="desenharCatalogo()">
+
+        <div id="app-form-box" class="project-section cat2-form" hidden>
+          <h3 id="app-form-titulo"><i class="ph ph-pencil"></i> Editar app</h3>
+          <form id="app-form" onsubmit="salvarAppForm(event)">
+            <input type="hidden" id="ap-id">
+            <div class="config-grid">
+              <div class="form-group"><label for="ap-nome">Nome *</label><input id="ap-nome" class="form-control" maxlength="160" required></div>
+              <div class="form-group"><label for="ap-url">Endereço (https) *</label><input id="ap-url" class="form-control" maxlength="500" required placeholder="https://nome.gustavopaulasantos.com.br"></div>
+              <div class="form-group"><label for="ap-categoria">Categoria *</label><input id="ap-categoria" class="form-control" maxlength="60" required list="ap-categorias" placeholder="Ex.: Agro"><datalist id="ap-categorias"></datalist></div>
+              <div class="form-group"><label for="ap-tipo">Tipo</label><select id="ap-tipo" class="form-control"><option value="pwa">PWA</option><option value="site">Site</option><option value="projeto">Projeto</option><option value="pessoal">Pessoal</option></select></div>
+              <div class="form-group"><label for="ap-status">Status</label><select id="ap-status" class="form-control"><option value="ativo">Ativo</option><option value="em_desenvolvimento">Em desenvolvimento</option><option value="pausado">Pausado</option><option value="arquivado">Arquivado</option></select></div>
+              <div class="form-group"><label class="cat2-check"><input type="checkbox" id="ap-publico"> Pode aparecer em vitrine</label></div>
+            </div>
+            <div class="form-group"><label for="ap-descricao">Descrição</label><textarea id="ap-descricao" class="form-control" rows="3" maxlength="2000"></textarea></div>
+            <div class="btn-row">
+              <button type="submit" class="btn-action" id="ap-salvar"><i class="ph ph-floppy-disk"></i> Salvar na API</button>
+              <button type="button" class="btn-action secondary" onclick="fecharAppForm()">Cancelar</button>
+              <button type="button" class="btn-action secondary cat2-perigo" id="ap-excluir" hidden onclick="excluirApp()"><i class="ph ph-trash"></i> Excluir (arquivado)</button>
+            </div>
+            <p id="ap-msg" class="vault-hint" role="status"></p>
+          </form>
+        </div>
+
+        <div class="cat2-filtros">
+          <input id="catalogo-busca" class="form-control" placeholder="Buscar app…" oninput="desenharCatalogo()">
+          <select id="catalogo-categoria" class="form-control" onchange="desenharCatalogo()"><option value="">Todas as categorias</option></select>
+          <select id="catalogo-tipo" class="form-control" onchange="desenharCatalogo()">
             <option value="">Todos os tipos</option><option value="pwa">PWA</option><option value="site">Site</option><option value="projeto">Projeto</option><option value="pessoal">Pessoal</option>
           </select>
-          <select id="catalogo-saude" class="form-control" style="max-width:200px" onchange="desenharCatalogo()">
+          <select id="catalogo-status" class="form-control" onchange="desenharCatalogo()">
+            <option value="">Ativos e em andamento</option><option value="arquivado">Arquivados</option><option value="todos">Todos</option>
+          </select>
+          <select id="catalogo-saude" class="form-control" onchange="desenharCatalogo()">
             <option value="">Qualquer situação</option><option value="ok">No ar</option><option value="erro">Com problema</option><option value="nv">Não verificado</option>
           </select>
         </div>

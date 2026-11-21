@@ -402,7 +402,7 @@ function renderHeaderActions(idTela) {
   } else if (idTela === 'tela-senhas') {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('senhas')"><i class="ph ph-key"></i> Nova Credencial</button>`;
   } else if (idTela === 'tela-catalogo') {
-    container.innerHTML = `<button class="btn-action" id="btn-verificar-apps" onclick="verificarApps()"><i class="ph ph-pulse"></i> Verificar agora</button>`;
+    container.innerHTML = `<button class="btn-action secondary" onclick="novoApp()"><i class="ph ph-plus"></i> Novo app</button> <button class="btn-action" id="btn-verificar-apps" onclick="verificarApps()"><i class="ph ph-pulse"></i> Verificar agora</button>`;
   } else if (idTela === 'tela-vendas') {
     container.innerHTML = `<button class="btn-action" onclick="abrirModalForm('vendas')"><i class="ph ph-plus"></i> Nova página</button>`;
   } else if (idTela === 'tela-treino') {
@@ -2881,46 +2881,66 @@ function desenharCatalogo() {
   const resumo = document.getElementById('catalogo-resumo');
   if (!root) return;
   if (!appsApi.length) { root.innerHTML = '<p class="vault-hint">Nenhum app retornado pela API. Confira o token e o escopo apps.read.</p>'; return; }
-  const noAr = appsApi.filter(a => classeSaude(a) === 'ok').length;
-  const fora = appsApi.filter(a => classeSaude(a) === 'erro').length;
+  const vivos = appsApi.filter(a => a.status !== 'arquivado');
+  const noAr = vivos.filter(a => classeSaude(a) === 'ok').length;
+  const fora = vivos.filter(a => classeSaude(a) === 'erro').length;
+  const arq = appsApi.length - vivos.length;
   if (resumo) resumo.innerHTML =
-    `<div class="metric-card"><span>Apps</span><h3>${appsApi.length}</h3></div>` +
+    `<div class="metric-card"><span>Apps em uso</span><h3>${vivos.length}</h3></div>` +
     `<div class="metric-card"><span>No ar</span><h3 style="color:var(--success-green)">${noAr}</h3></div>` +
-    `<div class="metric-card"><span>Com problema</span><h3 style="color:var(--danger-red)">${fora}</h3></div>`;
-  const q = ((document.getElementById('catalogo-busca') || {}).value || '').trim().toLowerCase();
-  const tipo = (document.getElementById('catalogo-tipo') || {}).value || '';
-  const saude = (document.getElementById('catalogo-saude') || {}).value || '';
+    `<div class="metric-card"><span>Com problema</span><h3 style="color:${fora ? 'var(--danger-red)' : 'var(--success-green)'}">${fora}</h3></div>` +
+    `<div class="metric-card"><span>Arquivados</span><h3>${arq}</h3></div>`;
+
+  const cats = [...new Set(appsApi.map(a => a.categoria))].sort((x, y) => x.localeCompare(y, 'pt-BR'));
+  const selCat = document.getElementById('catalogo-categoria');
+  if (selCat) {
+    const atual = selCat.value;
+    selCat.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    selCat.value = cats.includes(atual) ? atual : '';
+  }
+  const dl = document.getElementById('ap-categorias');
+  if (dl) dl.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">`).join('');
+
+  const val = id => ((document.getElementById(id) || {}).value || '');
+  const q = val('catalogo-busca').trim().toLowerCase();
+  const cat = val('catalogo-categoria'), tipo = val('catalogo-tipo'), st = val('catalogo-status'), saude = val('catalogo-saude');
   const lista = appsApi.filter(a =>
-    (!q || [a.nome, a.slug, a.categoria, a.descricao].some(v => String(v || '').toLowerCase().includes(q))) &&
+    (!q || [a.nome, a.slug, a.categoria, a.descricao, a.url].some(v => String(v || '').toLowerCase().includes(q))) &&
+    (!cat || a.categoria === cat) &&
     (!tipo || a.tipo === tipo) &&
-    (!saude || (saude === 'nv' ? classeSaude(a) === '' : classeSaude(a) === saude)));
-  if (!lista.length) { root.innerHTML = '<p class="vault-hint">Nenhum app com esse filtro.</p>'; return; }
-  const porCat = {};
-  lista.forEach(a => { (porCat[a.categoria] = porCat[a.categoria] || []).push(a); });
-  root.innerHTML = Object.keys(porCat).sort().map(cat => `
-    <section class="catalogo-secao">
-      <h2 class="catalogo-secao-titulo">${escapeHtml(cat)} <span>${porCat[cat].length}</span></h2>
-      <div class="catalogo-grid">${porCat[cat].map(cartaoApp).join('')}</div>
-    </section>`).join('');
+    (st === 'todos' ? true : st === 'arquivado' ? a.status === 'arquivado' : a.status !== 'arquivado') &&
+    (!saude || (saude === 'nv' ? classeSaude(a) === '' : classeSaude(a) === saude)))
+    .sort((x, y) => x.categoria.localeCompare(y.categoria, 'pt-BR') || x.nome.localeCompare(y.nome, 'pt-BR'));
+  root.innerHTML = lista.length ? '<div class="cat2-grid">' + lista.map(cartaoApp).join('') + '</div>'
+    : '<p class="vault-hint">Nenhum app com esse filtro.</p>';
 }
+
+const STATUS_ROTULO = { ativo: 'Ativo', em_desenvolvimento: 'Em desenvolvimento', pausado: 'Pausado', arquivado: 'Arquivado' };
 
 function cartaoApp(a) {
   const href = urlSegura(a.url);
-  const opts = STATUS_APP.map(s => `<option value="${s}" ${s === a.status ? 'selected' : ''}>${s.replace('_', ' ')}</option>`).join('');
+  let host = '';
+  try { host = new URL(a.url).hostname.replace('.gustavopaulasantos.com.br', ''); } catch {}
   return `
-    <article class="mini-card">
-      <div class="mini-card-top">
-        <strong class="venda-nome"><span class="app-dot ${classeSaude(a)}"></span> ${escapeHtml(a.nome)}</strong>
+    <article class="cat2-card ${a.status === 'arquivado' ? 'arq' : ''}">
+      <div class="cat2-topo">
+        <div class="cat2-nome"><span class="app-dot ${classeSaude(a)}"></span><span class="t" title="${escapeHtml(a.nome)}">${escapeHtml(a.nome)}</span></div>
         <span class="badge ${a.tipo === 'pwa' ? 'green' : a.tipo === 'pessoal' ? 'red' : 'blue'}">${escapeHtml(TIPO_ROTULO[a.tipo] || a.tipo)}</span>
       </div>
-      <p class="venda-desc">${a.descricao ? escapeHtml(a.descricao) : '<span class="mini-sem-link">sem descrição</span>'}</p>
-      <div class="mini-link-row"><i class="ph ph-pulse"></i> <span class="mini-sem-link">${escapeHtml(textoSaude(a))}</span></div>
-      <div class="mini-card-footer">
-        ${href ? `<a class="btn-action secondary mini-abrir" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"><i class="ph ph-arrow-square-out"></i> Abrir</a>` : '<span></span>'}
-        <select class="form-control mini-status" title="Status" onchange="alterarApp(${a.id}, {status: this.value})">${opts}</select>
-        <button class="btn-icon" title="Editar descrição" onclick="editarDescricaoApp(${a.id})"><i class="ph ph-pencil"></i></button>
+      <div class="cat2-tags">
+        <span class="cat2-tag">${escapeHtml(a.categoria)}</span>
+        <span class="cat2-tag st-${escapeHtml(a.status)}">${escapeHtml(STATUS_ROTULO[a.status] || a.status)}</span>
+        ${a.publico ? '<span class="cat2-tag">Vitrine</span>' : ''}
+        ${host ? `<span class="cat2-tag" title="${escapeHtml(a.url)}">${escapeHtml(host)}</span>` : ''}
       </div>
-      <p class="mini-sem-link" style="margin-top:6px">${a.publico ? 'Pode aparecer em vitrine' : 'Privado (não aparece em vitrine)'}</p>
+      <p class="cat2-desc">${a.descricao ? escapeHtml(a.descricao) : '<em>sem descrição</em>'}</p>
+      <div class="cat2-saude"><i class="ph ph-pulse"></i> ${escapeHtml(textoSaude(a))}</div>
+      <div class="cat2-rodape">
+        ${href ? `<a class="btn-action secondary" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"><i class="ph ph-arrow-square-out"></i> Abrir</a>` : '<span></span>'}
+        <button type="button" class="btn-action secondary" onclick="editarApp('${a.id}')"><i class="ph ph-pencil"></i> Editar</button>
+        <button type="button" class="btn-action secondary" onclick="enviarAppTuring('${a.id}')"><i class="ph ph-brain"></i> Turing</button>
+      </div>
+      <p class="cat2-msg" id="ap-cmsg-${a.id}" role="status"></p>
     </article>`;
 }
 
@@ -2934,12 +2954,89 @@ async function alterarApp(id, dados) {
   }
 }
 
-function editarDescricaoApp(id) {
-  const a = appsApi.find(x => x.id === id);
+function _appForm(a) {
+  const box = document.getElementById('app-form-box');
+  document.getElementById('ap-id').value = a ? a.id : '';
+  document.getElementById('ap-nome').value = a ? a.nome : '';
+  document.getElementById('ap-url').value = a ? a.url : 'https://';
+  document.getElementById('ap-categoria').value = a ? a.categoria : '';
+  document.getElementById('ap-tipo').value = a ? a.tipo : 'pwa';
+  document.getElementById('ap-status').value = a ? a.status : 'em_desenvolvimento';
+  document.getElementById('ap-publico').checked = a ? !!a.publico : false;
+  document.getElementById('ap-descricao').value = a ? (a.descricao || '') : '';
+  document.getElementById('app-form-titulo').innerHTML = a ? `<i class="ph ph-pencil"></i> Editar: ${escapeHtml(a.nome)}` : '<i class="ph ph-plus"></i> Novo app';
+  document.getElementById('ap-salvar').innerHTML = a ? '<i class="ph ph-floppy-disk"></i> Salvar alterações' : '<i class="ph ph-floppy-disk"></i> Criar na API';
+  document.getElementById('ap-excluir').hidden = !(a && a.status === 'arquivado');
+  document.getElementById('ap-msg').textContent = '';
+  box.hidden = false;
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => document.getElementById('ap-nome').focus({ preventScroll: true }), 400);
+}
+
+function editarApp(id) {
+  const a = appsApi.find(x => String(x.id) === String(id));
+  if (a) _appForm(a);
+}
+function novoApp() { abrirTela('tela-catalogo'); setTimeout(() => _appForm(null), 200); }
+function fecharAppForm() { document.getElementById('app-form-box').hidden = true; }
+function editarDescricaoApp(id) { editarApp(id); }
+
+async function salvarAppForm(ev) {
+  if (ev) ev.preventDefault();
+  const msg = document.getElementById('ap-msg');
+  const id = document.getElementById('ap-id').value;
+  const dados = {
+    nome: document.getElementById('ap-nome').value.trim(),
+    url: document.getElementById('ap-url').value.trim(),
+    categoria: document.getElementById('ap-categoria').value.trim(),
+    tipo: document.getElementById('ap-tipo').value,
+    status: document.getElementById('ap-status').value,
+    publico: document.getElementById('ap-publico').checked,
+    descricao: document.getElementById('ap-descricao').value.trim()
+  };
+  if (!/^https:\/\/[^\s]+\.[^\s]+/.test(dados.url)) { msg.textContent = 'O endereço precisa começar com https://'; return; }
+  msg.textContent = 'Salvando na API…';
+  try {
+    await apiApps(id ? '/' + id : '', { method: id ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+    msg.textContent = id ? 'Salvo na API ✅' : 'Criado na API ✅';
+    await carregarAppsApi();
+    desenharCatalogo();
+    setTimeout(fecharAppForm, 900);
+  } catch (e) { msg.textContent = 'Não foi possível salvar: ' + e.message; }
+}
+
+async function excluirApp() {
+  const id = document.getElementById('ap-id').value;
+  const a = appsApi.find(x => String(x.id) === String(id));
+  if (!a || a.status !== 'arquivado') return;
+  const msg = document.getElementById('ap-msg');
+  if (!confirm('Excluir "' + a.nome + '" da API? Isso não pode ser desfeito.')) return;
+  msg.textContent = 'Excluindo…';
+  try {
+    await apiApps('/' + id, { method: 'DELETE' });
+    await carregarAppsApi();
+    desenharCatalogo();
+    fecharAppForm();
+  } catch (e) { msg.textContent = 'Não foi possível excluir: ' + e.message; }
+}
+
+async function enviarAppTuring(id) {
+  const a = appsApi.find(x => String(x.id) === String(id));
+  const msg = document.getElementById('ap-cmsg-' + id);
   if (!a) return;
-  const nova = prompt('Descrição de "' + a.nome + '" (até 2000 caracteres):', a.descricao || '');
-  if (nova === null) return;
-  alterarApp(id, { descricao: nova.slice(0, 2000) });
+  const resposta = [
+    `"${a.nome}" é um ${TIPO_ROTULO[a.tipo] || a.tipo} do ecossistema GPS.dev / NexoTerraCore, na categoria ${a.categoria}.`,
+    a.descricao ? a.descricao.replace(/\s+/g, ' ').trim() : '',
+    `Situação: ${STATUS_ROTULO[a.status] || a.status}. Endereço: ${a.url}.`
+  ].filter(Boolean).join(' ');
+  msg.textContent = 'Enviando ao Turing…';
+  try {
+    const d = await apiConhecimento('/ensinar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ area: 'NexoTerraCore', pergunta: `[apps] O que é o "${a.nome}"?`, resposta, fonte: 'Mini-softwares · painel' })
+    });
+    msg.textContent = `Enviado ✅ #${d.conhecimento && d.conhecimento.id} pendente no Fluxo de treino.`;
+  } catch (e) { msg.textContent = 'Falhou: ' + e.message; }
 }
 
 async function verificarApps() {
