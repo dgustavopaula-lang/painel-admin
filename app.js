@@ -3424,7 +3424,9 @@ const PACOTES_TREINO = [
     ['Como planejar a logística entre Malanje e Luanda?', 'São cerca de 400 km por estrada, e há ligação ferroviária (Caminho de Ferro de Luanda). Na época de chuvas as estradas pioram, então escoar a produção e trazer insumos preferencialmente na seca, com frete contratado com antecedência.'],
     ['Como registrar a compra de insumos na Fazenda PIPE?', 'Registrar fornecedor, produto, quantidade, data, preço em kwanzas e o equivalente em dólar do dia (muitos insumos são importados e o câmbio varia). Cotar com antecedência por causa do prazo de entrega até Malanje.'],
     ['Quais indicadores acompanhar na Fazenda PIPE?', 'Custo por hectare, produtividade (t/ha), perdas na colheita e no armazenamento, preço de venda e margem por cultura. O Turing deve pedir os dados reais da fazenda antes de tirar conclusões e nunca inventar números.'],
-    ['Quem pode ver os dados da Fazenda PIPE?', 'Somente usuários e chaves da organização na NexoTerraCore API, com o menor escopo necessário. Dados da fazenda não devem ser expostos em páginas públicas.']
+    ['Quem pode ver os dados da Fazenda PIPE?', 'Somente usuários e chaves da organização na NexoTerraCore API, com o menor escopo necessário. Dados da fazenda não devem ser expostos em páginas públicas.'],
+    ['Qual a diferença entre a Fazenda PIPE e as fazendas do Brasil no Turing?', 'São organizações e contextos diferentes: Malanje usa kwanza, calendário de chuvas próprio e logística até Luanda; as fazendas do Centro-Oeste usam real, ZARC e cotações CEPEA/B3. O Turing deve sempre perguntar de qual fazenda se trata antes de responder.'],
+    ['Como registrar uma perda de colheita na Fazenda PIPE?', 'Registrar lote, cultura, data, quantidade perdida, causa (praga, chuva, transporte, armazenamento) e foto se houver. Com esse histórico o Turing ajuda a achar onde a perda se repete e quanto ela custa.']
   ]},
   { titulo: 'EduTech Angola', icone: 'ph-graduation-cap', area: 'Edutech Angola', itens: [
     ['Como estruturar um curso de manejo do solo para jovens de Malanje?', 'Módulos curtos: 1) o que é o solo e a matéria orgânica; 2) erosão e curvas de nível; 3) análise de solo e correção; 4) adubação e cobertura do solo; 5) prática na Fazenda PIPE. Cada módulo com aula curta, exercício prático e avaliação simples.'],
@@ -3437,7 +3439,9 @@ const PACOTES_TREINO = [
     ['Como é o clima do Cerrado para o agro?', 'Chuvas de outubro a abril e seca de maio a setembro. A seca limita a segunda safra e a pastagem, o que torna importantes a reserva de água, a irrigação e o planejamento de forragem.'],
     ['Como corrigir o solo do Cerrado?', 'O solo do Cerrado costuma ser ácido e pobre em nutrientes. A correção (calagem e, quando indicado, gessagem) deve ser feita com base em análise de solo e recomendação de um agrônomo.'],
     ['De onde tirar preços de commodities?', 'O Turing não inventa cotações. Preços devem vir de fontes do dia, como o CEPEA/ESALQ e a B3, sempre com data e fonte.'],
-    ['O que é integração lavoura-pecuária (ILP)?', 'Sistema que alterna ou combina lavoura e pastagem na mesma área, comum em Goiás. Melhora o solo, reduz custos e diversifica a renda.']
+    ['O que é integração lavoura-pecuária (ILP)?', 'Sistema que alterna ou combina lavoura e pastagem na mesma área, comum em Goiás. Melhora o solo, reduz custos e diversifica a renda.'],
+    ['O que é o vazio sanitário da soja em Goiás?', 'Período do ano em que é proibido ter plantas vivas de soja no campo, para quebrar o ciclo da ferrugem asiática. As datas são definidas pela Agrodefesa (Goiás) e pelo Ministério da Agricultura e devem ser conferidas a cada safra.'],
+    ['O que é o ZARC?', 'Zoneamento Agrícola de Risco Climático: estudo oficial que indica, por município e cultura, as datas de plantio com menor risco climático. É usado para crédito rural e seguro agrícola.']
   ]},
   { titulo: 'SEO para GPS.dev e mini-softwares', icone: 'ph-magnifying-glass', area: 'SEO', itens: [
     ['Quais são as regras básicas de SEO em uma página?', 'Um título único com cerca de 60 caracteres, meta description de 150 a 160 caracteres, um único H1, texto útil com a palavra-chave natural e links internos para páginas relacionadas.'],
@@ -3445,6 +3449,27 @@ const PACOTES_TREINO = [
     ['Como a velocidade do site afeta o SEO?', 'O Google considera a experiência da página (Core Web Vitals). Páginas leves, imagens comprimidas e PWA bem feito ajudam no posicionamento e na conversão.'],
     ['O que são dados estruturados?', 'Marcação schema.org (ex.: SoftwareApplication, LocalBusiness) que ajuda o Google a entender a página. Deve descrever só o que é real na página.'],
     ['Como medir resultados de SEO?', 'Pelo Google Search Console (impressões, cliques, posição média). Nenhuma ação garante posição: o Turing deve recomendar e medir, nunca prometer primeiro lugar.']
+  ]},
+  { titulo: 'Botânica · Plantas do morro', icone: 'ph-leaf', area: 'Botânica', itens: [
+    ['Como se escreve um nome científico de planta?', 'Duas palavras em latim (sistema de Lineu, 1753): o gênero com inicial maiúscula e a espécie toda em minúscula, ex.: Mangifera indica. Em texto impresso vai em itálico. "spp." indica várias espécies do mesmo gênero.'],
+    ['O que é família botânica?', 'Grupo de gêneros aparentados; o nome termina em -aceae. Ex.: Myrtaceae reúne goiaba, jabuticaba, eucalipto e cravo-da-índia. No catálogo, a família ajuda a avisar quando uma planta tem parente tóxico.'],
+    ['Como identificar uma planta com o Pl@ntNet?', 'Enviar de 1 a 4 fotos da mesma planta (flor, fruto, folha de perto, casca), marcar o órgão de cada foto e escolher a flora (Brasil para nativas, Flora mundial para cultivadas). Regra do catálogo: 90% ou mais = identificada; 50 a 89% = fica a identificar com nome provável; abaixo de 50% = refazer as fotos.'],
+    ['Qual a diferença entre planta nativa, naturalizada e cultivada?', 'Nativa: ocorre naturalmente no Brasil (ex.: pequi). Naturalizada: veio de fora e se espalha sozinha (ex.: mamona). Cultivada: veio de fora e depende do plantio (ex.: mangueira). A fonte oficial é a Flora e Funga do Brasil, do Jardim Botânico do Rio de Janeiro.'],
+    ['O Turing pode recomendar dose de planta medicinal?', 'Não. O Turing informa nome, família, origem e usos tradicionais registrados, mas não indica dose, preparo como tratamento nem substituição de remédio. Para uso medicinal, orientar a procurar médico ou farmacêutico e consultar o Formulário de Fitoterápicos da Anvisa.'],
+    ['Quais plantas do Cerrado intoxicam o gado?', 'Entre as mais conhecidas: erva-de-rato (Palicourea marcgravii), samambaia-do-campo (Pteridium), sementes de fedegoso (Senna occidentalis) e cambará (Lantana camara). Ao suspeitar de intoxicação, retirar os animais da área e chamar o veterinário.'],
+    ['O que fazer em caso de intoxicação por planta?', 'Ligar para o Disque-Intoxicação 0800 722 6001 (gratuito, 24 h) ou SAMU 192 e levar a planta ou uma foto. Não provocar vômito por conta própria.']
+  ]},
+  { titulo: 'Play Farm Agro', icone: 'ph-game-controller', area: 'Play Farm Agro', itens: [
+    ['O que é o Play Farm Agro?', 'Jogo de fazenda da GPS.dev (PWA e app Android) inspirado no agro real: lavouras como soja, milho e café, animais, maquinário com diesel e revisão, silo, missões diárias, estações do Cerrado e o Turing como conselheiro.'],
+    ['De onde vêm os preços do Play Farm Agro?', 'De cotações reais de referência (CEPEA/Esalq e B3), atualizadas pela equipe com data e fonte. Servem para aprender, não são recomendação de compra ou venda.'],
+    ['O Play Farm Agro usa a NexoTerraCore API?', 'Só o conselheiro Turing consulta a API, pelo servidor do jogo, com cache de 5 minutos e limite de consultas por minuto. Plantar, regar e colher acontecem no próprio aparelho e não gastam a API.'],
+    ['Qual a rotina diária no Play Farm Agro?', 'Regar e colher as lavouras, cuidar dos animais, cumprir as missões diárias, abastecer e revisar as máquinas e vender no momento de melhor preço. Guardar no silo evita perder a colheita quando o celeiro enche.']
+  ]},
+  { titulo: 'NexoTerraCore · operação', icone: 'ph-plugs-connected', area: 'NexoTerraCore', itens: [
+    ['A NexoTerraCore API fica no ar 24 horas?', 'Sim. Ela roda na VPS como serviço do sistema, que reinicia sozinho se cair. Uma verificação automática testa os apps a cada hora e o banco de dados tem backup diário, guardado por 7 dias.'],
+    ['Como o Turing aprende algo novo?', 'Pelo Fluxo de treino: entrada (ensinar ou importar) → pendente → revisão humana → aprovado. Só o conteúdo aprovado vira resposta do Turing.'],
+    ['Quais são as regras de credenciais da API?', 'Cada app usa uma API Key própria com o menor escopo necessário. Chaves nunca aparecem em páginas, prints ou conversas; ficam no cofre ou em arquivo protegido no servidor. Chave exposta ou sem uso deve ser revogada.'],
+    ['Onde fica a lista oficial de apps do ecossistema?', 'Na tabela apps da NexoTerraCore API, exibida no painel em Mini-softwares, com situação (no ar ou com problema), categoria e status. Apps fora de uso ficam arquivados, não apagados.']
   ]}
 ];
 
