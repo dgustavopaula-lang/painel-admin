@@ -51,7 +51,6 @@ const SEED_ENDPOINTS = [
   { rota: '/api/plantas', metodo: 'GET', auth: 'plantas.read', uso: 'Natureza · plantas' },
   { rota: '/api/apps', metodo: 'GET', auth: 'apps.read', uso: 'Mini-softwares' },
   { rota: '/api/imoveis', metodo: 'GET', auth: 'assets.read', uso: 'Patrimônio · imóveis' },
-  { rota: '/api/geo/ndvi', metodo: 'GET', auth: 'token válido', uso: 'Sentinel-2 · NDVI (400 sem coordenadas é normal)' },
   { rota: '/api/turing/security/health', metodo: 'GET', auth: 'token válido', uso: 'Turing Security' },
   { rota: '/api/control-plane', metodo: 'GET', auth: 'control_plane.read', uso: 'Painel de controle da API' }
 ];
@@ -332,7 +331,7 @@ function abrirTela(idTela) {
   const navMap = {
     'tela-posts': 'nav-home', 'tela-videos': 'nav-videos', 'tela-podcast': 'nav-podcast',
     'tela-patrimonio': 'nav-patrimonio', 'tela-financeiro': 'nav-financeiro', 'tela-clientes': 'nav-clientes', 'tela-senhas': 'nav-senhas',
-    'tela-satelite': 'nav-satelite',
+    'tela-satelite': 'nav-satelite', 'tela-pacotes': 'nav-pacotes',
     'tela-agro': 'nav-agro', 'tela-nexus': 'nav-nexus', 'tela-turin': 'nav-turin',
     'tela-catalogo': 'nav-catalogo', 'tela-edutech': 'nav-edutech', 'tela-angola': 'nav-angola',
     'tela-vendas': 'nav-vendas', 'tela-api': 'nav-api',
@@ -369,6 +368,7 @@ function abrirTela(idTela) {
     'tela-agro': 'Notas de testes (local)',
     'tela-nexus': 'Notas NexoTerraCore (local)',
     'tela-turin': 'Turing · Fluxo de treino',
+    'tela-pacotes': 'Turing · Treinos temáticos',
     'tela-videos': 'Gerenciador de Vídeos',
     'tela-podcast': 'Gerenciador de Podcasts',
     'tela-edutech': 'EduTech · Cursos',
@@ -438,6 +438,7 @@ function renderCurrentView() {
   if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
   if (['tela-agro', 'tela-nexus'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
   if (currentView === 'tela-turin') renderTuringVisao();
+  if (currentView === 'tela-pacotes') renderPacotes();
   if (currentView === 'tela-satelite') renderSatelite();
 }
 
@@ -2565,7 +2566,7 @@ const ROTAS_SIDEBAR = {
   'nav-plantas-uteis': '/api/plantas',
   'nav-api': '/api/health',
   'nav-patrimonio': '/api/imoveis',
-  'nav-satelite': '/api/geo/ndvi'
+  'nav-pacotes': '/api/turing/conhecimento/listar'
 };
 
 async function verificarIntegracaoSidebar() {
@@ -2646,7 +2647,7 @@ function abrirNoFluxo(no) {
       <form onsubmit="ensinarRapido(event)">
         <div class="config-grid">
           <div class="form-group"><label for="fx-area">Área</label>
-            <select id="fx-area" class="form-control">${['Segurança da API','Abuso e ataques','Contexto NexoTerraCore','Agro','Edutech Angola','Edutech Brasil'].map(a => `<option>${a}</option>`).join('')}</select></div>
+            <select id="fx-area" class="form-control">${['Segurança da API','Abuso e ataques','Contexto NexoTerraCore','Agro','Angola · Fazenda PIPE','Agro Centro-Oeste','Edutech Angola','Edutech Brasil','SEO'].map(a => `<option>${a}</option>`).join('')}</select></div>
           <div class="form-group"><label for="fx-classe">Classificação</label>
             <select id="fx-classe" class="form-control"><option value="informativo">informativo</option><option value="procedimento">procedimento</option><option value="alerta">alerta</option><option value="bloqueio">bloqueio</option></select></div>
         </div>
@@ -3278,4 +3279,78 @@ async function inserirUteis() {
   }
   msg.textContent = `${ok} inserida(s).` + (falhas.length ? ' Falharam: ' + falhas.join('; ') : '');
   await renderUteis();
+}
+
+
+/* ---------------- Treinos temáticos (pacotes prontos → Pendentes) ---------------- */
+const PACOTES_TREINO = [
+  { titulo: 'Angola · Fazenda PIPE (Malanje)', icone: 'ph-tractor', area: 'Angola · Fazenda PIPE', itens: [
+    ['Qual é o calendário de chuvas em Malanje e quando plantar?', 'Em Malanje a estação chuvosa vai, em geral, de outubro/novembro a abril, e a seca (cacimbo) de maio a setembro. Culturas de sequeiro devem ser plantadas no início das chuvas. Antes de decidir, conferir a previsão do ano e o histórico da própria fazenda.'],
+    ['Quais culturas são adequadas para a Fazenda PIPE em Malanje?', 'Culturas tradicionais da região: mandioca, milho, feijão, ginguba (amendoim) e batata-doce. A escolha deve considerar análise de solo, mercado comprador e capacidade de transporte da fazenda.'],
+    ['Como rastrear um lote de produção na Fazenda PIPE?', 'Cada lote recebe um código único e registra: talhão, data de plantio, variedade, insumos aplicados (produto, lote e dose conforme o rótulo), colheita, quantidade e destino. Esse histórico permite responder a compradores, apurar custos e localizar problemas.'],
+    ['Como planejar a logística entre Malanje e Luanda?', 'São cerca de 400 km por estrada, e há ligação ferroviária (Caminho de Ferro de Luanda). Na época de chuvas as estradas pioram, então escoar a produção e trazer insumos preferencialmente na seca, com frete contratado com antecedência.'],
+    ['Como registrar a compra de insumos na Fazenda PIPE?', 'Registrar fornecedor, produto, quantidade, data, preço em kwanzas e o equivalente em dólar do dia (muitos insumos são importados e o câmbio varia). Cotar com antecedência por causa do prazo de entrega até Malanje.'],
+    ['Quais indicadores acompanhar na Fazenda PIPE?', 'Custo por hectare, produtividade (t/ha), perdas na colheita e no armazenamento, preço de venda e margem por cultura. O Turing deve pedir os dados reais da fazenda antes de tirar conclusões e nunca inventar números.'],
+    ['Quem pode ver os dados da Fazenda PIPE?', 'Somente usuários e chaves da organização na NexoTerraCore API, com o menor escopo necessário. Dados da fazenda não devem ser expostos em páginas públicas.']
+  ]},
+  { titulo: 'EduTech Angola', icone: 'ph-graduation-cap', area: 'Edutech Angola', itens: [
+    ['Como estruturar um curso de manejo do solo para jovens de Malanje?', 'Módulos curtos: 1) o que é o solo e a matéria orgânica; 2) erosão e curvas de nível; 3) análise de solo e correção; 4) adubação e cobertura do solo; 5) prática na Fazenda PIPE. Cada módulo com aula curta, exercício prático e avaliação simples.'],
+    ['Como dar aulas com pouca internet em Angola?', 'Conteúdo leve para celular, que funcione offline (PWA), com vídeos curtos e textos que podem ser baixados uma vez e estudados sem rede. As atividades sincronizam quando houver conexão.'],
+    ['Como ensinar inglês técnico agrícola?', 'Vocabulário do dia a dia da fazenda (soil, seed, harvest, fertilizer, yield, irrigation), frases de compra e venda e leitura de rótulos e manuais em inglês, sempre ligando a palavra à prática no campo.'],
+    ['Como ligar a EduTech à Fazenda PIPE?', 'Os alunos aplicam o conteúdo em estágio prático na fazenda: registram lotes, medem produtividade e participam da logística. A fazenda vira laboratório de ensino e o aluno sai com experiência real.']
+  ]},
+  { titulo: 'Agro Centro-Oeste (Brasil)', icone: 'ph-plant', area: 'Agro Centro-Oeste', itens: [
+    ['Qual é o calendário da soja e do milho safrinha no Centro-Oeste?', 'A soja é plantada em geral de setembro a dezembro, com o início das chuvas, e o milho safrinha logo após a colheita da soja, de janeiro a março. As datas exatas dependem do zoneamento agrícola (ZARC) de cada município.'],
+    ['Como é o clima do Cerrado para o agro?', 'Chuvas de outubro a abril e seca de maio a setembro. A seca limita a segunda safra e a pastagem, o que torna importantes a reserva de água, a irrigação e o planejamento de forragem.'],
+    ['Como corrigir o solo do Cerrado?', 'O solo do Cerrado costuma ser ácido e pobre em nutrientes. A correção (calagem e, quando indicado, gessagem) deve ser feita com base em análise de solo e recomendação de um agrônomo.'],
+    ['De onde tirar preços de commodities?', 'O Turing não inventa cotações. Preços devem vir de fontes do dia, como o CEPEA/ESALQ e a B3, sempre com data e fonte.'],
+    ['O que é integração lavoura-pecuária (ILP)?', 'Sistema que alterna ou combina lavoura e pastagem na mesma área, comum em Goiás. Melhora o solo, reduz custos e diversifica a renda.']
+  ]},
+  { titulo: 'SEO para GPS.dev e mini-softwares', icone: 'ph-magnifying-glass', area: 'SEO', itens: [
+    ['Quais são as regras básicas de SEO em uma página?', 'Um título único com cerca de 60 caracteres, meta description de 150 a 160 caracteres, um único H1, texto útil com a palavra-chave natural e links internos para páginas relacionadas.'],
+    ['Como fazer SEO para um mini-software do Sistema Raiz?', 'Uma página por produto, com a busca que o cliente faz (ex.: "sistema para farmácia que funciona offline"), benefícios claros, perguntas frequentes, preço ou contato e prints reais.'],
+    ['Como a velocidade do site afeta o SEO?', 'O Google considera a experiência da página (Core Web Vitals). Páginas leves, imagens comprimidas e PWA bem feito ajudam no posicionamento e na conversão.'],
+    ['O que são dados estruturados?', 'Marcação schema.org (ex.: SoftwareApplication, LocalBusiness) que ajuda o Google a entender a página. Deve descrever só o que é real na página.'],
+    ['Como medir resultados de SEO?', 'Pelo Google Search Console (impressões, cliques, posição média). Nenhuma ação garante posição: o Turing deve recomendar e medir, nunca prometer primeiro lugar.']
+  ]}
+];
+
+async function renderPacotes() {
+  const box = document.getElementById('pac-lista');
+  if (!box) return;
+  try { conhecimentosApi = (await apiConhecimento('/listar')).conhecimentos || []; }
+  catch (e) { box.innerHTML = '<p class="vault-hint">Erro ao ler a API: ' + escapeHtml(e.message) + '</p>'; return; }
+  const ja = new Set(conhecimentosApi.map(k => String(k.pergunta).replace(/^\[[^\]]*\]\s*/, '').trim()));
+  box.innerHTML = PACOTES_TREINO.map((p, pi) => {
+    const enviados = p.itens.filter(it => ja.has(it[0])).length;
+    return `<div class="project-section" style="margin:14px 0">
+      <h3><i class="ph ${p.icone}"></i> ${escapeHtml(p.titulo)} <span class="badge ${enviados === p.itens.length ? 'green' : 'blue'}">${enviados}/${p.itens.length} no treino</span></h3>
+      <p class="mini-sem-link">Área no Turing: ${escapeHtml(p.area)}</p>
+      ${p.itens.map((it, ii) => `<div class="fluxo-item">
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer">
+          <input type="checkbox" class="pac-check" data-p="${pi}" data-i="${ii}" ${ja.has(it[0]) ? 'disabled' : 'checked'} style="margin-top:4px">
+          <span><strong>${escapeHtml(it[0])}</strong>${ja.has(it[0]) ? ' <span class="badge green">já no treino</span>' : ''}<br><span class="mini-sem-link">${escapeHtml(it[1])}</span></span>
+        </label></div>`).join('')}
+      <div class="btn-row"><button class="btn-action" onclick="enviarPacote(${pi})"><i class="ph ph-paper-plane-tilt"></i> Enviar marcados para Pendentes</button></div>
+    </div>`;
+  }).join('');
+}
+
+async function enviarPacote(pi) {
+  const p = PACOTES_TREINO[pi];
+  const msg = document.getElementById('pac-msg');
+  const marcados = [...document.querySelectorAll(`.pac-check[data-p="${pi}"]:checked:not(:disabled)`)].map(c => p.itens[Number(c.dataset.i)]);
+  if (!marcados.length) { msg.textContent = 'Nada marcado neste pacote.'; return; }
+  let ok = 0; const falhas = [];
+  for (const [pergunta, resposta] of marcados) {
+    msg.textContent = `${p.titulo}: enviando ${ok + falhas.length + 1}/${marcados.length}…`;
+    try {
+      await apiConhecimento('/ensinar', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ area: p.area, pergunta: `[informativo] ${pergunta}`, resposta, fonte: 'Treinos temáticos · painel' }) });
+      ok++;
+    } catch (e) { falhas.push(e.message); if (/429|limite/i.test(e.message)) break; }
+    await new Promise(r => setTimeout(r, 1200));
+  }
+  await renderPacotes();
+  document.getElementById('pac-msg').textContent = `${p.titulo}: ${ok} enviado(s) para Pendentes.` + (falhas.length ? ' Falhas: ' + falhas.join('; ') : ' Aprove no Fluxo de treino.');
 }

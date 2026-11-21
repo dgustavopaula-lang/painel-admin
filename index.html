@@ -283,15 +283,15 @@
       <button class="nav-item" id="nav-turin" onclick="abrirTela('tela-turin')">
         <i class="ph ph-flow-arrow"></i> Fluxo de treino <em class="nav-badge api">API</em>
       </button>
+      <button class="nav-item" id="nav-pacotes" onclick="abrirTela('tela-pacotes')">
+        <i class="ph ph-books"></i> Treinos temáticos <em class="nav-badge api">API</em>
+      </button>
     </details>
 
     <details class="nav-group" data-grupo="NexoTerraCore">
       <summary>NexoTerraCore</summary>
       <button class="nav-item" id="nav-api" onclick="abrirTela('tela-api')">
         <i class="ph ph-plugs-connected"></i> API Central <em class="nav-badge api">API</em>
-      </button>
-      <button class="nav-item" id="nav-satelite" onclick="abrirTela('tela-satelite')">
-        <i class="ph ph-planet"></i> Sentinel-2 · NDVI <em class="nav-badge api">API</em>
       </button>
     </details>
 
@@ -919,6 +919,15 @@
     </div>
     <p id="uteis-msg" class="vault-hint" role="status"></p>
     <div id="uteis-lista"></div>
+  </div>
+</div>
+
+<div id="tela-pacotes" class="tela-interna">
+  <div class="project-section">
+    <h3><i class="ph ph-books"></i> Treinos temáticos do Turing</h3>
+    <p class="vault-hint"><i class="ph ph-info"></i> Pacotes prontos de conhecimento. Marque o que concorda, clique em <strong>Enviar para Pendentes</strong> e aprove no <button class="link-inline" onclick="abrirTela('tela-turin')">Fluxo de treino</button>. O que já foi enviado aparece como <em>já no treino</em>.</p>
+    <p id="pac-msg" class="vault-hint" role="status"></p>
+    <div id="pac-lista"><p class="vault-hint">Carregando…</p></div>
   </div>
 </div>
 
