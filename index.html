@@ -592,10 +592,7 @@
               <label>URL base da API (https)</label>
               <input id="cfg-apibase" class="form-control" placeholder="https://..." onchange="salvarConfig()">
             </div>
-            <div class="form-group">
-              <label>Rota de envio do treinamento</label>
-              <input id="cfg-treinopath" class="form-control" placeholder="/api/turing/training/feedback" onchange="salvarConfig()">
-            </div>
+            <input id="cfg-treinopath" type="hidden">
           </div>
           <p class="vault-hint" id="api-token-status"></p>
           <div class="btn-row">
@@ -603,11 +600,12 @@
           </div>
         </div>
         <div class="project-section">
-          <h3><i class="ph ph-list-checks"></i> Endpoints do Turing</h3>
-          <p class="vault-hint"><i class="ph ph-shield-warning"></i> Marque "Auth verificada" só depois de confirmar que a rota exige autenticação. O envio de treinamento fica bloqueado enquanto a rota não estiver marcada.</p>
+          <h3><i class="ph ph-list-checks"></i> Saúde das rotas <button class="btn-action secondary" onclick="testarTodosEndpoints()"><i class="ph ph-pulse"></i> Testar todas</button></h3>
+          <p class="vault-hint"><i class="ph ph-info"></i> O painel testa sozinho cada rota ao abrir esta tela (só leitura, sem gravar nada), usando a chave do cofre.</p>
+          <div id="api-resumo-rotas" class="metrics-grid"></div>
           <div class="data-table-container">
             <table>
-              <thead><tr><th>Rota</th><th>Método</th><th>Auth</th><th>Verificada</th><th>Teste</th></tr></thead>
+              <thead><tr><th>Rota · para quê</th><th>Permissão</th><th>Resultado</th><th></th></tr></thead>
               <tbody id="tbody-endpoints"></tbody>
             </table>
           </div>

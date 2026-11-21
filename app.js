@@ -46,15 +46,16 @@ const SEED_VENDAS = [
 
 // Rotas reais usadas pelo painel (conferidas na API em 20/11/2026).
 const SEED_ENDPOINTS = [
-  { rota: '/api/health', metodo: 'GET', auth: 'Pública', verificado: true },
-  { rota: '/api/turing/conhecimento/listar', metodo: 'GET', auth: 'API Key · turing:training', verificado: true },
-  { rota: '/api/imoveis', metodo: 'GET', auth: 'API Key · assets.read', verificado: true },
-  { rota: '/api/geo/ndvi', metodo: 'GET', auth: 'Token (qualquer válido)', verificado: true },
-  { rota: '/api/turing/security/health', metodo: 'GET', auth: 'Token (qualquer válido)', verificado: true },
-  { rota: '/api/control-plane', metodo: 'GET', auth: 'API Key · control_plane.read', verificado: true },
-  { rota: '/api/turing/training/feedback', metodo: 'POST', auth: 'Token (fila local)', verificado: true }
+  { rota: '/api/health', metodo: 'GET', auth: 'Pública', uso: 'API no ar' },
+  { rota: '/api/turing/conhecimento/listar', metodo: 'GET', auth: 'turing:training', uso: 'Fluxo de treino do Turing' },
+  { rota: '/api/plantas', metodo: 'GET', auth: 'plantas.read', uso: 'Natureza · plantas' },
+  { rota: '/api/apps', metodo: 'GET', auth: 'apps.read', uso: 'Mini-softwares' },
+  { rota: '/api/imoveis', metodo: 'GET', auth: 'assets.read', uso: 'Patrimônio · imóveis' },
+  { rota: '/api/geo/ndvi', metodo: 'GET', auth: 'token válido', uso: 'Sentinel-2 · NDVI (400 sem coordenadas é normal)' },
+  { rota: '/api/turing/security/health', metodo: 'GET', auth: 'token válido', uso: 'Turing Security' },
+  { rota: '/api/control-plane', metodo: 'GET', auth: 'control_plane.read', uso: 'Painel de controle da API' }
 ];
-const ENDPOINTS_VERSAO = 2;
+const ENDPOINTS_VERSAO = 3;
 
 function configPadrao() {
   return { apiBase: 'https://api.gustavopaulasantos.com.br', treinoPath: '/api/turing/training/feedback', endpoints: JSON.parse(JSON.stringify(SEED_ENDPOINTS)), endpointsVersao: ENDPOINTS_VERSAO };
@@ -1368,17 +1369,35 @@ function renderApi() {
     ? `<i class="ph ph-shield-check"></i> Token encontrado no cofre (item "Turing API token"). Ele nunca é gravado fora do cofre criptografado.`
     : `<i class="ph ph-warning"></i> Nenhum token no cofre. Cadastre um item chamado "Turing API token" em Senhas e Acessos.`;
 
+  desenharEndpoints();
+  testarTodosEndpoints();
+}
+
+function desenharEndpoints() {
+  const c = appData.config;
   const tbody = document.getElementById('tbody-endpoints');
-  tbody.innerHTML = c.endpoints.map((e, i) => `
-    <tr>
-      <td><code>${escapeHtml(e.rota)}</code></td>
-      <td><span class="badge blue">${escapeHtml(e.metodo)}</span></td>
-      <td><input class="inline-input" value="${escapeHtml(e.auth)}" onchange="atualizarEndpoint(${i}, 'auth', this.value)"></td>
-      <td><input type="checkbox" ${e.verificado ? 'checked' : ''} onchange="atualizarEndpoint(${i}, 'verificado', this.checked)"></td>
-      <td>${e.metodo === 'GET'
-        ? `<button class="btn-action secondary" onclick="testarEndpoint(${i})"><i class="ph ph-pulse"></i> Testar</button> <span id="teste-${i}" class="teste-res">${escapeHtml(resultadosTeste[i] || '')}</span>`
-        : '<span class="mini-sem-link">só GET</span>'}</td>
-    </tr>`).join('');
+  if (!tbody) return;
+  tbody.innerHTML = c.endpoints.map((e, i) => {
+    const r = resultadosTeste[i];
+    const cls = !r ? '' : r.ok ? 'green' : 'red';
+    return `<tr>
+      <td><code>${escapeHtml(e.rota)}</code><br><span class="mini-sem-link">${escapeHtml(e.uso || '')}</span></td>
+      <td><span class="mini-sem-link">${escapeHtml(e.auth)}</span></td>
+      <td>${r ? `<span class="badge ${cls}">${escapeHtml(r.texto)}</span>` : '<span class="mini-sem-link">aguardando…</span>'}</td>
+      <td><button class="btn-icon" title="Testar de novo" onclick="testarEndpoint(${i})"><i class="ph ph-arrows-clockwise"></i></button></td>
+    </tr>`;
+  }).join('');
+  const feitos = Object.values(resultadosTeste).filter(Boolean);
+  const ok = feitos.filter(r => r.ok);
+  const resumo = document.getElementById('api-resumo-rotas');
+  if (resumo) resumo.innerHTML =
+    `<div class="metric-card"><span>Rotas OK</span><h3 style="color:var(--success-green)">${ok.length}/${c.endpoints.length}</h3></div>` +
+    `<div class="metric-card"><span>Com problema</span><h3 style="color:var(--danger-red)">${feitos.length - ok.length}</h3></div>` +
+    `<div class="metric-card"><span>Tempo médio</span><h3>${ok.length ? Math.round(ok.reduce((a, r) => a + r.ms, 0) / ok.length) + ' ms' : '—'}</h3></div>`;
+}
+
+async function testarTodosEndpoints() {
+  for (let i = 0; i < appData.config.endpoints.length; i++) await testarEndpoint(i);
 }
 
 function salvarConfig() {
@@ -1415,22 +1434,18 @@ function significadoHttp(c) {
 // Só GET, sem enviar dados: serve para ver se a API responde.
 async function testarEndpoint(i) {
   const e = appData.config.endpoints[i];
-  const out = document.getElementById(`teste-${i}`);
-  if (!e || e.metodo !== 'GET') return;
-  if (!appData.config.apiBase) { alert('Configure a URL base da API primeiro.'); return; }
-  out.textContent = '...';
+  if (!e || e.metodo !== 'GET' || !appData.config.apiBase) return;
   const t0 = performance.now();
   try {
     const tk = tokenDoCofre();
-    const res = await fetch(appData.config.apiBase + e.rota, {
-      method: 'GET', cache: 'no-store',
-      headers: tk ? { Authorization: 'Bearer ' + tk } : {}
-    });
-    resultadosTeste[i] = `HTTP ${res.status} · ${Math.round(performance.now() - t0)} ms · ${significadoHttp(res.status)}`;
+    const res = await fetch(appData.config.apiBase + e.rota, { method: 'GET', cache: 'no-store', headers: tk ? { Authorization: 'Bearer ' + tk } : {} });
+    const ms = Math.round(performance.now() - t0);
+    const ok = (res.status >= 200 && res.status < 300) || (res.status === 400 && e.rota === '/api/geo/ndvi');
+    resultadosTeste[i] = { ok, ms, texto: `HTTP ${res.status} · ${ms} ms · ${significadoHttp(res.status)}` };
   } catch (err) {
-    resultadosTeste[i] = navigator.onLine ? 'sem resposta (rede ou CORS)' : 'sem internet';
+    resultadosTeste[i] = { ok: false, ms: 0, texto: navigator.onLine ? 'sem resposta (rede ou CORS)' : 'sem internet' };
   }
-  out.textContent = resultadosTeste[i];
+  desenharEndpoints();
 }
 
 function cadastrarTokenNoCofre() {
