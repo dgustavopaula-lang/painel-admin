@@ -244,7 +244,8 @@
       const p = portaSaida(a, l.saida), q = portaEntrada(b);
       const dx = Math.max(40, (q.x - p.x) / 2);
       const ativo = resultados[a.id] && resultados[b.id];
-      svg += `<path d="M${p.x},${p.y} C${p.x + dx},${p.y} ${q.x - dx},${q.y} ${q.x},${q.y}" class="fx-lig ${ativo ? 'ativa' : ''}" data-lig="${i}"><title>Clique para remover a ligação</title></path>`;
+      const d = `M${p.x},${p.y} C${p.x + dx},${p.y} ${q.x - dx},${q.y} ${q.x},${q.y}`;
+      svg += `<path d="${d}" class="fx-lig ${ativo ? 'ativa' : ''}"></path><path d="${d}" class="fx-lig-alvo" data-lig="${i}"><title>Clique para remover a ligação</title></path>`;
       if (TIPOS[a.tipo].saidas.length > 1) svg += `<text x="${p.x + 8}" y="${p.y - 6}" class="fx-rotulo">${esc(TIPOS[a.tipo].saidas[l.saida])}</text>`;
     });
     svg += '</svg>';
@@ -290,6 +291,11 @@
       <p class="vault-hint">${esc(t.ajuda)}</p>
       <div class="form-group"><label>Nome do nó</label><input class="form-control" data-cfg="__nome" value="${esc(n.nome)}"></div>
       ${campos}
+      <h4 class="fx-h4">Ligações deste nó</h4>
+      ${(() => { const ls = atual.ligacoes.map((l, i) => ({ l, i })).filter(o => o.l.de === n.id || o.l.para === n.id);
+        if (!ls.length) return '<p class="vault-hint">Nenhuma ligação.</p>';
+        return ls.map(o => { const outro = atual.nos.find(x => x.id === (o.l.de === n.id ? o.l.para : o.l.de));
+          return `<div class="fx-ligrow">${o.l.de === n.id ? 'sai para →' : '← vem de'} <strong>${esc(outro ? outro.nome : '?')}</strong> <button class="btn-action secondary cat2-perigo" data-desligar="${o.i}">Desligar</button></div>`; }).join(''); })()}
       <div class="btn-row"><button class="btn-action secondary cat2-perigo" id="fx-del-no"><i class="ph ph-trash"></i> Remover nó</button></div>
       ${r ? `<h4 class="fx-h4">Entrada</h4><pre class="fx-pre">${json(r.entrada)}</pre>
              <h4 class="fx-h4">Saída ${r.msg ? '· ' + esc(r.msg) : ''}</h4><pre class="fx-pre ${r.status}">${r.status === 'erro' ? esc(r.msg) : json(r.saida)}</pre>` : '<p class="vault-hint">Execute o fluxo para ver a entrada e a saída deste nó.</p>'}`;
@@ -297,6 +303,7 @@
       if (el.dataset.cfg === '__nome') n.nome = el.value; else n.cfg[el.dataset.cfg] = el.value;
       salvar(); desenhar();
     }));
+    box.querySelectorAll('[data-desligar]').forEach(bt => bt.onclick = () => { atual.ligacoes.splice(Number(bt.dataset.desligar), 1); salvar(); mostrarNo(n.id); });
     box.querySelector('#fx-del-no').onclick = () => {
       atual.nos = atual.nos.filter(x => x.id !== n.id);
       atual.ligacoes = atual.ligacoes.filter(l => l.de !== n.id && l.para !== n.id);
@@ -322,7 +329,7 @@
           ligando = null; desenhar(); return;
         }
       }
-      const caminho = ev.target.closest('.fx-lig');
+      const caminho = ev.target.closest('.fx-lig-alvo');
       if (caminho) { atual.ligacoes.splice(Number(caminho.dataset.lig), 1); salvar(); desenhar(); return; }
       const el = ev.target.closest('.fx-no');
       if (!el) { if (ligando) { ligando = null; desenhar(); } return; }
@@ -465,9 +472,11 @@
 #tela-fluxo-api .fx-bloco:hover{border-color:rgba(52,211,153,.6)}
 #tela-fluxo-api .fx-canvas{overflow:auto;border:1px solid rgba(255,255,255,.08);border-radius:12px;height:460px;background-color:#1b1916;background-image:radial-gradient(rgba(255,255,255,.12) 1px,transparent 1px);background-size:18px 18px}
 #tela-fluxo-api .fx-area{position:relative;min-width:100%;min-height:100%;touch-action:none}
-#tela-fluxo-api .fx-svg{position:absolute;left:0;top:0}
+#tela-fluxo-api .fx-svg{position:absolute;left:0;top:0;z-index:1}
+#tela-fluxo-api .fx-no{z-index:2}
 #tela-fluxo-api .fx-lig{fill:none;stroke:rgba(255,255,255,.35);stroke-width:2.5;cursor:pointer}
-#tela-fluxo-api .fx-lig:hover{stroke:#f87171}
+#tela-fluxo-api .fx-lig-alvo{fill:none;stroke:transparent;stroke-width:16;cursor:pointer;pointer-events:stroke}
+#tela-fluxo-api .fx-lig-alvo:hover{stroke:rgba(248,113,113,.45)}
 #tela-fluxo-api .fx-lig.ativa{stroke:#34d399}
 #tela-fluxo-api .fx-rotulo{fill:#cfc8bc;font-size:11px}
 #tela-fluxo-api .fx-no{position:absolute;width:180px;height:64px;display:flex;gap:10px;align-items:center;padding:8px 12px;background:#2a2722;border:1px solid rgba(255,255,255,.14);border-left:4px solid;border-radius:10px;cursor:grab;user-select:none;box-sizing:border-box}
@@ -494,6 +503,8 @@
 body.fx-foco .sidebar,body.fx-foco .sidebar-backdrop{display:none !important}
 body.fx-foco .main-content{margin-left:0 !important;width:100% !important;max-width:none !important;grid-column:1 / -1 !important;flex:1 1 auto !important}
 body.fx-foco #tela-fluxo-api .fx-canvas{height:calc(100vh - 330px);min-height:460px}
+#tela-fluxo-api .fx-ligrow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:4px 0;font-size:.85rem}
+#tela-fluxo-api .fx-ligrow .btn-action{padding:4px 10px;font-size:.75rem}
 #tela-fluxo-api .fx-cab{display:flex;gap:8px;align-items:center;font-size:1rem;margin-bottom:6px}`;
     document.head.appendChild(st);
   }
