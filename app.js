@@ -1181,8 +1181,15 @@ function renderMetricasHome() {
   const el = document.getElementById('home-metricas');
   if (!el) return;
   appsApi = appsApi || []; conhecimentosApi = conhecimentosApi || [];
-  if (!appsApi.length && !renderMetricasHome._pedido) { renderMetricasHome._pedido = true; carregarAppsApi().then(renderMetricasHome); }
-  if (!conhecimentosApi.length && !renderMetricasHome._pedidoK) { renderMetricasHome._pedidoK = true; apiConhecimento('/listar').then(d => { conhecimentosApi = d.conhecimentos || []; renderMetricasHome(); }).catch(() => {}); }
+  const agoraH = Date.now();
+  if (!appsApi.length && tokenDoCofre() && agoraH - (renderMetricasHome._pedido || 0) > 15000) {
+    renderMetricasHome._pedido = agoraH;
+    carregarAppsApi().then(() => { if (appsApi.length) renderMetricasHome(); });
+  }
+  if (!conhecimentosApi.length && tokenDoCofre() && agoraH - (renderMetricasHome._pedidoK || 0) > 15000) {
+    renderMetricasHome._pedidoK = agoraH;
+    apiConhecimento('/listar').then(d => { conhecimentosApi = d.conhecimentos || []; if (conhecimentosApi.length) renderMetricasHome(); }).catch(() => {});
+  }
   const ativos = appsApi.filter(a => a.status !== 'arquivado');
   const noArApps = ativos.filter(a => classeSaude(a) === 'ok').length;
   const pwas = ativos.filter(a => a.tipo === 'pwa').length;
@@ -1254,6 +1261,8 @@ async function checarSaudeApi() {
 function renderHomeApi() {
   const el = document.getElementById('home-api');
   if (!el) return;
+  el.innerHTML = ''; // bloco antigo removido: o card principal do Turing (topo) já mostra status, latência e treino
+  return;
   const est = ESTADOS_API[statusApi.estado] || ESTADOS_API['nao-configurada'];
   const fila = (appData.treino || []).filter(t => !t.enviado).length;
   const hora = statusApi.quando ? statusApi.quando.toLocaleTimeString('pt-BR') : '—';
