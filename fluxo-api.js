@@ -252,7 +252,7 @@
     const nos = atual.nos.map(n => {
       const t = TIPOS[n.tipo], r = resultados[n.id];
       const st = r ? `<span class="fx-st ${r.status}">${r.status === 'ok' ? '✔' : r.status === 'erro' ? '✖' : r.status === 'simulado' ? 'sim' : '…'}</span>` : '';
-      const saidas = t.saidas.map((s, i) => { const p = portaSaida(n, i); return `<span class="fx-porta saida" style="top:${p.y - n.y - 7}px" data-no="${n.id}" data-saida="${i}" title="Saída: ${esc(s)} — clique e depois clique na entrada de outro nó"></span>`; }).join('');
+      const saidas = t.saidas.map((s, i) => { const p = portaSaida(n, i); return `<span class="fx-porta saida" style="top:${p.y - n.y - 10}px" data-no="${n.id}" data-saida="${i}" title="Saída: ${esc(s)} — clique e depois clique na entrada de outro nó"></span>`; }).join('');
       return `<div class="fx-no ${selecionado === n.id ? 'sel' : ''} ${ligando ? 'ligando' : ''}" data-no="${n.id}" style="left:${n.x}px;top:${n.y}px;border-left-color:${t.cor}">
         ${n.tipo !== 'gatilho' ? `<span class="fx-porta entrada" data-no="${n.id}" title="Entrada"></span>` : ''}
         <i class="ph ${t.icone}" style="color:${t.cor}"></i>
@@ -296,6 +296,10 @@
         if (!ls.length) return '<p class="vault-hint">Nenhuma ligação.</p>';
         return ls.map(o => { const outro = atual.nos.find(x => x.id === (o.l.de === n.id ? o.l.para : o.l.de));
           return `<div class="fx-ligrow">${o.l.de === n.id ? 'sai para →' : '← vem de'} <strong>${esc(outro ? outro.nome : '?')}</strong> <button class="btn-action secondary cat2-perigo" data-desligar="${o.i}">Desligar</button></div>`; }).join(''); })()}
+      ${t.saidas.length ? `<div class="fx-ligar"><label>Ligar a saída deste nó em:</label>
+        ${t.saidas.length > 1 ? `<select class="form-control" id="fx-lig-saida">${t.saidas.map((x, i) => `<option value="${i}">saída: ${esc(x)}</option>`).join('')}</select>` : ''}
+        <select class="form-control" id="fx-lig-dest"><option value="">— escolha o nó —</option>${atual.nos.filter(x => x.id !== n.id && x.tipo !== 'gatilho').map(x => `<option value="${esc(x.id)}">${esc(x.nome)}</option>`).join('')}</select>
+        <button class="btn-action" id="fx-lig-ok"><i class="ph ph-link"></i> Ligar</button></div>` : ''}
       <div class="btn-row"><button class="btn-action secondary cat2-perigo" id="fx-del-no"><i class="ph ph-trash"></i> Remover nó</button></div>
       ${r ? `<h4 class="fx-h4">Entrada</h4><pre class="fx-pre">${json(r.entrada)}</pre>
              <h4 class="fx-h4">Saída ${r.msg ? '· ' + esc(r.msg) : ''}</h4><pre class="fx-pre ${r.status}">${r.status === 'erro' ? esc(r.msg) : json(r.saida)}</pre>` : '<p class="vault-hint">Execute o fluxo para ver a entrada e a saída deste nó.</p>'}`;
@@ -304,6 +308,13 @@
       salvar(); desenhar();
     }));
     box.querySelectorAll('[data-desligar]').forEach(bt => bt.onclick = () => { atual.ligacoes.splice(Number(bt.dataset.desligar), 1); salvar(); mostrarNo(n.id); });
+    const okLig = box.querySelector('#fx-lig-ok');
+    if (okLig) okLig.onclick = () => {
+      const para = box.querySelector('#fx-lig-dest').value; if (!para) return;
+      const sel = box.querySelector('#fx-lig-saida'); const saida = sel ? Number(sel.value) : 0;
+      if (!atual.ligacoes.some(l => l.de === n.id && l.para === para && l.saida === saida)) atual.ligacoes.push({ de: n.id, para, saida });
+      salvar(); mostrarNo(n.id);
+    };
     box.querySelector('#fx-del-no').onclick = () => {
       atual.nos = atual.nos.filter(x => x.id !== n.id);
       atual.ligacoes = atual.ligacoes.filter(l => l.de !== n.id && l.para !== n.id);
@@ -485,9 +496,9 @@
 #tela-fluxo-api .fx-no-txt{min-width:0;display:flex;flex-direction:column}
 #tela-fluxo-api .fx-no-txt strong{font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tela-fluxo-api .fx-no-txt small{font-size:.7rem;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#tela-fluxo-api .fx-porta{position:absolute;width:14px;height:14px;border-radius:50%;background:#1b1916;border:2px solid #cfc8bc;cursor:crosshair}
-#tela-fluxo-api .fx-porta.entrada{left:-8px;top:24px}
-#tela-fluxo-api .fx-porta.saida{right:-8px}
+#tela-fluxo-api .fx-porta{position:absolute;width:20px;height:20px;z-index:3;border-radius:50%;background:#1b1916;border:2px solid #cfc8bc;cursor:crosshair}
+#tela-fluxo-api .fx-porta.entrada{left:-11px;top:21px}
+#tela-fluxo-api .fx-porta.saida{right:-11px}
 #tela-fluxo-api .fx-no.ligando .fx-porta.entrada{border-color:#34d399;background:#34d399}
 #tela-fluxo-api .fx-st{position:absolute;top:-9px;right:8px;font-size:.7rem;padding:1px 6px;border-radius:999px;background:#444}
 #tela-fluxo-api .fx-st.ok{background:#065f46;color:#d1fae5}
@@ -505,6 +516,7 @@ body.fx-foco .main-content{margin-left:0 !important;width:100% !important;max-wi
 body.fx-foco #tela-fluxo-api .fx-canvas{height:calc(100vh - 330px);min-height:460px}
 #tela-fluxo-api .fx-ligrow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:4px 0;font-size:.85rem}
 #tela-fluxo-api .fx-ligrow .btn-action{padding:4px 10px;font-size:.75rem}
+#tela-fluxo-api .fx-ligar{display:grid;gap:6px;margin:10px 0;padding:10px;border:1px dashed rgba(52,211,153,.5);border-radius:8px}
 #tela-fluxo-api .fx-cab{display:flex;gap:8px;align-items:center;font-size:1rem;margin-bottom:6px}`;
     document.head.appendChild(st);
   }
