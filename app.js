@@ -367,7 +367,7 @@ function abrirTela(idTela) {
     'tela-patrimonio': 'Patrimônio / Imóveis',
     'tela-agro': 'Notas de testes (local)',
     'tela-nexus': 'Notas NexoTerraCore (local)',
-    'tela-turin': 'Turing · Visão geral',
+    'tela-turin': 'Turing · Fluxo de treino',
     'tela-videos': 'Gerenciador de Vídeos',
     'tela-podcast': 'Gerenciador de Podcasts',
     'tela-edutech': 'EduTech · Cursos',
@@ -435,7 +435,7 @@ function renderCurrentView() {
     if (!apiChecadaNaSessao) { apiChecadaNaSessao = true; checarSaudeApi(); }
   }
   if (['tela-posts', 'tela-videos', 'tela-podcast'].includes(currentView)) renderPosts();
-  if (['tela-agro', 'tela-nexus', 'tela-turin'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
+  if (['tela-agro', 'tela-nexus'].includes(currentView)) renderProjeto(currentView.replace('tela-', ''));
   if (currentView === 'tela-turin') renderTuringVisao();
   if (currentView === 'tela-satelite') renderSatelite();
 }
@@ -2559,31 +2559,157 @@ function _baseTuring() {
   return ((appData.config && appData.config.apiBase) || 'https://api.gustavopaulasantos.com.br').replace(/\/+$/, '');
 }
 
-async function renderTuringVisao() {
-  const box = document.getElementById('turing-areas');
-  if (!box) return;
+let conhecimentosApi = [];
+let fluxoNoAtual = 'rascunhos';
+
+async function apiConhecimento(caminho, opcoes) {
   const tk = tokenDoCofre();
-  if (!tk) { box.textContent = 'Token "Turing API token" não encontrado no cofre.'; return; }
+  if (!tk) throw new Error('Token "Turing API token" não encontrado no cofre.');
+  const o = Object.assign({ cache: 'no-store' }, opcoes || {});
+  o.headers = Object.assign({ Authorization: 'Bearer ' + tk }, o.headers || {});
+  const t0 = performance.now();
+  const r = await fetch(_baseTuring() + '/api/turing/conhecimento' + caminho, o);
+  const ms = Math.round(performance.now() - t0);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.ok) throw new Error(d.erro || 'HTTP ' + r.status);
+  d._ms = ms;
+  return d;
+}
+
+async function renderTuringVisao() {
+  const painel = document.getElementById('fluxo-painel');
+  if (!painel) return;
+  document.querySelectorAll('#fluxo-turing .fluxo-no').forEach(b => { b.onclick = () => abrirNoFluxo(b.dataset.no); });
   try {
-    const r = await fetch(_baseTuring() + '/api/turing/conhecimento/listar', {
-      headers: { Authorization: 'Bearer ' + tk }, cache: 'no-store'
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok || !d.ok) throw new Error(d.erro || 'HTTP ' + r.status);
-    const porArea = {};
-    (d.conhecimentos || []).forEach(k => {
-      const a = k.area || 'Sem área';
-      porArea[a] = porArea[a] || { aprovado: 0, rascunho: 0 };
-      if (k.status === 'aprovado') porArea[a].aprovado++;
-      if (k.status === 'rascunho') porArea[a].rascunho++;
-    });
-    const areas = Object.entries(porArea).sort((x, y) => y[1].aprovado - x[1].aprovado);
-    box.innerHTML = areas.length
-      ? areas.map(([a, c]) => `<div class="metric-card"><span>${escapeHtml(a)}</span><h3>${c.aprovado}</h3><p class="metric-sub">aprovados${c.rascunho ? ' · ' + c.rascunho + ' rascunho(s)' : ''}</p></div>`).join('')
-      : '<p class="vault-hint">Nenhum conhecimento registrado ainda.</p>';
+    const d = await apiConhecimento('/listar');
+    conhecimentosApi = d.conhecimentos || [];
+    const conta = s => conhecimentosApi.filter(k => k.status === s).length;
+    const ap = conta('aprovado'), ra = conta('rascunho'), rj = conta('rejeitado');
+    document.getElementById('fx-rascunhos').textContent = ra;
+    document.getElementById('fx-aprovados').textContent = ap;
+    document.getElementById('fx-taxa').textContent = (ap + rj) ? Math.round(100 * ap / (ap + rj)) + '%' : '—';
+    document.getElementById('fx-areas').textContent = new Set(conhecimentosApi.filter(k => k.status === 'aprovado').map(k => k.area)).size + ' áreas';
+    document.getElementById('fx-ms').textContent = d._ms + ' ms';
+    const lc = document.getElementById('turin-lab-contagem'); if (lc) lc.textContent = `${ap} aprovados · ${ra} rascunhos`;
+    abrirNoFluxo(fluxoNoAtual);
   } catch (e) {
-    box.textContent = 'Não foi possível consultar a API: ' + e.message;
+    painel.innerHTML = '<p class="vault-hint">Não foi possível consultar a API: ' + escapeHtml(e.message) + '</p>';
   }
+}
+
+function abrirNoFluxo(no) {
+  fluxoNoAtual = no;
+  document.querySelectorAll('#fluxo-turing .fluxo-no').forEach(b => b.classList.toggle('ativo', b.dataset.no === no));
+  const p = document.getElementById('fluxo-painel');
+  if (no === 'fontes') {
+    p.innerHTML = `
+      <h4 style="margin-top:0"><i class="ph ph-plus-circle"></i> Entrada de conhecimento</h4>
+      <form onsubmit="ensinarRapido(event)">
+        <div class="config-grid">
+          <div class="form-group"><label for="fx-area">Área</label>
+            <select id="fx-area" class="form-control">${['Segurança da API','Abuso e ataques','Contexto NexoTerraCore','Agro','Edutech Angola','Edutech Brasil'].map(a => `<option>${a}</option>`).join('')}</select></div>
+          <div class="form-group"><label for="fx-classe">Classificação</label>
+            <select id="fx-classe" class="form-control"><option value="informativo">informativo</option><option value="procedimento">procedimento</option><option value="alerta">alerta</option><option value="bloqueio">bloqueio</option></select></div>
+        </div>
+        <div class="form-group"><label for="fx-pergunta">Cenário / pergunta</label><textarea id="fx-pergunta" class="form-control" rows="2" maxlength="2000" required></textarea></div>
+        <div class="form-group"><label for="fx-resposta">Resposta esperada do Turing</label><textarea id="fx-resposta" class="form-control" rows="3" maxlength="4000" required></textarea></div>
+        <div class="btn-row">
+          <button type="submit" class="btn-action"><i class="ph ph-paper-plane-tilt"></i> Enviar para revisão</button>
+          <button type="button" class="btn-action secondary" onclick="importarPlantasTuring()"><i class="ph ph-plant"></i> Importar plantas identificadas</button>
+          <button type="button" class="btn-action secondary" onclick="abrirTela('tela-lab-conhecimento')"><i class="ph ph-flask"></i> Laboratório completo</button>
+        </div>
+        <p id="fx-msg" class="vault-hint" role="status"></p>
+      </form>`;
+  } else if (no === 'rascunhos') {
+    const lista = conhecimentosApi.filter(k => k.status === 'rascunho');
+    p.innerHTML = `<h4 style="margin-top:0"><i class="ph ph-hourglass"></i> Pendentes de revisão (${lista.length})</h4>` + (lista.length ? lista.map(k => `
+      <div class="fluxo-item">
+        <p><strong>#${k.id} · ${escapeHtml(k.area || '')}</strong></p>
+        <p><em>${escapeHtml(k.pergunta)}</em></p>
+        <p>${escapeHtml(k.resposta)}</p>
+        <div class="btn-row"><button class="btn-action" onclick="revisarConhecimento(${k.id},'aprovado')"><i class="ph ph-check"></i> Aprovar</button>
+        <button class="btn-action secondary" onclick="revisarConhecimento(${k.id},'rejeitado')"><i class="ph ph-x"></i> Rejeitar</button></div>
+      </div>`).join('') : '<p class="vault-hint">Nada pendente. Use o bloco 1 · Entrada para ensinar algo novo.</p>');
+  } else if (no === 'revisao') {
+    const c = s => conhecimentosApi.filter(k => k.status === s).length;
+    const recentes = conhecimentosApi.filter(k => k.status !== 'rascunho').slice(0, 10);
+    p.innerHTML = `<h4 style="margin-top:0"><i class="ph ph-check-square"></i> Revisão</h4>
+      <div class="metrics-grid"><div class="metric-card"><span>Aprovados</span><h3>${c('aprovado')}</h3></div><div class="metric-card"><span>Rejeitados</span><h3>${c('rejeitado')}</h3></div><div class="metric-card"><span>Pendentes</span><h3>${c('rascunho')}</h3></div></div>
+      <p class="vault-hint">Últimas decisões:</p>` + recentes.map(k => `<div class="fluxo-item"><p><span class="badge ${k.status === 'aprovado' ? 'green' : 'red'}">${escapeHtml(k.status)}</span> #${k.id} · ${escapeHtml(k.area || '')} · <em>${escapeHtml(String(k.pergunta).slice(0, 120))}</em></p></div>`).join('');
+  } else if (no === 'aprovados') {
+    const porArea = {};
+    conhecimentosApi.filter(k => k.status === 'aprovado').forEach(k => { porArea[k.area || 'Sem área'] = (porArea[k.area || 'Sem área'] || 0) + 1; });
+    p.innerHTML = `<h4 style="margin-top:0"><i class="ph ph-seal-check"></i> O que o Turing sabe, por área</h4><div class="metrics-grid">` +
+      Object.entries(porArea).sort((a, b) => b[1] - a[1]).map(([a, n]) => `<div class="metric-card" style="cursor:pointer" onclick="abrirNoFluxo('consulta');setTimeout(()=>{document.getElementById('turing-consulta-q').value=${JSON.stringify(a).replace(/"/g, '&quot;')};consultarTuring();},50)"><span>${escapeHtml(a)}</span><h3>${n}</h3><p class="metric-sub">aprovados</p></div>`).join('') + '</div>';
+  } else {
+    p.innerHTML = `<h4 style="margin-top:0"><i class="ph ph-robot"></i> Pergunte ao Turing</h4>
+      <p class="vault-hint">Busca só nos conhecimentos <strong>aprovados</strong>. Ex.: <em>login</em>, <em>Malanje</em>, <em>mamona</em>.</p>
+      <form class="btn-row" onsubmit="consultarTuring(event)">
+        <input id="turing-consulta-q" class="form-control" maxlength="500" placeholder="Palavra-chave (vazio = mais recentes)" style="flex:1;min-width:220px">
+        <button type="submit" class="btn-action"><i class="ph ph-magnifying-glass"></i> Consultar</button>
+      </form>
+      <div id="turing-consulta-resultado" style="margin-top:12px"></div>`;
+  }
+}
+
+async function revisarConhecimento(id, status) {
+  try {
+    await apiConhecimento('/' + encodeURIComponent(id) + '/revisar', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    await renderTuringVisao();
+  } catch (e) { alert('Falha na revisão: ' + e.message); }
+}
+
+async function ensinarRapido(ev) {
+  ev.preventDefault();
+  const msg = document.getElementById('fx-msg');
+  const pergunta = document.getElementById('fx-pergunta').value.trim();
+  const resposta = document.getElementById('fx-resposta').value.trim();
+  if (!pergunta || !resposta) return;
+  msg.textContent = 'Enviando…';
+  try {
+    const d = await apiConhecimento('/ensinar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+      area: document.getElementById('fx-area').value,
+      pergunta: `[${document.getElementById('fx-classe').value}] ${pergunta}`, resposta, fonte: 'Fluxo de treino · painel' }) });
+    msg.textContent = `Enviado ✅ #${d.conhecimento && d.conhecimento.id} está em Pendentes.`;
+    document.getElementById('fx-pergunta').value = ''; document.getElementById('fx-resposta').value = '';
+    await renderTuringVisao(); abrirNoFluxo('fontes');
+    document.getElementById('fx-msg').textContent = msg.textContent;
+  } catch (e) { msg.textContent = 'Falhou: ' + e.message; }
+}
+
+function textoTreinoPlanta(p, todas) {
+  const parentes = todas.filter(o => o.id !== p.id && _fam(p) && _fam(o) === _fam(p)).map(o => o.nome_popular + (o.nome_cientifico ? ' (' + o.nome_cientifico + ')' : ''));
+  return [
+    `No catálogo Plantas do morro, "${p.nome_popular}" está registrada como ${p.nome_cientifico}` + (p.familia ? `, família ${p.familia}.` : '.'),
+    parentes.length ? `Outras plantas da mesma família no catálogo: ${parentes.slice(0, 8).join(', ')}.` : '',
+    p.toxica ? `Atenção: marcada com risco de toxicidade${p.alerta ? ' (' + p.alerta + ')' : ''}.` : (p.alerta ? 'Alerta: ' + p.alerta : ''),
+    'Identificação a confirmar com especialista. Este registro não indica uso, dose ou segurança da planta.'
+  ].filter(Boolean).join(' ');
+}
+
+async function importarPlantasTuring() {
+  const msg = document.getElementById('fx-msg');
+  try {
+    msg.textContent = 'Lendo plantas da API…';
+    const plantas = (await apiPlantas('')).plantas || [];
+    const ja = new Set(conhecimentosApi.map(k => (String(k.pergunta).match(/planta "(.+?)" do catálogo/) || [])[1]).filter(Boolean));
+    const faltam = plantas.filter(p => p.nome_cientifico && p.status !== 'descartada' && !ja.has(p.nome_popular));
+    if (!faltam.length) { msg.textContent = 'Todas as plantas identificadas já estão no treino.'; return; }
+    if (!confirm(`Enviar ${faltam.length} planta(s) para Pendentes do Turing? (vai devagar para respeitar o limite da API)`)) { msg.textContent = ''; return; }
+    let ok = 0; const falhas = [];
+    for (const p of faltam) {
+      msg.textContent = `Enviando ${ok + falhas.length + 1}/${faltam.length}: ${p.nome_popular}…`;
+      try {
+        await apiConhecimento('/ensinar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          area: 'Agro', pergunta: `[botânica] O que é a planta "${p.nome_popular}" do catálogo Plantas do morro?`,
+          resposta: textoTreinoPlanta(p, plantas), fonte: 'Plantas do morro · painel' }) });
+        ok++;
+      } catch (e) { falhas.push(p.nome_popular + ' (' + e.message + ')'); if (/429|limite|muitas/i.test(e.message)) break; }
+      await new Promise(r => setTimeout(r, 1200));
+    }
+    await renderTuringVisao(); abrirNoFluxo('fontes');
+    document.getElementById('fx-msg').textContent = `${ok} planta(s) enviadas para Pendentes.` + (falhas.length ? ' Falharam: ' + falhas.join('; ') + ' — clique de novo em 1 minuto para continuar.' : '');
+  } catch (e) { msg.textContent = 'Falhou: ' + e.message; }
 }
 
 async function consultarTuring(ev) {

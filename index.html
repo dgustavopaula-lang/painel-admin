@@ -281,7 +281,7 @@
         <i class="ph ph-flask"></i> Laboratório <em class="nav-badge api">API</em>
       </button>
       <button class="nav-item" id="nav-turin" onclick="abrirTela('tela-turin')">
-        <i class="ph ph-robot"></i> Visão geral <em class="nav-badge api">API</em>
+        <i class="ph ph-flow-arrow"></i> Fluxo de treino <em class="nav-badge api">API</em>
       </button>
     </details>
 
@@ -731,83 +731,37 @@
       </div>
 
       <div id="tela-turin" class="tela-interna">
+        <style>
+          .fluxo{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:8px 2px 16px}
+          .fluxo-no{flex:1 1 0;min-width:150px;background:var(--bg-card,#2b2722);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;cursor:pointer;transition:.15s;text-align:left;color:inherit;font:inherit}
+          .fluxo-no:hover{border-color:var(--accent,#f4a26b)}
+          .fluxo-no.ativo{border-color:var(--accent,#f4a26b);box-shadow:0 0 0 2px rgba(244,162,107,.25)}
+          .fluxo-no .n-tit{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;opacity:.7;display:flex;gap:6px;align-items:center}
+          .fluxo-no .n-num{font-size:1.6rem;font-weight:700;margin:6px 0 2px}
+          .fluxo-no .n-sub{font-size:.8rem;opacity:.7}
+          .fluxo-seta{flex:0 0 34px;display:flex;align-items:center;justify-content:center;opacity:.5;font-size:1.3rem}
+          .fluxo-painel{border:1px dashed rgba(255,255,255,.15);border-radius:14px;padding:18px;min-height:220px}
+          .fluxo-item{border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0}
+          .fluxo-item:last-child{border-bottom:0}
+          .fluxo-item p{margin:4px 0}
+        </style>
         <div class="project-section">
-          <h3><i class="ph ph-magnifying-glass"></i> Pergunte ao Turing</h3>
-          <p class="vault-hint">Busca no que o Turing já aprendeu (só conhecimentos <strong>aprovados</strong> no Laboratório). Use uma palavra-chave do cenário, por exemplo: <em>login</em>, <em>varredura</em>, <em>API Key</em>.</p>
-          <form id="form-turing-consulta" class="btn-row" onsubmit="consultarTuring(event)">
-            <input id="turing-consulta-q" class="form-control" maxlength="500" placeholder="Palavra-chave (deixe vazio para ver os mais recentes)" style="flex:1;min-width:220px">
-            <button type="submit" class="btn-action"><i class="ph ph-magnifying-glass"></i> Consultar</button>
-          </form>
-          <div id="turing-consulta-resultado" style="margin-top:12px"></div>
-        </div>
-
-        <div class="project-section">
-          <h3><i class="ph ph-chart-bar"></i> O que o Turing sabe, por área</h3>
-          <div id="turing-areas" class="metrics-grid"><p class="vault-hint">Carregando da API…</p></div>
-          <p class="vault-hint">Para ensinar algo novo, use o <button class="link-inline" onclick="abrirTela('tela-lab-conhecimento')">Laboratório do Turing</button>.</p>
-        </div>
-
-        <h3 style="margin:24px 0 8px">Anotações (local, só neste navegador)</h3>
-        <div class="project-grid">
-          <div>
-            <div class="project-section">
-              <h3><i class="ph ph-robot"></i> Prompts & Arquitetura da IA Turing</h3>
-              <textarea class="editable-area" id="turin-notas" placeholder="Instruções de sistema, prompts e especificações da IA Turing..." oninput="salvarProjeto('turin')"></textarea>
-            </div>
-            <div class="project-section">
-              <h3>Checklist de Desenvolvimento <button class="btn-action" onclick="adicionarTask('turin')"><i class="ph ph-plus"></i> Tarefa</button></h3>
-              <div id="tasks-turin" class="task-list"></div>
-            </div>
+          <h3><i class="ph ph-flow-arrow"></i> Fluxo de treino do Turing</h3>
+          <p class="vault-hint"><i class="ph ph-info"></i> Tudo aqui vem da NexoTerraCore API. Clique em um bloco do fluxo para trabalhar nele. Nada vira resposta do Turing sem passar pela <strong>revisão</strong>.</p>
+          <div class="fluxo" id="fluxo-turing">
+            <button class="fluxo-no" data-no="fontes"><div class="n-tit"><i class="ph ph-plus-circle"></i> 1 · Entrada</div><div class="n-num" id="fx-fontes">+</div><div class="n-sub">ensinar ou importar</div></button>
+            <div class="fluxo-seta">→</div>
+            <button class="fluxo-no" data-no="rascunhos"><div class="n-tit"><i class="ph ph-hourglass"></i> 2 · Pendentes</div><div class="n-num" id="fx-rascunhos">—</div><div class="n-sub">aguardando revisão</div></button>
+            <div class="fluxo-seta">→</div>
+            <button class="fluxo-no" data-no="revisao"><div class="n-tit"><i class="ph ph-check-square"></i> 3 · Revisão</div><div class="n-num" id="fx-taxa">—</div><div class="n-sub">taxa de aprovação</div></button>
+            <div class="fluxo-seta">→</div>
+            <button class="fluxo-no" data-no="aprovados"><div class="n-tit"><i class="ph ph-seal-check"></i> 4 · Aprovados</div><div class="n-num" id="fx-aprovados">—</div><div class="n-sub" id="fx-areas">áreas</div></button>
+            <div class="fluxo-seta">→</div>
+            <button class="fluxo-no" data-no="consulta"><div class="n-tit"><i class="ph ph-robot"></i> 5 · Turing responde</div><div class="n-num" id="fx-ms">—</div><div class="n-sub">latência da API</div></button>
           </div>
-          <div>
-            <div class="project-section">
-              <h3>Status do Projeto</h3>
-              <select id="turin-status" class="form-control" onchange="salvarProjeto('turin')">
-                <option value="Em Planejamento">Em Planejamento</option>
-                <option value="Em Andamento">Em Andamento</option>
-                <option value="Concluído">Concluído</option>
-                <option value="Pausado">Pausado</option>
-              </select>
-            </div>
-            <div class="project-section">
-              <h3>Links Úteis <button class="btn-action" onclick="abrirModalLink('turin')"><i class="ph ph-plus"></i> Link</button></h3>
-              <div id="links-turin" class="link-list"></div>
-            </div>
-          </div>
-
+          <div class="fluxo-painel" id="fluxo-painel"><p class="vault-hint">Carregando da API…</p></div>
         </div>
-
-        <div id="turing-lab-consolidado">
-
-          <div class="project-section">
-            <h3><i class="ph ph-robot"></i> Turing · Status Operacional</h3>
-
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span>Status</span>
-                <h3>ONLINE</h3>
-                <span class="badge green">Ativo</span>
-              </div>
-
-              <div class="metric-card">
-                <span>Integração</span>
-                <h3>NexoTerraCore API</h3>
-              </div>
-
-              <div class="metric-card">
-                <span>Função</span>
-                <h3>Intelligence Layer</h3>
-              </div>
-
-              <div class="metric-card">
-                <span>Laboratório (API)</span>
-                <h3 id="turin-lab-contagem">—</h3>
-              </div>
-            </div>
-          </div>
-
-
-        </div>
+        <span id="turin-lab-contagem" hidden></span>
       </div>
 
 
