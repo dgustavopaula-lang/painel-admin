@@ -378,6 +378,7 @@
         <button class="btn-action secondary" data-acao="exportar"><i class="ph ph-download-simple"></i> Exportar</button>
         <button class="btn-action secondary" data-acao="importar"><i class="ph ph-upload-simple"></i> Importar</button>
         <button class="btn-action secondary" data-acao="modelos"><i class="ph ph-arrow-counter-clockwise"></i> Restaurar modelos</button>
+        <button class="btn-action secondary" data-acao="foco" id="fx-btn-foco"><i class="ph ph-sidebar-simple"></i> Recolher menu</button>
         <label class="fx-sim"><input type="checkbox" id="fx-simulacao" checked> Modo simulação</label>
         <button class="btn-action" data-acao="executar"><i class="ph ph-play"></i> Executar</button>
       </div>
@@ -405,6 +406,7 @@
       const b = ev.target.closest('[data-acao]'); if (!b) return;
       const a = b.dataset.acao;
       if (a === 'executar') executarFluxo();
+      if (a === 'foco') alternarFoco();
       if (a === 'novo') { const nome = prompt('Nome do novo fluxo:', 'Meu fluxo'); if (!nome) return; fluxos.push({ nome, nos: [{ id: novoId(), tipo: 'gatilho', x: 40, y: 140, nome: TIPOS.gatilho.nome, cfg: {} }], ligacoes: [] }); salvar(); trocar(fluxos.length - 1); }
       if (a === 'renomear') { const nome = prompt('Novo nome:', atual.nome); if (nome) { atual.nome = nome; salvar(); preencherSeletor(); } }
       if (a === 'duplicar') { const c = JSON.parse(JSON.stringify(atual)); c.nome += ' (cópia)'; fluxos.push(c); salvar(); trocar(fluxos.length - 1); }
@@ -423,6 +425,14 @@
       ev.target.value = '';
     });
     ligarEventos();
+  }
+
+  function alternarFoco(forcar) {
+    const ligar = typeof forcar === 'boolean' ? forcar : !document.body.classList.contains('fx-foco');
+    document.body.classList.toggle('fx-foco', ligar);
+    try { localStorage.setItem('gps-fluxos-foco', ligar ? '1' : '0'); } catch (e) { /* ignora */ }
+    const bt = document.getElementById('fx-btn-foco');
+    if (bt) bt.innerHTML = ligar ? '<i class="ph ph-sidebar-simple"></i> Mostrar menu' : '<i class="ph ph-sidebar-simple"></i> Recolher menu';
   }
 
   function montarMenu() {
@@ -476,6 +486,9 @@
 #tela-fluxo-api .fx-pre.erro{color:#f87171}
 #tela-fluxo-api .fx-mono{font-family:ui-monospace,monospace;font-size:.8rem}
 #tela-fluxo-api .fx-h4{margin:12px 0 6px;font-size:.85rem;opacity:.85}
+body.fx-foco .sidebar,body.fx-foco .sidebar-backdrop{display:none !important}
+body.fx-foco .main-content{margin-left:0 !important;width:100% !important;max-width:none !important;grid-column:1 / -1 !important;flex:1 1 auto !important}
+body.fx-foco #tela-fluxo-api .fx-canvas{height:calc(100vh - 330px);min-height:460px}
 #tela-fluxo-api .fx-cab{display:flex;gap:8px;align-items:center;font-size:1rem;margin-bottom:6px}`;
     document.head.appendChild(st);
   }
@@ -486,7 +499,9 @@
     const original = window.abrirTela;
     window.abrirTela = function (id) {
       original(id);
-      if (id !== 'tela-fluxo-api') return;
+      if (id !== 'tela-fluxo-api') { document.body.classList.remove('fx-foco'); return; }
+      let foco = false; try { foco = localStorage.getItem('gps-fluxos-foco') === '1'; } catch (e) { /* ignora */ }
+      alternarFoco(foco);
       const nav = document.getElementById('nav-fluxo-api');
       if (nav) { nav.classList.add('active-menu'); const g = nav.closest('details.nav-group'); if (g) g.open = true; }
       const t = document.getElementById('titulo-pagina'); if (t) t.innerText = 'Fluxos da API · estilo n8n';
