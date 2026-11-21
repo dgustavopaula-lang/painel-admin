@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grandes Fazendas — Turing Agro</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  td input,td select{width:100%;min-width:70px;padding:5px}
+  .x{background:none;border:1px solid var(--line);color:var(--mut);border-radius:6px;cursor:pointer;padding:4px 8px}
+  .x:hover{color:#fff;border-color:var(--bad)}
+  /* Tema escuro provisório — alinhar aos tokens do Design System NexoTerraCore */
+  :root{--bg:#0f1419;--card:#18202a;--line:#2a3542;--txt:#e6edf3;--mut:#8b98a5;
+        --ok:#2ea043;--warn:#d29922;--bad:#da3633;--acc:#3b82f6;--r:10px}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);font-size:15px}
+  header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+  h1{font-size:18px;margin:0}
+  .tag{font-size:11px;padding:2px 7px;border-radius:20px;border:1px solid var(--warn);color:var(--warn);margin-left:6px}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line)}
+  nav button,.btn{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;cursor:pointer;font-size:14px}
+  nav button.on{border-color:var(--acc);color:#fff;background:#1e3a5f}
+  .btn.p{background:var(--acc);border-color:var(--acc)}
+  main{padding:18px;max-width:1200px;margin:auto}
+  section{display:none}section.on{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+  label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mut)}
+  input,select,textarea{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px}
+  #map{height:460px;border-radius:var(--r)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left}
+  th{color:var(--mut);font-weight:500}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+  .q{display:none;margin-left:4px;width:20px;height:20px;border-radius:50%;border:1px solid var(--acc);background:none;color:var(--acc);cursor:pointer;font-size:12px;padding:0}
+  body.aula .q{display:inline-block}
+  #aulaBox{display:none;position:fixed;right:18px;bottom:18px;max-width:380px;background:#102a43;border:1px solid var(--acc);border-radius:var(--r);padding:14px;z-index:9999}
+  #aulaBox b{display:block;margin-bottom:6px}
+  .mut{color:var(--mut);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌾 Grandes Fazendas <span class="mut">— Turing Agro</span><span class="tag">dados locais · v1.5</span></h1>
+  <div class="row">
+    <label style="flex-direction:row;align-items:center;gap:6px;color:var(--txt)">
+      <input type="checkbox" id="modoAula"> Modo Aula
+    </label>
+    <button class="btn" id="btnDemo">🧪 Demonstração</button>
+    <button class="btn" id="exportar">Backup (exportar)</button>
+    <label class="btn" style="flex-direction:row">Restaurar<input type="file" id="importarBackup" accept=".json" hidden></label>
+  </div>
+</header>
+
+<nav>
+  <button data-t="mapa" class="on">1. Mapa</button>
+  <button data-t="satelite">2. Satélite da semana</button>
+  <button data-t="campo">3. Campo</button>
+  <button data-t="decisao">4. Decisão</button>
+  <button data-t="vigia">5. 🛰 Turing Vigia</button>
+</nav>
+
+<main>
+<!-- 1. MAPA -->
+<section id="mapa" class="on">
+  <div class="card">
+    <div class="row">
+      <label>Fazenda
+        <select id="fazSel"></select></label>
+      <label>Importar contornos <button class="q" data-g="geojson">?</button>
+        <input type="file" id="geoFile" accept=".geojson,.json"></label>
+      <button class="btn" id="novaFaz">+ Nova fazenda</button>
+      <button class="btn" id="renFaz">✎ Renomear</button>
+      <button class="btn" id="remFaz">🗑 Remover fazenda</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label>Ir para coordenada (lat, lon)<input id="coordIr" placeholder="-9.54, 16.34" style="width:170px"></label>
+      <button class="btn" id="btnIr">Ir</button>
+      <button class="btn p" id="btnDesenhar">✏️ Desenhar talhão</button>
+      <button class="btn" id="btnConcluir" style="display:none">✔ Concluir</button>
+      <button class="btn" id="btnDesfazer" style="display:none">↶ Desfazer ponto</button>
+      <button class="btn" id="btnCancelar" style="display:none">✖ Cancelar</button>
+      <span class="mut" id="desenhoInfo"></span>
+    </div>
+    <p class="mut">Cada polígono do arquivo vira um talhão <button class="q" data-g="talhao">?</button>. A área é calculada automaticamente em hectares <button class="q" data-g="hectare">?</button>.</p>
+  </div>
+  <div id="map"></div>
+  <div class="card" style="margin-top:14px">
+    <table><thead><tr><th>Talhão</th><th>Fazenda</th><th>Área (ha)</th><th>Ações</th></tr></thead><tbody id="talhoesTb"></tbody></table>
+    <p class="mut" id="totalHa"></p>
+  </div>
+</section>
+
+<!-- 2. SATÉLITE -->
+<section id="satelite">
+  <div class="card">
+    <p class="mut">V1: você lê os valores no <a href="https://dataspace.copernicus.eu/browser/" target="_blank" style="color:var(--acc)">Copernicus Browser</a> <button class="q" data-g="copernicus">?</button> e registra aqui. Depois isso será automático pela API.</p>
+    <div class="row">
+      <label>Talhão<select id="satTalhao"></select></label>
+      <label>Data<input type="date" id="satData"></label>
+      <label>NDVI <button class="q" data-g="ndvi">?</button><input type="number" step="0.01" min="-1" max="1" id="satNdvi" style="width:90px"></label>
+      <label>NDMI <button class="q" data-g="ndmi">?</button><input type="number" step="0.01" min="-1" max="1" id="satNdmi" style="width:90px"></label>
+      <label>Nuvens? <button class="q" data-g="nuvem">?</button><select id="satNuvem"><option value="nao">Não</option><option value="sim">Sim (usar Sentinel-1)</option></select></label>
+      <button class="btn p" id="satAdd">Registrar</button>
+    </div>
+  </div>
+  <div class="card">
+    <table><thead><tr><th>Situação</th><th>Talhão</th><th>Data</th><th>NDVI</th><th>NDMI</th><th>Variação NDVI</th><th></th></tr></thead><tbody id="satTb"></tbody></table>
+    <p class="mut">Regra provisória: 🟢 NDVI ≥ 0,6 · 🟡 0,4–0,59 ou queda ≥ 0,1 · 🔴 &lt; 0,4 ou queda ≥ 0,2. Ajustar com o agrônomo por cultura.</p>
+  </div>
+</section>
+
+<!-- 3. CAMPO -->
+<section id="campo">
+  <div class="card">
+    <p class="mut">Confirmação em campo <button class="q" data-g="campo">?</button>: quem está na fazenda verifica o alerta do satélite.</p>
+    <div class="row">
+      <label>Talhão<select id="cTalhao"></select></label>
+      <label>Data<input type="date" id="cData"></label>
+      <label>Responsável<input id="cResp" placeholder="nome"></label>
+      <label>O que foi visto<select id="cTipo"><option>Lavoura normal</option><option>Praga</option><option>Doença</option><option>Falta de água</option><option>Falha de plantio</option><option>Erva daninha</option><option>Outro</option></select></label>
+      <label style="flex:1;min-width:220px">Observação / transcrição do áudio<input id="cObs"></label>
+      <button class="btn p" id="cAdd">Registrar</button>
+    </div>
+  </div>
+  <div class="card"><table><thead><tr><th>Data</th><th>Talhão</th><th>Responsável</th><th>Visto</th><th>Observação</th><th></th></tr></thead><tbody id="cTb"></tbody></table></div>
+</section>
+
+<!-- 4. DECISÃO -->
+<section id="decisao">
+  <div class="card">
+    <p class="mut">Linha de decisão <button class="q" data-g="decisao">?</button>: alerta → confirmação → custo → decisão → resultado.</p>
+    <div class="row">
+      <label>Talhão<select id="dTalhao"></select></label>
+      <label>Alerta<input id="dAlerta" placeholder="ex.: NDVI caiu 0,2"></label>
+      <label>Confirmação<input id="dConf" placeholder="ex.: lagarta confirmada"></label>
+      <label>Custo estimado<input type="number" id="dCusto" style="width:120px"></label>
+      <label>Moeda<select id="dMoeda"><option>BRL</option><option>AOA</option><option>USD</option></select></label>
+      <label>Decisão<input id="dDec" placeholder="ex.: aplicar só no talhão"></label>
+      <button class="btn p" id="dAdd">Registrar</button>
+    </div>
+  </div>
+  <div class="card"><table><thead><tr><th>Data</th><th>Talhão</th><th>Alerta</th><th>Confirmação</th><th>Custo</th><th>Decisão</th><th>Resultado</th><th></th></tr></thead><tbody id="dTb"></tbody></table></div>
+</section>
+<!-- 5. TURING VIGIA -->
+<section id="vigia">
+  <div class="card">
+    <div class="row">
+      <button class="btn p" id="btnClima">🔄 Atualizar clima (7 dias)</button>
+      <button class="btn" id="btnCopiar">📋 Copiar resumo</button>
+      <span class="mut" id="climaInfo"></span>
+    </div>
+    <h3 style="margin:14px 0 6px">🧠 Resumo do Turing</h3>
+    <div id="resumo" style="white-space:pre-wrap;line-height:1.5"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin:0 0 8px">📍 Pontos monitorados <button class="q" data-g="ponto">?</button></h3>
+    <div class="row">
+      <label>Nome<input id="pNome" placeholder="ex.: Fazenda Brasil 1"></label>
+      <label>Lat, lon<input id="pCoord" placeholder="-17.79, -50.92" style="width:170px"></label>
+      <button class="btn" id="pAdd">+ Adicionar ponto</button>
+    </div>
+    <div id="climaCards" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin:0 0 8px">🌾 Safra e avisos oficiais</h3>
+    <p>• <a style="color:var(--acc)" target="_blank" href="https://alertas2.inmet.gov.br/">INMET — avisos meteorológicos (Brasil)</a><br>
+       • <a style="color:var(--acc)" target="_blank" href="https://www.conab.gov.br/info-agro/safras">CONAB — boletins de safra (grãos)</a> <button class="q" data-g="conab">?</button><br>
+       • <a style="color:var(--acc)" target="_blank" href="https://www.gov.br/cemaden/pt-br">Cemaden — monitoramento de seca</a></p>
+    <p class="mut">Regras de alerta de clima (provisórias): 🔴 chuva ≥ 50 mm/dia · 🔴 mínima ≤ 3 °C (geada) · 🟡 máxima ≥ 36 °C · 🟡 vento ≥ 60 km/h · 🟡 veranico <button class="q" data-g="veranico">?</button>: &lt; 10 mm nos 14 dias anteriores e &lt; 10 mm previstos. Dados de clima: <a style="color:var(--acc)" target="_blank" href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0).</p>
+  </div>
+</section>
+</main>
+
+<div id="aulaBox"><b id="aulaT"></b><span id="aulaX"></span><p style="text-align:right;margin:8px 0 0"><button class="btn" onclick="aulaBox.style.display='none'">Entendi</button></p></div>
+
+<script>
+// ===== Glossário do Modo Aula =====
+const G={
+ geojson:["GeoJSON","Arquivo que guarda o desenho (contorno) da fazenda ou do talhão no mapa. Pode ser exportado do QGIS ou do CAR."],
+ talhao:["Talhão","Cada divisão da fazenda, manejada como uma unidade: mesmo plantio, mesma data, mesmo manejo."],
+ hectare:["Hectare (ha)","Área de 100 m × 100 m = 10.000 m². Com o Sentinel-2, cada hectare tem 100 pixels de 10 × 10 m."],
+ copernicus:["Copernicus Browser","Site gratuito da União Europeia para ver as imagens dos satélites Sentinel. Endereço: dataspace.copernicus.eu/browser."],
+ ndvi:["NDVI (índice de vegetação)","De −1 a 1. Mede o 'verde vivo' da planta. Perto de 0,8 = lavoura forte; perto de 0,2 = planta fraca, solo exposto ou problema."],
+ ndmi:["NDMI (índice de umidade)","Mede a água dentro da planta. Quando cai, a planta pode estar com sede (estresse hídrico)."],
+ nuvem:["Nuvens e Sentinel-1","O Sentinel-2 não enxerga através de nuvens. Na época de chuva use o Sentinel-1, que é radar e vê através delas."],
+ campo:["Confirmação em campo","O satélite mostra que algo mudou, mas não diz o quê. Alguém precisa ir ao local e confirmar com foto ou áudio."],
+ ponto:["Ponto monitorado","Local (latitude, longitude) onde o Turing consulta o clima. Pode ser a sede da fazenda ou uma cidade de referência da região."],
+ veranico:["Veranico","Período seco no meio da estação chuvosa. No Centro-Oeste pode derrubar a produtividade da soja e do milho safrinha."],
+ conab:["CONAB","Companhia Nacional de Abastecimento. Publica todo mês a estimativa oficial da safra brasileira de grãos."],
+ mm:["Milímetro de chuva","1 mm = 1 litro de água por metro quadrado. 50 mm em um dia é chuva forte."],
+ decisao:["Linha de decisão","Registra por que cada gasto foi feito e se deu resultado. Com o tempo vira histórico para o Turing aprender."]
+};
+document.addEventListener('click',e=>{const k=e.target.dataset&&e.target.dataset.g;if(!k)return;
+ aulaT.textContent=G[k][0];aulaX.textContent=G[k][1];aulaBox.style.display='block';});
+modoAula.onchange=()=>document.body.classList.toggle('aula',modoAula.checked);
+
+// ===== Armazenamento local (v1) — será substituído pela API NexoTerraCore =====
+const KEY='turingAgro.grandesFazendas.v1';
+let D={fazendas:["Fazenda PIPE — Malanje (Angola)","Fazenda Brasil 1","Fazenda Brasil 2","Fazenda Brasil 3","Fazenda Brasil 4"],talhoes:[],sat:[],campo:[],dec:[]};
+try{const s=localStorage.getItem(KEY);if(s)D=JSON.parse(s);}catch(e){}
+['sat','campo','dec'].forEach(k=>D[k].forEach((r,i)=>{if(!r.id)r.id=k+'-'+Date.now()+'-'+i;}));
+D.fazendas=D.fazendas.map(f=>f==='Malanje (Angola)'?'Fazenda PIPE — Malanje (Angola)':f);
+function salvar(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){alert('Não foi possível salvar localmente. Faça backup.');}}
+const hoje=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);}; // data local
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ===== Abas =====
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));
+ b.classList.add('on');document.getElementById(b.dataset.t).classList.add('on');
+ if(b.dataset.t==='mapa')setTimeout(()=>map.invalidateSize(),50);});
+
+// ===== Mapa =====
+const map=L.map('map').setView([-9.54,16.34],9); // cidade de Malanje (ponto exato da Fazenda PIPE a definir)
+// Fundo: satélite (Esri) — funciona aberto do disco; OSM bloqueia file:// (403)
+const satelite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagens © Esri'});
+const rotulos=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
+const ruas=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'© OpenStreetMap © CARTO'});
+satelite.addTo(map);rotulos.addTo(map);
+L.control.layers({'Satélite':satelite,'Mapa escuro':ruas},{'Nomes de lugares':rotulos}).addTo(map);
+const camada=L.featureGroup().addTo(map);
+
+// Área geodésica aproximada (m²) de um anel [lon,lat]
+function areaAnel(c){const R=6378137,rad=Math.PI/180;let a=0;
+ for(let i=0;i<c.length-1;i++){const[x1,y1]=c[i],[x2,y2]=c[i+1];
+  a+=(x2-x1)*rad*(2+Math.sin(y1*rad)+Math.sin(y2*rad));}
+ return Math.abs(a*R*R/2);}
+function areaHa(geom){let m2=0;
+ const pol=p=>{m2+=areaAnel(p[0]);for(let i=1;i<p.length;i++)m2-=areaAnel(p[i]);};
+ if(geom.type==='Polygon')pol(geom.coordinates);
+ else if(geom.type==='MultiPolygon')geom.coordinates.forEach(pol);
+ return m2/10000;}
+
+// ===== Ir para coordenada =====
+btnIr.onclick=()=>{const m=coordIr.value.replace(/\s/g,'').split(',').map(Number);
+ if(m.length!==2||m.some(isNaN)||Math.abs(m[0])>90||Math.abs(m[1])>180)return alert('Use o formato: -9.54, 16.34');
+ map.setView(m,15);L.circleMarker(m,{radius:6,color:'#3b82f6'}).addTo(map);};
+
+// ===== Desenhar talhão clicando no mapa =====
+let pts=[],linha=null,desenhando=false;
+function modoDesenho(on){desenhando=on;pts=[];if(linha){map.removeLayer(linha);linha=null;}
+ btnDesenhar.style.display=on?'none':'';[btnConcluir,btnDesfazer,btnCancelar].forEach(b=>b.style.display=on?'':'none');
+ map.getContainer().style.cursor=on?'crosshair':'';atualizaDesenho();}
+function atualizaDesenho(){if(linha)map.removeLayer(linha);linha=null;
+ if(pts.length)linha=(pts.length>2?L.polygon(pts,{color:'#d29922',dashArray:'6'}):L.polyline(pts,{color:'#d29922'})).addTo(map);
+ let ha='';if(pts.length>2){const anel=pts.map(p=>[p[1],p[0]]);anel.push(anel[0]);ha=' · ≈ '+(areaAnel(anel)/10000).toLocaleString('pt-BR',{maximumFractionDigits:1})+' ha';}
+ desenhoInfo.textContent=desenhando?`Clique nos cantos da área. Pontos: ${pts.length}${ha}`:'';}
+btnDesenhar.onclick=()=>modoDesenho(true);
+btnCancelar.onclick=()=>modoDesenho(false);
+btnDesfazer.onclick=()=>{pts.pop();atualizaDesenho();};
+map.on('click',e=>{if(!desenhando)return;pts.push([+e.latlng.lat.toFixed(6),+e.latlng.lng.toFixed(6)]);atualizaDesenho();});
+btnConcluir.onclick=()=>{if(pts.length<3)return alert('Marque pelo menos 3 pontos.');
+ const nome=prompt('Nome do talhão:',`Talhão ${D.talhoes.length+1}`);if(!nome)return;
+ const anel=pts.map(p=>[p[1],p[0]]);anel.push(anel[0]);const g={type:'Polygon',coordinates:[anel]};
+ D.talhoes.push({id:Date.now()+'',nome:nome.trim(),fazenda:fazSel.value,ha:+areaHa(g).toFixed(2),geom:g,origem:'desenho manual'});
+ salvar();modoDesenho(false);renderTudo();};
+
+// ===== Demonstração (área FICTÍCIA de 8.600 ha perto de Malanje) =====
+const DEMO_FAZ='DEMO — Fazenda PIPE (área fictícia)';
+btnDemo.onclick=()=>{
+ if(D.talhoes.some(t=>t.demo)){
+  if(!confirm('Remover os dados de demonstração? (dados reais não são afetados)'))return;
+  const ids=new Set(D.talhoes.filter(t=>t.demo).map(t=>t.id));
+  D.talhoes=D.talhoes.filter(t=>!t.demo);D.sat=D.sat.filter(s=>!ids.has(s.talhao));
+  D.campo=D.campo.filter(c=>!ids.has(c.talhao));D.dec=D.dec.filter(d=>!ids.has(d.talhao));
+  D.fazendas=D.fazendas.filter(f=>f!==DEMO_FAZ);salvar();renderFaz();renderTudo();return;}
+ if(!D.fazendas.includes(DEMO_FAZ))D.fazendas.push(DEMO_FAZ);
+ // quadrado de ~9,27 km x 9,27 km = ~8.600 ha, dividido em 4 talhões de ~2.150 ha
+ const lat0=-9.70,lon0=16.20,dLat=0.08387/2,dLon=0.08451/2;
+ const nomes=['T1 — Milho','T2 — Soja','T3 — Feijão','T4 — Mandioca'];let k=0;
+ const hoje7=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+ const ndvi=[[0.72,0.74],[0.70,0.48],[0.66,0.55],[0.61,0.63]];
+ for(let i=0;i<2;i++)for(let j=0;j<2;j++){
+  const a=lat0+i*dLat,b=lon0+j*dLon;
+  const g={type:'Polygon',coordinates:[[[b,a],[b+dLon,a],[b+dLon,a+dLat],[b,a+dLat],[b,a]]]};
+  const id='demo-'+k;
+  D.talhoes.push({id,nome:nomes[k],fazenda:DEMO_FAZ,ha:+areaHa(g).toFixed(2),geom:g,demo:true});
+  D.sat.push({id:id+'-s1',talhao:id,data:hoje7,ndvi:ndvi[k][0],ndmi:0.30,nuvem:'nao'});
+  D.sat.push({id:id+'-s2',talhao:id,data:hoje(),ndvi:ndvi[k][1],ndmi:k===1?0.08:0.28,nuvem:'nao'});k++;}
+ D.campo.push({id:'demo-c1',talhao:'demo-1',data:hoje(),resp:'(exemplo)',tipo:'Falta de água',obs:'Exemplo: folhas enroladas na parte baixa do talhão.'});
+ D.dec.push({id:'demo-d1',talhao:'demo-1',data:hoje(),alerta:'NDVI caiu 0,22 e NDMI caiu',conf:'Falta de água confirmada (exemplo)',custo:0,moeda:'AOA',dec:'Exemplo: verificar irrigação antes de aplicar insumo',res:''});
+ salvar();renderFaz();fazSel.value=DEMO_FAZ;renderTudo();
+ alert('Demonstração carregada: 4 talhões fictícios (~8.600 ha). Clique de novo em "Demonstração" para remover.');};
+
+// ===== Edição genérica =====
+window.ed=(col,id,campo,el)=>{const r=D[col].find(x=>x.id===id);if(!r)return;
+ let v=el.value;if(['ndvi','ndmi','custo'].includes(campo)){v=parseFloat(v);if(isNaN(v)){v=campo==='custo'?0:null;}
+  if((campo==='ndvi'||campo==='ndmi')&&v!==null&&(v<-1||v>1))return alert('Valor entre -1 e 1.');}
+ r[campo]=v;salvar();setTimeout(renderTudo,0);};
+window.rem=(col,id)=>{if(!confirm('Remover este registro?'))return;D[col]=D[col].filter(x=>x.id!==id);salvar();renderTudo();};
+const optT=sel=>D.talhoes.map(t=>`<option value="${t.id}" ${t.id===sel?'selected':''}>${esc(t.nome)}</option>`).join('');
+const optF=sel=>D.fazendas.map(f=>`<option ${f===sel?'selected':''}>${esc(f)}</option>`).join('');
+renFaz.onclick=()=>{const a=fazSel.value;const n=prompt('Novo nome da fazenda:',a);if(!n||n===a)return;
+ D.fazendas=D.fazendas.map(f=>f===a?n.trim():f);D.talhoes.forEach(t=>{if(t.fazenda===a)t.fazenda=n.trim();});
+ salvar();renderFaz();fazSel.value=n.trim();renderTudo();};
+remFaz.onclick=()=>{const a=fazSel.value;if(D.talhoes.some(t=>t.fazenda===a))return alert('Esta fazenda tem talhões. Remova ou mova os talhões antes.');
+ if(!confirm('Remover a fazenda "'+a+'"?'))return;D.fazendas=D.fazendas.filter(f=>f!==a);salvar();renderFaz();renderTudo();};
+
+// ===== Turing Vigia: clima + resumo =====
+if(!D.pontos)D.pontos=[
+ {id:'p1',nome:'Malanje (referência)',lat:-9.54,lon:16.34},
+ {id:'p2',nome:'Rio Verde - GO (ref. Centro-Oeste)',lat:-17.79,lon:-50.92},
+ {id:'p3',nome:'Sorriso - MT (ref. Centro-Oeste)',lat:-12.55,lon:-55.71},
+ {id:'p4',nome:'Dourados - MS (ref. Centro-Oeste)',lat:-22.22,lon:-54.81}];
+if(!D.clima)D.clima={};
+pAdd.onclick=()=>{const m=pCoord.value.replace(/\s/g,'').split(',').map(Number);
+ if(!pNome.value.trim()||m.length!==2||m.some(isNaN))return alert('Informe nome e "lat, lon".');
+ D.pontos.push({id:'p'+Date.now(),nome:pNome.value.trim(),lat:m[0],lon:m[1]});pNome.value=pCoord.value='';salvar();renderVigia();};
+window.remPonto=id=>{if(!confirm('Remover este ponto?'))return;D.pontos=D.pontos.filter(p=>p.id!==id);delete D.clima[id];salvar();renderVigia();};
+function alertasClima(c){const a=[];if(!c)return a;const d=c.daily,hojeS=hoje();
+ const iHoje=Math.max(0,d.time.indexOf(hojeS));let passado=0,futuro=0;
+ d.time.forEach((t,i)=>{const pr=d.precipitation_sum[i]||0;if(i<iHoje)passado+=pr;else futuro+=pr;
+  if(i<iHoje)return;const dt=t.slice(8,10)+'/'+t.slice(5,7);
+  if(pr>=50)a.push(['🔴',`${dt}: chuva forte (${pr.toFixed(0)} mm)`]);
+  if(d.temperature_2m_min[i]<=3)a.push(['🔴',`${dt}: risco de geada (mín. ${d.temperature_2m_min[i].toFixed(0)} °C)`]);
+  if(d.temperature_2m_max[i]>=36)a.push(['🟡',`${dt}: calor forte (máx. ${d.temperature_2m_max[i].toFixed(0)} °C)`]);
+  if(d.wind_speed_10m_max[i]>=60)a.push(['🟡',`${dt}: vento forte (${d.wind_speed_10m_max[i].toFixed(0)} km/h)`]);});
+ if(passado<10&&futuro<10)a.push(['🟡',`Veranico/seca: ${passado.toFixed(0)} mm nos últimos 14 dias e ${futuro.toFixed(0)} mm previstos`]);
+ return a;}
+btnClima.onclick=async()=>{climaInfo.textContent='Consultando...';let ok=0,erro=0;
+ for(const p of D.pontos){try{
+  const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,wind_speed_10m_max&timezone=auto&past_days=14&forecast_days=7`;
+  const r=await fetch(u);if(!r.ok)throw new Error(r.status);D.clima[p.id]={em:new Date().toISOString(),daily:(await r.json()).daily};ok++;
+ }catch(e){erro++;}}
+ salvar();climaInfo.textContent=`Atualizado: ${ok} ponto(s)`+(erro?` · ${erro} falha(s) — sem internet? mostrando último dado salvo`:'');renderVigia();};
+function renderVigia(){
+ climaCards.innerHTML=D.pontos.map(p=>{const c=D.clima[p.id];const al=alertasClima(c);
+  let tab='<p class="mut">Sem dados ainda. Clique em "Atualizar clima".</p>';
+  if(c){const d=c.daily,i0=Math.max(0,d.time.indexOf(hoje()));
+   tab='<table><tr><th>Dia</th>'+d.time.slice(i0).map(t=>`<th>${t.slice(8,10)}/${t.slice(5,7)}</th>`).join('')+'</tr>'+
+   '<tr><td>Chuva (mm) <button class="q" data-g="mm">?</button></td>'+d.precipitation_sum.slice(i0).map(v=>`<td>${(v||0).toFixed(0)}</td>`).join('')+'</tr>'+
+   '<tr><td>Máx °C</td>'+d.temperature_2m_max.slice(i0).map(v=>`<td>${v.toFixed(0)}</td>`).join('')+'</tr>'+
+   '<tr><td>Mín °C</td>'+d.temperature_2m_min.slice(i0).map(v=>`<td>${v.toFixed(0)}</td>`).join('')+'</tr></table>'+
+   `<p class="mut">Consultado em ${new Date(c.em).toLocaleString('pt-BR')}</p>`;}
+  return `<div class="card" style="background:var(--bg)"><b>${esc(p.nome)}</b> <span class="mut">(${p.lat}, ${p.lon})</span>
+   <button class="x" style="float:right" onclick="remPonto('${p.id}')">🗑</button>
+   <div style="margin:6px 0">${al.length?al.map(x=>x[0]+' '+esc(x[1])).join('<br>'):(c?'🟢 Sem alertas de clima nos próximos 7 dias':'')}</div>${tab}</div>`;}).join('');
+ resumo.textContent=gerarResumo();}
+function gerarResumo(){const L=[];const nome=id=>(D.talhoes.find(t=>t.id===id)||{}).nome||'?';
+ L.push('Resumo do Turing — '+new Date().toLocaleDateString('pt-BR'));
+ L.push('\nCLIMA');let nc=0;
+ D.pontos.forEach(p=>{const al=alertasClima(D.clima[p.id]);if(!D.clima[p.id]){L.push(`• ${p.nome}: sem dados (atualizar clima)`);return;}
+  if(al.length){nc+=al.length;al.forEach(a=>L.push(`• ${p.nome}: ${a[0]} ${a[1]}`));}else L.push(`• ${p.nome}: 🟢 sem alertas`);});
+ L.push('\nLAVOURAS (satélite)');let nl=0;
+ D.talhoes.forEach(t=>{const s=ultimaSituacao(t.id);if(s.txt.includes('🔴')||s.txt.includes('🟡')){nl++;L.push(`• ${t.nome} (${t.fazenda}): ${s.txt}`);}});
+ if(!nl)L.push('• Nenhum talhão em alerta.');
+ const pend=D.dec.filter(d=>!d.res);L.push('\nDECISÕES SEM RESULTADO: '+pend.length);
+ pend.forEach(d=>L.push(`• ${nome(d.talhao)}: ${d.dec}`));
+ L.push('\nPRÓXIMO PASSO');
+ L.push(nl?'Confirmar em campo os talhões em alerta antes de qualquer gasto.':'Manter a leitura semanal do satélite.');
+ L.push('Conferir avisos oficiais do INMET e o boletim mensal da CONAB.');
+ L.push('\n(Regras automáticas provisórias — não substituem o agrônomo.)');
+ return L.join('\n');}
+btnCopiar.onclick=()=>{try{navigator.clipboard.writeText(gerarResumo());climaInfo.textContent='Resumo copiado.';}catch(e){alert(gerarResumo());}};
+
+function renderFaz(){fazSel.innerHTML=D.fazendas.map(f=>`<option>${esc(f)}</option>`).join('');}
+novaFaz.onclick=()=>{const n=prompt('Nome da nova fazenda:');if(n){D.fazendas.push(n.trim());salvar();renderFaz();}};
+
+geoFile.onchange=async()=>{const f=geoFile.files[0];if(!f)return;
+ try{const gj=JSON.parse(await f.text());
+  const feats=gj.type==='FeatureCollection'?gj.features:gj.type==='Feature'?[gj]:[{type:'Feature',properties:{},geometry:gj}];
+  let n=0;feats.forEach((ft,i)=>{const g=ft.geometry;if(!g||!/Polygon/.test(g.type))return;
+   const p=ft.properties||{};const nome=p.nome||p.name||p.NOME||`Talhão ${D.talhoes.length+1}`;
+   D.talhoes.push({id:Date.now()+'-'+i,nome:String(nome),fazenda:fazSel.value,ha:+areaHa(g).toFixed(2),geom:g});n++;});
+  salvar();renderTudo();alert(n+' talhão(ões) importado(s).');
+ }catch(e){alert('Arquivo inválido: '+e.message);}
+ geoFile.value='';};
+
+function renderMapa(){camada.clearLayers();
+ D.talhoes.forEach(t=>{const st=ultimaSituacao(t.id);
+  L.geoJSON(t.geom,{style:{color:st.cor,weight:2,fillOpacity:.25}})
+   .bindPopup(`<b>${esc(t.nome)}</b><br>${esc(t.fazenda)}<br>${t.ha} ha<br>${st.txt}`).addTo(camada);});
+ if(D.talhoes.length)map.fitBounds(camada.getBounds(),{padding:[20,20]});
+ talhoesTb.innerHTML=D.talhoes.map(t=>`<tr><td><input value="${esc(t.nome)}" onchange="edT('${t.id}','nome',this)"></td>
+  <td><select onchange="edT('${t.id}','fazenda',this)">${optF(t.fazenda)}</select></td><td>${t.ha.toLocaleString('pt-BR')}${t.demo?' <span class=mut>(demo)</span>':''}</td>
+  <td><button class="x" onclick="zoomT('${t.id}')">🔍</button> <button class="x" onclick="remTalhao('${t.id}')">🗑</button></td></tr>`).join('')||'<tr><td colspan=4 class="mut">Nenhum talhão ainda. Importe um arquivo GeoJSON.</td></tr>';
+ const tot={};D.talhoes.forEach(t=>tot[t.fazenda]=(tot[t.fazenda]||0)+t.ha);
+ totalHa.textContent=Object.entries(tot).map(([f,h])=>`${f}: ${h.toLocaleString('pt-BR',{maximumFractionDigits:0})} ha`).join(' · ');}
+window.edT=(id,campo,el)=>{const t=D.talhoes.find(x=>x.id===id);if(!t||!el.value.trim())return;t[campo]=el.value.trim();salvar();setTimeout(renderTudo,0);};
+window.zoomT=id=>{const t=D.talhoes.find(x=>x.id===id);if(t)map.fitBounds(L.geoJSON(t.geom).getBounds());};
+window.remTalhao=id=>{if(!confirm('Remover este talhão e todas as leituras, registros e decisões dele? (faça backup antes)'))return;
+ D.talhoes=D.talhoes.filter(t=>t.id!==id);['sat','campo','dec'].forEach(k=>D[k]=D[k].filter(r=>r.talhao!==id));salvar();renderTudo();};
+
+// ===== Satélite =====
+function classificar(ndvi,delta){
+ if(ndvi<0.4||(delta!==null&&delta<=-0.2))return{cor:'#da3633',txt:'🔴 Ação'};
+ if(ndvi<0.6||(delta!==null&&delta<=-0.1))return{cor:'#d29922',txt:'🟡 Atenção'};
+ return{cor:'#2ea043',txt:'🟢 Bem'};}
+function ultimaSituacao(tid){const r=D.sat.filter(s=>s.talhao===tid).sort((a,b)=>a.data<b.data?1:-1);
+ if(!r.length)return{cor:'#8b98a5',txt:'Sem leitura'};
+ return classificar(r[0].ndvi,r[1]?+(r[0].ndvi-r[1].ndvi).toFixed(2):null);}
+satAdd.onclick=()=>{const v=parseFloat(satNdvi.value);if(!satTalhao.value||isNaN(v)||v<-1||v>1)return alert('Escolha o talhão e um NDVI entre -1 e 1.');
+ const m=parseFloat(satNdmi.value);
+ D.sat.push({id:'sat-'+Date.now(),talhao:satTalhao.value,data:satData.value||hoje(),ndvi:v,ndmi:isNaN(m)?null:m,nuvem:satNuvem.value});
+ salvar();satNdvi.value=satNdmi.value='';renderTudo();};
+function renderSat(){const nome=id=>(D.talhoes.find(t=>t.id===id)||{}).nome||'?';
+ const linhas=[...D.sat].sort((a,b)=>a.data<b.data?1:-1).map(s=>{
+  const ant=D.sat.filter(x=>x.talhao===s.talhao&&x.data<s.data).sort((a,b)=>a.data<b.data?1:-1)[0];
+  const d=ant?+(s.ndvi-ant.ndvi).toFixed(2):null;const c=classificar(s.ndvi,d);
+  return`<tr><td><span class="dot" style="background:${c.cor}"></span>${c.txt}${s.nuvem==='sim'?' ☁️':''}</td><td>${esc(nome(s.talhao))}</td>
+  <td><input type="date" value="${s.data}" onchange="ed('sat','${s.id}','data',this)"></td>
+  <td><input type="number" step="0.01" value="${s.ndvi}" onchange="ed('sat','${s.id}','ndvi',this)"></td>
+  <td><input type="number" step="0.01" value="${s.ndmi??''}" onchange="ed('sat','${s.id}','ndmi',this)"></td>
+  <td>${d===null?'—':(d>0?'+':'')+d}</td><td><button class="x" onclick="rem('sat','${s.id}')">🗑</button></td></tr>`;});
+ satTb.innerHTML=linhas.join('')||'<tr><td colspan=7 class="mut">Sem leituras.</td></tr>';}
+
+// ===== Campo =====
+cAdd.onclick=()=>{if(!cTalhao.value)return alert('Escolha o talhão.');
+ D.campo.push({id:'campo-'+Date.now(),talhao:cTalhao.value,data:cData.value||hoje(),resp:cResp.value,tipo:cTipo.value,obs:cObs.value});
+ salvar();cObs.value='';renderTudo();};
+function renderCampo(){const nome=id=>(D.talhoes.find(t=>t.id===id)||{}).nome||'?';
+ const tipos=['Lavoura normal','Praga','Doença','Falta de água','Falha de plantio','Erva daninha','Outro'];
+ cTb.innerHTML=[...D.campo].reverse().map(c=>`<tr><td><input type="date" value="${c.data}" onchange="ed('campo','${c.id}','data',this)"></td>
+  <td><select onchange="ed('campo','${c.id}','talhao',this)">${optT(c.talhao)}</select></td>
+  <td><input value="${esc(c.resp)}" onchange="ed('campo','${c.id}','resp',this)"></td>
+  <td><select onchange="ed('campo','${c.id}','tipo',this)">${tipos.map(x=>`<option ${x===c.tipo?'selected':''}>${x}</option>`).join('')}</select></td>
+  <td><input value="${esc(c.obs)}" onchange="ed('campo','${c.id}','obs',this)"></td>
+  <td><button class="x" onclick="rem('campo','${c.id}')">🗑</button></td></tr>`).join('')||'<tr><td colspan=6 class="mut">Sem registros.</td></tr>';}
+
+// ===== Decisão =====
+dAdd.onclick=()=>{if(!dTalhao.value||!dDec.value)return alert('Talhão e decisão são obrigatórios.');
+ D.dec.push({id:Date.now()+'',talhao:dTalhao.value,data:hoje(),alerta:dAlerta.value,conf:dConf.value,custo:parseFloat(dCusto.value)||0,moeda:dMoeda.value,dec:dDec.value,res:''});
+ salvar();[dAlerta,dConf,dCusto,dDec].forEach(i=>i.value='');renderTudo();};
+window.setRes=(id,v)=>{const x=D.dec.find(d=>d.id===id);if(x){x.res=v;salvar();}};
+function renderDec(){const nome=id=>(D.talhoes.find(t=>t.id===id)||{}).nome||'?';
+ dTb.innerHTML=[...D.dec].reverse().map(d=>`<tr><td><input type="date" value="${d.data}" onchange="ed('dec','${d.id}','data',this)"></td>
+  <td><select onchange="ed('dec','${d.id}','talhao',this)">${optT(d.talhao)}</select></td>
+  <td><input value="${esc(d.alerta)}" onchange="ed('dec','${d.id}','alerta',this)"></td>
+  <td><input value="${esc(d.conf)}" onchange="ed('dec','${d.id}','conf',this)"></td>
+  <td style="white-space:nowrap"><input type="number" value="${d.custo}" style="width:90px" onchange="ed('dec','${d.id}','custo',this)">
+   <select style="width:70px" onchange="ed('dec','${d.id}','moeda',this)">${['BRL','AOA','USD'].map(m=>`<option ${m===d.moeda?'selected':''}>${m}</option>`).join('')}</select></td>
+  <td><input value="${esc(d.dec)}" onchange="ed('dec','${d.id}','dec',this)"></td>
+  <td><input value="${esc(d.res)}" placeholder="preencher depois" onchange="ed('dec','${d.id}','res',this)"></td>
+  <td><button class="x" onclick="rem('dec','${d.id}')">🗑</button></td></tr>`).join('')||'<tr><td colspan=8 class="mut">Sem decisões.</td></tr>';}
+
+// ===== Backup =====
+exportar.onclick=()=>{const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`grandes-fazendas-backup-${hoje()}.json`;a.click();};
+importarBackup.onchange=async()=>{const f=importarBackup.files[0];if(!f)return;
+ if(!confirm('Substituir os dados atuais pelo backup?'))return;
+ try{D=JSON.parse(await f.text());salvar();renderTudo();}catch(e){alert('Backup inválido.');}};
+
+function renderSelects(){const op=D.talhoes.map(t=>`<option value="${t.id}">${esc(t.nome)} — ${esc(t.fazenda)}</option>`).join('');
+ [satTalhao,cTalhao,dTalhao].forEach(s=>s.innerHTML=op||'<option value="">(importe talhões no Mapa)</option>');}
+function renderTudo(){renderSelects();renderMapa();renderSat();renderCampo();renderDec();renderVigia();}
+renderFaz();renderTudo();
+</script>
+</body>
+</html>
