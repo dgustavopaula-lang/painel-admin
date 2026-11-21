@@ -1180,20 +1180,23 @@ function baixarJSON(nome, obj) {
 function renderMetricasHome() {
   const el = document.getElementById('home-metricas');
   if (!el) return;
-  const minis = appData.minis || [];
-  const publicados = minis.filter(m => m.status === 'Publicado').length;
-  const comLink = minis.filter(m => urlSegura(m.url)).length;
-  const noAr = (appData.vendas || []).filter(v => v.status === 'No ar').length;
-  const fila = (appData.treino || []).filter(t => !t.enviado).length;
+  appsApi = appsApi || []; conhecimentosApi = conhecimentosApi || [];
+  if (!appsApi.length && !renderMetricasHome._pedido) { renderMetricasHome._pedido = true; carregarAppsApi().then(renderMetricasHome); }
+  if (!conhecimentosApi.length && !renderMetricasHome._pedidoK) { renderMetricasHome._pedidoK = true; apiConhecimento('/listar').then(d => { conhecimentosApi = d.conhecimentos || []; renderMetricasHome(); }).catch(() => {}); }
+  const ativos = appsApi.filter(a => a.status !== 'arquivado');
+  const noArApps = ativos.filter(a => classeSaude(a) === 'ok').length;
+  const pwas = ativos.filter(a => a.tipo === 'pwa').length;
+  const pend = conhecimentosApi.filter(k => k.status === 'rascunho').length;
+  const aprov = conhecimentosApi.filter(k => k.status === 'aprovado').length;
   const est = ESTADOS_API[statusApi.estado] || ESTADOS_API['nao-configurada'];
   // Turing em destaque: primeiro e em largura total no topo
   const cardsTuring = [
     ['API / Turing', est.curto, statusApi.ms != null ? `${statusApi.ms} ms` : est.sub, 'tela-api', 'turing'],
-    ['Fila local do Turing', `${fila}`, 'exemplos neste navegador', 'tela-treino', 'turing']
+    ['Treino do Turing', conhecimentosApi.length ? `${pend} pendente(s)` : '—', `${aprov} aprovados na API`, 'tela-turin', 'turing']
   ];
   const cardsSecundarios = [
-    ['Mini-softwares', `${minis.length}`, `${publicados} publicado(s) · ${comLink} com link`, 'tela-catalogo', ''],
-    ['Páginas de venda', `${(appData.vendas || []).length}`, `${noAr} no ar`, 'tela-vendas', '']
+    ['Mini-softwares', appsApi.length ? `${ativos.length}` : '—', `${pwas} PWA · ${noArApps} no ar (API)`, 'tela-catalogo', ''],
+    ['Natureza', 'Plantas', 'catálogo e treino na API', 'tela-plantas', '']
   ];
   el.innerHTML =
     `<div class="metrics-row-turing">` +
@@ -2599,7 +2602,7 @@ function _baseTuring() {
   return ((appData.config && appData.config.apiBase) || 'https://api.gustavopaulasantos.com.br').replace(/\/+$/, '');
 }
 
-let conhecimentosApi = [];
+var conhecimentosApi = [];
 let fluxoNoAtual = 'rascunhos';
 
 async function apiConhecimento(caminho, opcoes) {
@@ -2783,7 +2786,7 @@ async function consultarTuring(ev) {
 
 
 /* ---------------- Catálogo de apps (NexoTerraCore API: /api/apps) ---------------- */
-let appsApi = [];
+var appsApi = [];
 const TIPO_ROTULO = { pwa: 'PWA', site: 'Site', projeto: 'Projeto', pessoal: 'Pessoal' };
 const STATUS_APP = ['ativo', 'em_desenvolvimento', 'pausado', 'arquivado'];
 
@@ -2830,7 +2833,11 @@ function montarSidebarApps() {
   const ativos = appsApi.filter(a => a.status !== 'arquivado');
   const noAr = ativos.filter(a => classeSaude(a) === 'ok').length;
   const fora = ativos.filter(a => classeSaude(a) === 'erro');
-  box.innerHTML = `<div class="nav-app-cat">${ativos.length} apps · ${noAr} no ar${fora.length ? ' · ' + fora.length + ' com problema' : ''}</div>` +
+  const FAVORITOS = ['paranagel', 'minifazenda', 'edutech', 'conecta'];
+  const atalhos = FAVORITOS.map(sl => ativos.find(a => a.slug === sl)).filter(a => a && urlSegura(a.url));
+  box.innerHTML = (atalhos.length ? `<div class="nav-app-cat">Atalhos</div>` + atalhos.map(a =>
+    `<a class="nav-item nav-externo nav-app" href="${escapeHtml(urlSegura(a.url))}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(a.descricao || textoSaude(a))}"><span class="app-dot ${classeSaude(a)}"></span> ${escapeHtml(a.nome)} ↗</a>`).join('') : '') +
+    `<div class="nav-app-cat">${ativos.length} apps · ${noAr} no ar${fora.length ? ' · ' + fora.length + ' com problema' : ''}</div>` +
     fora.map(a => `<a class="nav-item nav-externo nav-app" href="#" onclick="abrirTela('tela-catalogo');return false" title="${escapeHtml(textoSaude(a))}"><span class="app-dot erro"></span> ${escapeHtml(a.nome)}</a>`).join('');
 }
 
