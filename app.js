@@ -3266,6 +3266,7 @@ async function enviarPlantaTuring(id) {
   const resposta = [
     `No catálogo Plantas do morro, "${p.nome_popular}" está registrada como ${p.nome_cientifico}` + (p.familia ? `, família ${p.familia}.` : '.'),
     parentes.length ? `Outras plantas da mesma família no catálogo: ${parentes.join(', ')}.` : '',
+    p.notas ? `Origem e história: ${String(p.notas).replace(/\s+/g, ' ').trim()}` : '',
     p.toxica ? `Atenção: marcada com risco de toxicidade${p.alerta ? ' (' + p.alerta + ')' : ''}.` : '',
     'Identificação feita por foto e a confirmar com especialista. Este registro não indica uso, dose ou segurança da planta.'
   ].filter(Boolean).join(' ');
