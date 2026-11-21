@@ -1375,6 +1375,12 @@ function renderApi() {
 
 function desenharEndpoints() {
   const c = appData.config;
+  if (c.endpoints.length !== SEED_ENDPOINTS.length || c.endpoints.some((e, i) => e.rota !== SEED_ENDPOINTS[i].rota || !e.uso)) {
+    c.endpoints = JSON.parse(JSON.stringify(SEED_ENDPOINTS));
+    c.endpointsVersao = ENDPOINTS_VERSAO;
+    for (const k in resultadosTeste) delete resultadosTeste[k];
+    persistData();
+  }
   const tbody = document.getElementById('tbody-endpoints');
   if (!tbody) return;
   tbody.innerHTML = c.endpoints.map((e, i) => {
@@ -1397,6 +1403,7 @@ function desenharEndpoints() {
 }
 
 async function testarTodosEndpoints() {
+  desenharEndpoints();
   for (let i = 0; i < appData.config.endpoints.length; i++) await testarEndpoint(i);
 }
 
