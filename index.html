@@ -240,6 +240,34 @@
 </style>
 
 <link rel="stylesheet" href="gps-command-center.css?v=20261030" />
+<style id="turing-rosto-css">
+  .turing-orbit-rosto{display:flex;align-items:center;justify-content:center;padding:0!important;overflow:visible}
+  .turing-rosto{width:100%;height:100%;max-width:190px;max-height:190px}
+  .turing-rosto .tr-aura{fill:none;stroke:rgba(244,162,107,.25);stroke-width:2;stroke-dasharray:4 7;animation:trGira 30s linear infinite;transform-origin:100px 100px}
+  .turing-rosto .tr-cabeca{stroke:#f4a26b;stroke-width:3}
+  .turing-rosto .tr-antena,.turing-rosto .tr-circuito,.turing-rosto .tr-boca,.turing-rosto .tr-orelha{fill:none;stroke:#f4a26b;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+  .turing-rosto .tr-circuito{opacity:.55;stroke-width:1.8}
+  .turing-rosto .tr-escudo{fill:rgba(244,162,107,.18);stroke:#f4a26b;stroke-width:2}
+  .turing-rosto .tr-visor{stroke:rgba(244,162,107,.5);stroke-width:1.5}
+  .turing-rosto .tr-olhos ellipse{fill:#9a9a9a;transition:fill .4s}
+  .turing-rosto .tr-brilho{fill:#fff;opacity:.85}
+  .turing-rosto .tr-led{fill:#9a9a9a}
+  .api-online .turing-rosto .tr-olhos ellipse{fill:#2ee88a;filter:drop-shadow(0 0 6px #2ee88a);animation:trPisca 6s infinite}
+  .api-online .turing-rosto .tr-led{fill:#2ee88a;filter:drop-shadow(0 0 5px #2ee88a);animation:trPulsa 2s infinite}
+  .api-online .turing-rosto .tr-aura{stroke:rgba(46,232,138,.35)}
+  .turing-face-mini svg{width:28px;height:28px;color:#f4a26b}
+  .turing-face-mini .tm-olho{fill:#9a9a9a}
+  .api-online .turing-face-mini .tm-olho{fill:#2ee88a}
+  .api-online #home-turing-badge{background:rgba(46,232,138,.14)!important;color:#2ee88a!important;border-color:rgba(46,232,138,.45)!important}
+  .api-online #home-turing-badge .home-turing-dot{background:#2ee88a!important;box-shadow:0 0 0 4px rgba(46,232,138,.2);animation:trPulsa 2s infinite}
+  .api-online #home-turing-status{color:#2ee88a}
+  @keyframes trPisca{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+  .turing-rosto .tr-olhos ellipse{transform-box:fill-box;transform-origin:center}
+  @keyframes trPulsa{0%,100%{opacity:1}50%{opacity:.45}}
+  @keyframes trGira{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.turing-rosto *,.api-online #home-turing-badge .home-turing-dot{animation:none!important}}
+  .fluxo-item label>span{min-width:0;white-space:normal;overflow-wrap:anywhere}
+</style>
 </head>
 <body>
 
@@ -361,8 +389,8 @@
 
           <div class="home-turing-head">
             <div class="home-turing-ident">
-              <div class="home-turing-face">
-                <i class="ph ph-shield-check"></i>
+              <div class="home-turing-face turing-face-mini">
+                <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M10 15 Q10 6 20 6 Q30 6 30 15 L30 25 Q30 34 20 35 Q10 34 10 25 Z" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="16" width="14" height="6" rx="3" fill="currentColor" opacity=".25"/><circle class="tm-olho" cx="16.5" cy="19" r="1.8"/><circle class="tm-olho" cx="23.5" cy="19" r="1.8"/><path d="M16 28 q4 2 8 0" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
               </div>
 
               <div>
@@ -380,8 +408,23 @@
           <div class="home-turing-body">
 
             <div class="home-turing-avatar">
-              <div class="home-turing-orbit">
-                <i class="ph ph-shield-chevron"></i>
+              <div class="home-turing-orbit turing-orbit-rosto">
+                <svg class="turing-rosto" viewBox="0 0 200 200" role="img" aria-label="Rosto do Turing">
+                  <defs>
+                    <radialGradient id="tg-pele" cx="50%" cy="38%" r="65%"><stop offset="0" stop-color="#3a2f27"/><stop offset="1" stop-color="#1b1613"/></radialGradient>
+                    <linearGradient id="tg-visor" x1="0" x2="1"><stop offset="0" stop-color="#0f1a14"/><stop offset=".5" stop-color="#142a1e"/><stop offset="1" stop-color="#0f1a14"/></linearGradient>
+                  </defs>
+                  <circle cx="100" cy="100" r="94" class="tr-aura"/>
+                  <path class="tr-antena" d="M100 22 v14"/><circle class="tr-led" cx="100" cy="18" r="5"/>
+                  <path class="tr-cabeca" d="M52 70 Q52 38 100 36 Q148 38 148 70 L150 118 Q150 156 100 162 Q50 156 50 118 Z" fill="url(#tg-pele)"/>
+                  <path class="tr-circuito" d="M62 60 h14 l6 6 M138 60 h-14 l-6 6 M58 132 h12 l8 8 M142 132 h-12 l-8 8"/>
+                  <path class="tr-escudo" d="M100 46 l12 5 v8 q0 9 -12 14 q-12 -5 -12 -14 v-8 z"/>
+                  <rect class="tr-visor" x="62" y="82" width="76" height="30" rx="15" fill="url(#tg-visor)"/>
+                  <g class="tr-olhos"><ellipse cx="83" cy="97" rx="9" ry="7"/><ellipse cx="117" cy="97" rx="9" ry="7"/></g>
+                  <circle class="tr-brilho" cx="86" cy="94" r="2.2"/><circle class="tr-brilho" cx="120" cy="94" r="2.2"/>
+                  <path class="tr-boca" d="M80 134 q20 10 40 0"/>
+                  <path class="tr-orelha" d="M50 92 h-10 v22 h10 M150 92 h10 v22 h-10"/>
+                </svg>
               </div>
 
               <strong>TURING</strong>
