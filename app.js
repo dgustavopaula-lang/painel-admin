@@ -2816,13 +2816,14 @@ const STATUS_APP = ['ativo', 'em_desenvolvimento', 'pausado', 'arquivado'];
 
 function classeSaude(a) {
   if (a.ultimo_http == null) return '';
-  return (a.ultimo_http >= 200 && a.ultimo_http < 400) ? 'ok' : 'erro';
+  return ((a.ultimo_http >= 200 && a.ultimo_http < 400) || a.ultimo_http === 401 || a.ultimo_http === 403) ? 'ok' : 'erro';
 }
 
 function textoSaude(a) {
   if (a.ultimo_http == null) return 'ainda não verificado';
   const quando = a.ultimo_check_em ? new Date(a.ultimo_check_em).toLocaleString('pt-BR') : '';
   if (a.ultimo_http === 0) return 'sem resposta · ' + quando;
+  if (a.ultimo_http === 401 || a.ultimo_http === 403) return 'no ar (protegido) · ' + quando;
   return 'HTTP ' + a.ultimo_http + (a.ultimo_ms != null ? ' · ' + a.ultimo_ms + ' ms' : '') + ' · ' + quando;
 }
 
