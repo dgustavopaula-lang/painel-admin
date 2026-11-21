@@ -3020,7 +3020,7 @@ function limparFormPlanta() {
 }
 
 function editarPlanta(id) {
-  const p = plantasApi.find(x => x.id === id);
+  const p = plantasApi.find(x => String(x.id) === String(id));
   if (!p) return;
   limparFormPlanta();
   document.getElementById('pl-id').value = p.id;
@@ -3160,7 +3160,7 @@ async function salvarIdentificacao(id) {
 }
 
 async function enviarPlantaTuring(id) {
-  const p = plantasApi.find(x => x.id === id);
+  const p = plantasApi.find(x => String(x.id) === String(id));
   const msg = document.getElementById('fi-msg-' + id);
   if (!p || !p.nome_cientifico) return;
   const tk = tokenDoCofre();
