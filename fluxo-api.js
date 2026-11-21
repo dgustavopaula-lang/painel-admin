@@ -427,10 +427,15 @@
     ligarEventos();
   }
 
-  function alternarFoco(forcar) {
+  function alternarFoco(forcar, semSalvar) {
     const ligar = typeof forcar === 'boolean' ? forcar : !document.body.classList.contains('fx-foco');
     document.body.classList.toggle('fx-foco', ligar);
-    try { localStorage.setItem('gps-fluxos-foco', ligar ? '1' : '0'); } catch (e) { /* ignora */ }
+    document.documentElement.classList.toggle('fx-foco', ligar);
+    document.querySelectorAll('.sidebar, .sidebar-backdrop').forEach(el => { el.style.setProperty('display', ligar ? 'none' : '', ligar ? 'important' : ''); });
+    const main = document.querySelector('.main-content');
+    if (main) ['margin-left', 'max-width'].forEach(p => main.style.setProperty(p, ligar ? (p === 'margin-left' ? '0' : 'none') : '', ligar ? 'important' : ''));
+    if (main && ligar) main.style.setProperty('width', '100%', 'important'); else if (main) main.style.removeProperty('width');
+    if (!semSalvar) { try { localStorage.setItem('gps-fluxos-foco', ligar ? '1' : '0'); } catch (e) { /* ignora */ } }
     const bt = document.getElementById('fx-btn-foco');
     if (bt) bt.innerHTML = ligar ? '<i class="ph ph-sidebar-simple"></i> Mostrar menu' : '<i class="ph ph-sidebar-simple"></i> Recolher menu';
   }
@@ -499,7 +504,7 @@ body.fx-foco #tela-fluxo-api .fx-canvas{height:calc(100vh - 330px);min-height:46
     const original = window.abrirTela;
     window.abrirTela = function (id) {
       original(id);
-      if (id !== 'tela-fluxo-api') { document.body.classList.remove('fx-foco'); return; }
+      if (id !== 'tela-fluxo-api') { if (document.body.classList.contains('fx-foco')) alternarFoco(false, true); return; }
       let foco = false; try { foco = localStorage.getItem('gps-fluxos-foco') === '1'; } catch (e) { /* ignora */ }
       alternarFoco(foco);
       const nav = document.getElementById('nav-fluxo-api');
