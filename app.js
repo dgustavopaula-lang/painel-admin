@@ -3030,7 +3030,10 @@ function editarPlanta(id) {
   document.getElementById('pl-lon').value = p.longitude ?? '';
   document.getElementById('pl-toxica').checked = !!p.toxica;
   document.getElementById('pl-salvar').innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar alterações';
-  document.getElementById('pl-nome').focus();
+  const form = document.getElementById('form-planta') || document.getElementById('pl-nome');
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('pl-msg').textContent = 'Editando: ' + p.nome_popular + ' — altere e clique em Salvar alterações.';
+  setTimeout(() => document.getElementById('pl-nome').focus({ preventScroll: true }), 400);
 }
 
 async function salvarPlanta(ev) {
