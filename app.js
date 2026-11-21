@@ -1979,15 +1979,18 @@ async function renderPatrimonio() {
     }
 
     const dadosImoveis = await resp.json();
-    const imoveis = Array.isArray(dadosImoveis) ? dadosImoveis
-      : (Array.isArray(dadosImoveis && dadosImoveis.imoveis) ? dadosImoveis.imoveis : []);
+    const imoveis = (Array.isArray(dadosImoveis) ? dadosImoveis
+      : (Array.isArray(dadosImoveis && dadosImoveis.imoveis) ? dadosImoveis.imoveis : [])).filter(i => i.ativo !== false);
+    window._imoveisCache = imoveis;
 
     if (statusEl) statusEl.innerHTML = `<i class="ph ph-check-circle"></i> ${imoveis.length} imóvel(is) · NexoTerraCore API`;
 
+    const conjuntos = {};
+    imoveis.forEach(i => { const x = i.dados_extras || {}; if (x.conjunto && Number(x.valor_conjunto) > 0) conjuntos[x.conjunto] = Number(x.valor_conjunto); });
     const valorTotal = imoveis.reduce((s, i) => {
       const n = Number(i.valor);
       return s + (Number.isFinite(n) ? n : 0);
-    }, 0);
+    }, 0) + Object.values(conjuntos).reduce((a, b) => a + b, 0);
 
     if (resumo) {
       resumo.innerHTML = `
@@ -1999,7 +2002,7 @@ async function renderPatrimonio() {
         <div class="metric-card">
           <span>Valor total</span>
           <h3>${_moeda(valorTotal)}</h3>
-          <p class="metric-sub">portfólio</p>
+          <p class="metric-sub">${Object.keys(conjuntos).length ? 'inclui conjunto ' + Object.keys(conjuntos).map(escapeHtml).join(', ') : 'portfólio'}</p>
         </div>
         <div class="metric-card">
           <span>API</span>
@@ -2015,13 +2018,8 @@ async function renderPatrimonio() {
     }
 
     tbody.innerHTML = imoveis.map(im => {
-      const end = [im.endereco, im.numero, im.cidade, im.uf].filter(Boolean).join(', ');
-      const mapsBtn = end
-        ? `<button class="btn-action secondary" onclick="abrirMapsEndereco('${end.replace(/'/g, "\\'")}')" title="Google Maps"><i class="ph ph-map-pin"></i></button>`
-        : '';
-      const earthBtn = end
-        ? `<button class="btn-action secondary" onclick="abrirEarthEndereco('${end.replace(/'/g, "\\'")}')" title="Google Earth"><i class="ph ph-globe"></i></button>`
-        : '';
+      const mapsBtn = `<button class="btn-action secondary" onclick="abrirMapaImovel(${im.id}, 'maps')" title="Google Maps"><i class="ph ph-map-pin"></i></button>`;
+      const earthBtn = `<button class="btn-action secondary" onclick="abrirMapaImovel(${im.id}, 'earth')" title="Google Earth"><i class="ph ph-globe"></i></button>`;
       return `
         <tr>
           <td><strong>${escapeHtml(im.matricula || '—')}</strong></td>
@@ -2059,7 +2057,8 @@ function abrirModalImovel(id = null) {
     if (!token) { alert('Token não configurado.'); return; }
     fetch(_apiBasePatrimonio() + '/api/imoveis', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' })
       .then(r => r.json())
-      .then(lista => {
+      .then(d => {
+        const lista = Array.isArray(d) ? d : (d && d.imoveis) || [];
         const found = lista.find(x => x.id === id);
         if (found) {
           Object.assign(im, {
@@ -2097,7 +2096,7 @@ function _preencherFormImovel(body, im) {
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="form-group" style="grid-column:1/-1"><label>Título / Identificação *</label><input id="im-titulo" class="form-control" value="${escapeHtml(im.titulo)}" required></div>
-      <div class="form-group"><label>Matrícula *</label><input id="im-matricula" class="form-control" value="${escapeHtml(im.matricula)}" required></div>
+      <div class="form-group"><label>Matrícula (opcional)</label><input id="im-matricula" class="form-control" value="${escapeHtml(im.matricula)}"></div>
       <div class="form-group"><label>Tipo</label><select id="im-tipo" class="form-control">${tipos.map(t => `<option${t === im.tipo ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
       <div class="form-group"><label>Status</label><select id="im-status" class="form-control">${statuses.map(s => `<option${s === im.status ? ' selected' : ''}>${s}</option>`).join('')}</select></div>
       <div class="form-group"><label>Valor (R$)</label><input id="im-valor" class="form-control" type="number" min="0" step="0.01" value="${escapeHtml(String(im.valor))}"></div>
@@ -2127,13 +2126,13 @@ async function salvarImovel() {
 
   const titulo = document.getElementById('im-titulo')?.value.trim();
   const matricula = document.getElementById('im-matricula')?.value.trim();
-  if (!titulo || !matricula) { alert('Título e matrícula são obrigatórios.'); return; }
+  if (!titulo) { alert('O título é obrigatório.'); return; }
 
   const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 
   const dados = {
     titulo,
-    matricula,
+    matricula: matricula || null,
     tipo: document.getElementById('im-tipo')?.value || 'Casa',
     status: document.getElementById('im-status')?.value || 'Rascunho',
     endereco: document.getElementById('im-endereco')?.value.trim() || null,
@@ -2222,6 +2221,24 @@ function abrirEarthImovelForm() {
   const end = _enderecoImovelForm();
   if (!end) { alert('Preencha o endereço primeiro.'); return; }
   window.open('https://earth.google.com/web/search/' + encodeURIComponent(end), '_blank', 'noopener,noreferrer');
+}
+
+function abrirMapaImovel(id, onde) {
+  const im = (window._imoveisCache || []).find(x => x.id === id);
+  if (!im) return;
+  const x = im.dados_extras || {};
+  let lat = Number(x.lat), lon = Number(x.lon);
+  if (!(Number.isFinite(lat) && Number.isFinite(lon)) && im.mapa) {
+    const m = String(im.mapa).match(/(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/);
+    if (m) { lat = Number(m[1]); lon = Number(m[2]); }
+  }
+  const temCoord = Number.isFinite(lat) && Number.isFinite(lon) && (lat || lon);
+  const end = [im.endereco, im.numero, im.bairro, im.cidade, im.uf].filter(Boolean).join(', ');
+  let url;
+  if (onde === 'earth') url = temCoord ? `https://earth.google.com/web/@${lat},${lon},800a,1500d,35y,0h,0t,0r` : 'https://earth.google.com/web/search/' + encodeURIComponent(end);
+  else url = temCoord ? `https://www.google.com/maps?q=${lat},${lon}` : (im.mapa && /^https:\/\//.test(im.mapa) ? im.mapa : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(end));
+  if (!temCoord && !end && !im.mapa) { alert('Sem endereço nem coordenadas. Use Editar para completar.'); return; }
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 function abrirMapsEndereco(end) {
