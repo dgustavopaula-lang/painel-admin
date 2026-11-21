@@ -1205,7 +1205,22 @@ function renderMetricasHome() {
     ['Mini-softwares', appsApi.length ? `${ativos.length}` : '—', `${pwas} PWA · ${noArApps} no ar (API)`, 'tela-catalogo', ''],
     ['Natureza', 'Plantas', 'catálogo e treino na API', 'tela-plantas', '']
   ];
-  el.innerHTML =
+  const fora = ativos.filter(a => classeSaude(a) === 'erro');
+  const ultimoCheck = Math.max(0, ...ativos.map(a => a.ultimo_check_em ? Date.parse(a.ultimo_check_em) : 0));
+  const parado = ativos.length && ultimoCheck && (Date.now() - ultimoCheck > 2 * 3600 * 1000);
+  let alertaApps = '';
+  if (fora.length) {
+    alertaApps = `<div class="alerta-apps" role="alert" onclick="abrirTela('tela-catalogo')">
+      <i class="ph ph-warning-circle"></i>
+      <div><strong>${fora.length} app(s) fora do ar ou com erro</strong>
+      <p>${fora.map(a => `${escapeHtml(a.nome)} <small>(${escapeHtml(textoSaude(a))})</small>`).join(' · ')}</p></div>
+      <span class="alerta-apps-ver">Ver →</span></div>`;
+  } else if (ativos.length && ultimoCheck) {
+    alertaApps = `<div class="alerta-apps ok"><i class="ph ph-check-circle"></i><div><strong>Todos os ${ativos.length} apps no ar</strong>
+      <p>Última verificação: ${new Date(ultimoCheck).toLocaleString('pt-BR')}</p></div></div>`;
+  }
+  if (parado) alertaApps += `<div class="alerta-apps aviso"><i class="ph ph-clock-countdown"></i><div><strong>A verificação automática está parada</strong><p>Última: ${new Date(ultimoCheck).toLocaleString('pt-BR')} (deveria rodar a cada hora na VPS).</p></div></div>`;
+  el.innerHTML = alertaApps +
     `<div class="metrics-row-turing">` +
     cardsTuring.map(([rot, val, sub, alvo]) =>
       `<button type="button" class="metric-card clicavel metric-turing" onclick="abrirTela('${alvo}')"><span>${escapeHtml(rot)}</span><h3>${escapeHtml(val)}</h3><p class="metric-sub">${escapeHtml(sub)}</p></button>`
