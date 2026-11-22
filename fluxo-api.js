@@ -96,6 +96,7 @@
   /* ---------------- Estado ---------------- */
   let fluxos = carregar();
   let atual = fluxos[0];
+  try { const u = Number(localStorage.getItem('gps-fluxos-ultimo')); if (fluxos[u]) atual = fluxos[u]; } catch (e) { /* ignora */ }
   let selecionado = null;
   let ligando = null;        // { de, saida } enquanto o usuário liga dois nós
   let resultados = {};       // id do nó -> { entrada, saida, status, msg }
@@ -378,7 +379,7 @@
     const sel = document.getElementById('fx-sel');
     sel.innerHTML = fluxos.map((f, i) => `<option value="${i}" ${f === atual ? 'selected' : ''}>${esc(f.nome)}</option>`).join('');
   }
-  function trocar(i) { atual = fluxos[i]; selecionado = null; resultados = {}; ligando = null; preencherSeletor(); desenhar(); mostrarNo(null); document.getElementById('fx-log').innerHTML = ''; }
+  function trocar(i) { try { localStorage.setItem('gps-fluxos-ultimo', String(i)); } catch (e) { /* ignora */ } atual = fluxos[i]; selecionado = null; resultados = {}; ligando = null; preencherSeletor(); desenhar(); mostrarNo(null); document.getElementById('fx-log').innerHTML = ''; }
 
   /* ---------------- Montagem da tela ---------------- */
   function montarTela() {
@@ -396,6 +397,7 @@
         <button class="btn-action secondary" data-acao="exportar"><i class="ph ph-download-simple"></i> Exportar</button>
         <button class="btn-action secondary" data-acao="importar"><i class="ph ph-upload-simple"></i> Importar</button>
         <button class="btn-action secondary" data-acao="modelos"><i class="ph ph-arrow-counter-clockwise"></i> Restaurar modelos</button>
+        <button class="btn-action secondary" data-acao="centralizar"><i class="ph ph-arrows-in"></i> Centralizar</button>
         <button class="btn-action secondary" data-acao="foco" id="fx-btn-foco"><i class="ph ph-sidebar-simple"></i> Recolher menu</button>
         <label class="fx-sim"><input type="checkbox" id="fx-simulacao" checked> Modo simulação</label>
         <button class="btn-action" data-acao="executar"><i class="ph ph-play"></i> Executar</button>
@@ -425,6 +427,11 @@
       const a = b.dataset.acao;
       if (a === 'executar') executarFluxo();
       if (a === 'foco') alternarFoco();
+      if (a === 'centralizar' && atual.nos.length) {
+        const mx = Math.min(...atual.nos.map(n => n.x)), my = Math.min(...atual.nos.map(n => n.y));
+        atual.nos.forEach(n => { n.x = n.x - mx + 40; n.y = n.y - my + 60; }); salvar(); desenhar();
+        const c = document.querySelector('#tela-fluxo-api .fx-canvas'); if (c) { c.scrollLeft = 0; c.scrollTop = 0; }
+      }
       if (a === 'novo') { const nome = prompt('Nome do novo fluxo:', 'Meu fluxo'); if (!nome) return; fluxos.push({ nome, nos: [{ id: novoId(), tipo: 'gatilho', x: 40, y: 140, nome: TIPOS.gatilho.nome, cfg: {} }], ligacoes: [] }); salvar(); trocar(fluxos.length - 1); }
       if (a === 'renomear') { const nome = prompt('Novo nome:', atual.nome); if (nome) { atual.nome = nome; salvar(); preencherSeletor(); } }
       if (a === 'duplicar') { const c = JSON.parse(JSON.stringify(atual)); c.nome += ' (cópia)'; fluxos.push(c); salvar(); trocar(fluxos.length - 1); }
@@ -537,5 +544,14 @@ body.fx-foco #tela-fluxo-api .fx-canvas{height:calc(100vh - 330px);min-height:46
       preencherSeletor(); desenhar(); mostrarNo(selecionado);
     };
   }
+  window.fluxoApiNovo = function (metodo, caminho, nome) {
+    const f = { nome: nome || (metodo + ' ' + caminho), nos: [
+      { id: novoId(), tipo: 'gatilho', x: 40, y: 140, nome: TIPOS.gatilho.nome, cfg: {} },
+      { id: novoId(), tipo: 'http', x: 280, y: 140, nome: metodo + ' ' + caminho, cfg: { metodo, caminho, corpo: '' } },
+      { id: novoId(), tipo: 'saida', x: 520, y: 140, nome: TIPOS.saida.nome, cfg: {} }], ligacoes: [] };
+    f.ligacoes = [{ de: f.nos[0].id, para: f.nos[1].id, saida: 0 }, { de: f.nos[1].id, para: f.nos[2].id, saida: 0 }];
+    fluxos.push(f); salvar();
+    window.abrirTela('tela-fluxo-api'); trocar(fluxos.length - 1);
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();

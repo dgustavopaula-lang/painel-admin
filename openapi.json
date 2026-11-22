@@ -1,0 +1,1502 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NexoTerraCore API",
+    "version": "2026-11-21",
+    "description": "Documento interno. Gerado do código em 21/11/2026 (lista de rotas). Campos detalhados só para apps, plantas e conhecimento do Turing; o resto a completar."
+  },
+  "servers": [
+    {
+      "url": "https://api.gustavopaulasantos.com.br"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API Key ntc_live_… ou token de sessão"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Saúde da API (está no ar?)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/turing/security/health": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Saúde da camada de segurança do Turing",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/control-plane": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Painel de controle: visão geral da organização",
+        "x-escopo": "control_plane · GET",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Entrar com e-mail e senha",
+        "security": [],
+        "description": "Tem limite de tentativas (proteção contra força bruta).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "string",
+                "senha": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/selecionar-fazenda": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Escolher a fazenda depois do login",
+        "security": [],
+        "description": "Tem limite de tentativas.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "desafio": "string",
+                "fazendaId": "número"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Quem sou eu (usuário da sessão)",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/auth/fazendas": {
+      "get": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Fazendas que o usuário pode acessar",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/auth/trocar-fazenda": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Trocar a fazenda ativa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "fazendaId": "número"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Sair (encerra a sessão)",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/apps": {
+      "get": {
+        "tags": [
+          "Catálogo de apps"
+        ],
+        "summary": "Lista os apps do ecossistema",
+        "x-escopo": "apps.read",
+        "description": "Filtro opcional: ?tipo=pwa|site|projeto|pessoal",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Catálogo de apps"
+        ],
+        "summary": "Cria um app",
+        "x-escopo": "apps.write",
+        "description": "O slug é gerado a partir do nome.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "nome": "texto*",
+                "url": "https://…*",
+                "categoria": "texto*",
+                "tipo": "pwa|site|projeto|pessoal*",
+                "status": "ativo|em_desenvolvimento|pausado|arquivado",
+                "publico": "true|false",
+                "descricao": "texto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/apps/{id}": {
+      "patch": {
+        "tags": [
+          "Catálogo de apps"
+        ],
+        "summary": "Altera campos de um app",
+        "x-escopo": "apps.write",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "nome": "texto",
+                "url": "https://…",
+                "categoria": "texto",
+                "tipo": "…",
+                "status": "…",
+                "publico": "true|false",
+                "descricao": "texto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Catálogo de apps"
+        ],
+        "summary": "Exclui um app (só se estiver arquivado)",
+        "x-escopo": "apps.write",
+        "description": "Responde 409 se o app não estiver arquivado.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/apps/verificar": {
+      "post": {
+        "tags": [
+          "Catálogo de apps"
+        ],
+        "summary": "Testa agora se cada app está no ar",
+        "x-escopo": "apps.write",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/plantas": {
+      "get": {
+        "tags": [
+          "Plantas"
+        ],
+        "summary": "Lista o catálogo Plantas do morro",
+        "x-escopo": "plantas.read",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Plantas"
+        ],
+        "summary": "Cadastra uma planta",
+        "x-escopo": "plantas.write",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "nome_popular": "texto*",
+                "nome_cientifico": "texto",
+                "familia": "texto",
+                "parte_usada": "texto",
+                "local_descricao": "texto",
+                "status": "a_identificar|identificada|enviada_pesquisa|descartada",
+                "toxica": "true|false",
+                "alerta": "texto",
+                "uso_tradicional": "texto",
+                "notas": "texto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/plantas/{id}": {
+      "patch": {
+        "tags": [
+          "Plantas"
+        ],
+        "summary": "Altera uma planta",
+        "x-escopo": "plantas.write",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "…": "os mesmos campos do POST"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/conhecimento/ensinar": {
+      "post": {
+        "tags": [
+          "Turing · conhecimento"
+        ],
+        "summary": "Cria um exemplo pendente (rascunho)",
+        "x-escopo": "turing:training",
+        "description": "Nada vira resposta antes de ser aprovado.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "area": "texto",
+                "pergunta": "texto",
+                "resposta": "texto",
+                "fonte": "texto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/conhecimento/listar": {
+      "get": {
+        "tags": [
+          "Turing · conhecimento"
+        ],
+        "summary": "Lista os exemplos (pendentes, aprovados, rejeitados)",
+        "x-escopo": "turing:training",
+        "description": "Até 1000 itens.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/conhecimento/{id}/revisar": {
+      "patch": {
+        "tags": [
+          "Turing · conhecimento"
+        ],
+        "summary": "Aprova ou rejeita um exemplo",
+        "x-escopo": "turing:training",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/conhecimento/aprovados": {
+      "get": {
+        "tags": [
+          "Turing · conhecimento"
+        ],
+        "summary": "Só os aprovados (o que o Turing responde)",
+        "x-escopo": "turing:training",
+        "description": "Usado pelo conselheiro do Play Farm Agro.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/training/health": {
+      "get": {
+        "tags": [
+          "Turing · treino e segurança"
+        ],
+        "summary": "Saúde do módulo de treino",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/turing/training/classificar": {
+      "post": {
+        "tags": [
+          "Turing · treino e segurança"
+        ],
+        "summary": "Classifica um cenário (normal, suspeito, ataque)",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/training/feedback": {
+      "post": {
+        "tags": [
+          "Turing · treino e segurança"
+        ],
+        "summary": "Registra correção de uma classificação",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/training/promote": {
+      "post": {
+        "tags": [
+          "Turing · treino e segurança"
+        ],
+        "summary": "Promove exemplos revisados",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/publico": {
+      "post": {
+        "tags": [
+          "Turing · treino e segurança"
+        ],
+        "summary": "Turing público (congelado)",
+        "security": [],
+        "description": "Responde 410: rota desativada.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assistente/perguntar": {
+      "post": {
+        "tags": [
+          "Turing · treino e segurança"
+        ],
+        "summary": "Pergunta ao assistente",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "pergunta": "texto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/angola/resumo": {
+      "get": {
+        "tags": [
+          "Turing · regiões"
+        ],
+        "summary": "Resumo da frente Angola",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/angola/sinais": {
+      "get": {
+        "tags": [
+          "Turing · regiões"
+        ],
+        "summary": "Sinais e alertas de Angola",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/centro-oeste/oportunidades": {
+      "get": {
+        "tags": [
+          "Turing · regiões"
+        ],
+        "summary": "Oportunidades no Centro-Oeste",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/turing/centro-oeste/resumo": {
+      "get": {
+        "tags": [
+          "Turing · regiões"
+        ],
+        "summary": "Resumo do Centro-Oeste",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/imoveis": {
+      "get": {
+        "tags": [
+          "Imóveis"
+        ],
+        "summary": "Lista os imóveis",
+        "x-escopo": "imoveis · GET",
+        "description": "Tem limite por chave e medição de consumo.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Imóveis"
+        ],
+        "summary": "Cadastra um imóvel",
+        "x-escopo": "imoveis · POST",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/imoveis/{id}": {
+      "put": {
+        "tags": [
+          "Imóveis"
+        ],
+        "summary": "Substitui os dados de um imóvel",
+        "x-escopo": "imoveis · PUT",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Imóveis"
+        ],
+        "summary": "Exclui um imóvel",
+        "x-escopo": "imoveis · DELETE",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/fazendas": {
+      "get": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Lista as fazendas",
+        "x-escopo": "fazendas · GET",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/maquinas": {
+      "get": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Lista as máquinas",
+        "x-escopo": "maquinas · GET",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Cadastra uma máquina",
+        "x-escopo": "maquinas · POST",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/maquinas/{id}": {
+      "get": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Uma máquina",
+        "x-escopo": "maquinas · GET",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Substitui uma máquina",
+        "x-escopo": "maquinas · PUT",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Exclui uma máquina",
+        "x-escopo": "maquinas · DELETE",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/financeiro/resumo": {
+      "get": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Resumo financeiro",
+        "x-escopo": "financeiro · GET",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/financeiro": {
+      "get": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Lista lançamentos",
+        "x-escopo": "financeiro · GET",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Cria lançamento",
+        "x-escopo": "financeiro · POST",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/financeiro/{id}": {
+      "get": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Um lançamento",
+        "x-escopo": "financeiro · GET",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Substitui lançamento",
+        "x-escopo": "financeiro · PUT",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Exclui lançamento",
+        "x-escopo": "financeiro · DELETE",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/clientes": {
+      "get": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Lista clientes",
+        "x-escopo": "clientes · GET",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Cadastra cliente",
+        "x-escopo": "clientes · POST",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/clientes/{id}": {
+      "put": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Substitui cliente",
+        "x-escopo": "clientes · PUT",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Gestão rural"
+        ],
+        "summary": "Exclui cliente",
+        "x-escopo": "clientes · DELETE",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/agroconex/status": {
+      "get": {
+        "tags": [
+          "AgroConex"
+        ],
+        "summary": "Estado do módulo AgroConex",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/agroconex/sync/health": {
+      "get": {
+        "tags": [
+          "AgroConex"
+        ],
+        "summary": "Saúde da sincronização",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/agroconex/sync/registros": {
+      "post": {
+        "tags": [
+          "AgroConex"
+        ],
+        "summary": "Envia registros de campo (offline → API)",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "AgroConex"
+        ],
+        "summary": "Lê registros sincronizados",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Dado inválido"
+          },
+          "401": {
+            "description": "Sem token"
+          },
+          "403": {
+            "description": "Sem escopo"
+          }
+        }
+      }
+    },
+    "/api/whatsapp/health": {
+      "get": {
+        "tags": [
+          "WhatsApp"
+        ],
+        "summary": "Saúde da integração",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/whatsapp/webhook": {
+      "get": {
+        "tags": [
+          "WhatsApp"
+        ],
+        "summary": "Verificação do webhook (feita pelo provedor)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WhatsApp"
+        ],
+        "summary": "Recebe mensagens do provedor (webhook)",
+        "security": [],
+        "description": "Quem chama é o WhatsApp, não você.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}
