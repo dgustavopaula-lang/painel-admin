@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fazendas do Altair — gestão à distância</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{--bg:#0b1220;--card:#121b2e;--line:#22304d;--txt:#e6edf7;--mut:#8a9bb8;--acc:#3b82f6;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--r:12px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,sans-serif}
+  header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  h1{margin:0;font-size:22px} h2{margin:0 0 10px;font-size:17px}
+  .mut{color:var(--mut)} main{padding:18px 22px;max-width:1300px;margin:auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-bottom:16px}
+  .fz{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+  .fz h3{margin:0 0 6px;font-size:16px} .fz div{margin:3px 0}
+  .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+  table{border-collapse:collapse;width:100%} th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;font-size:14px}
+  th{color:var(--mut);font-weight:600} td.c{text-align:center}
+  #map{height:460px;border-radius:var(--r);border:1px solid var(--line)}
+  .btn{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;cursor:pointer;font-size:14px}
+  a{color:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🌾 Fazendas do Altair</h1><div class="mut">Gestão à distância — veja as fazendas sem precisar ir até lá</div></div>
+  <div><span class="mut" id="hoje"></span> <a class="btn" href="grandes-fazendas.html" style="text-decoration:none">Abrir gestão completa →</a></div>
+</header>
+<main>
+  <div class="grid" id="cards"></div>
+
+  <div class="card">
+    <h2>🗺️ Mapa das fazendas</h2>
+    <div id="map"></div>
+    <p class="mut" style="margin:8px 0 0">Use o ícone de camadas no canto do mapa para trocar entre satélite e Sentinel-2 (Copernicus, mosaico 2024), onde os pivôs aparecem como círculos.</p>
+  </div>
+
+  <div class="card">
+    <h2>📅 Safra e colheita — <select id="ano" class="btn"></select></h2>
+    <div style="overflow-x:auto"><table><thead id="gH"></thead><tbody id="gB"></tbody></table></div>
+    <p class="mut" style="margin:8px 0 0">🌱 plantio · 🌾 colheita. Os lançamentos são feitos na gestão completa (aba Safras).</p>
+  </div>
+
+  <div class="card">
+    <h2>⏰ Prazos e vencimentos</h2>
+    <table><thead><tr><th>Fazenda</th><th>O quê</th><th>Data</th><th>Situação</th></tr></thead><tbody id="pB"></tbody></table>
+    <p class="mut" style="margin:8px 0 0">Datas vindas de documentos públicos (licenças e calendário oficial de Goiás). Conferir com os documentos originais.</p>
+  </div>
+
+  <div class="card">
+    <h2>💸 Onde pode estar saindo dinheiro</h2>
+    <table><thead><tr><th>Ponto de atenção</th><th>O que acompanhar</th><th>Quem informa</th></tr></thead><tbody>
+      <tr><td>Pivôs de irrigação</td><td>Horas ligado, energia por hectare, área realmente irrigada</td><td>Gerente da fazenda</td></tr>
+      <tr><td>Água (outorga)</td><td>Volume usado × volume autorizado, vencimento</td><td>Documento da outorga</td></tr>
+      <tr><td>Produtividade por talhão</td><td>Sacas por hectare em cada área, comparado com o vizinho</td><td>Colheita + mapa</td></tr>
+      <tr><td>Insumos</td><td>Custo por hectare (adubo, defensivo, semente) por talhão</td><td>Compras / notas</td></tr>
+      <tr><td>Máquinas</td><td>Horas, combustível e parada de trator e colheitadeira</td><td>Gerente / oficina</td></tr>
+    </tbody></table>
+    <p class="mut" style="margin:8px 0 0">Campos prontos para preencher quando o Altair e o sócio passarem os números reais.</p>
+  </div>
+  <p class="mut">Satélite: Esri e Sentinel-2 cloudless (EOX, contém dados Copernicus Sentinel modificados). Clima: Open-Meteo. Versão de demonstração; dados guardados neste navegador.</p>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const KEY='turingAgro.grandesFazendas.v1';
+let D={fazendas:[],talhoes:[],safras:[],pontos:[],clima:{}};
+try{const s=localStorage.getItem(KEY);if(s)D=Object.assign(D,JSON.parse(s));}catch(e){}
+D.fazendas=D.fazendas.length?D.fazendas:["Fazenda PIPE — Malanje (Angola)","Fazenda Saudade","Fazenda Pateirinho","Fazenda Santa Luzia","Fazenda do Lago"];
+D.safras=D.safras||[];D.pontos=D.pontos||[];D.clima=D.clima||{};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nb=v=>(+v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
+const hoje=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);};
+const fmtD=d=>{const[a,m,x]=d.split('-');return x+'/'+m+'/'+a;};
+const diasAte=d=>Math.round((Date.parse(d)-Date.parse(hoje()))/864e5);
+document.getElementById('hoje').textContent=fmtD(hoje());
+
+// Prazos conhecidos (fontes públicas; conferir com o documento original)
+const PRAZOS=[
+ {faz:'Fazenda Saudade',nome:'Licença ambiental SEMAD-GO nº 20211198',rot:'Licença ambiental',data:'2026-12-14',aviso:'renovação a confirmar'},
+ {faz:'Fazenda Saudade',nome:'Fim do vazio sanitário da soja (Goiás)',rot:'Vazio sanitário',data:'2026-09-24'},
+ {faz:'Fazenda Saudade',nome:'Limite de semeadura da soja (Goiás 2026/27)',rot:'Limite de semeadura',data:'2027-01-02'},
+ {faz:'Fazenda Saudade',nome:'Cadastro da lavoura no Sidago',rot:'Cadastro no Sidago',data:'2027-01-17'}
+];
+const AREA_CAR={'Fazenda Saudade':330.84};
+const emMes=(ini,fim,ano,m)=>{if(!ini)return false;fim=fim||ini;const a=ano*12+m,i=+ini.slice(0,4)*12+(+ini.slice(5,7)-1),f=+fim.slice(0,4)*12+(+fim.slice(5,7)-1);return a>=i&&a<=f;};
+const curto=f=>f.replace('Fazenda ','').split(' — ')[0];
+
+function status(d){const n=diasAte(d);if(n<0)return '<span class="mut">✔ encerrado</span>';
+ return n<=15?`<span class="bad">🔴 faltam ${n} dias</span>`:(n<=30?`<span class="warn">🟡 faltam ${n} dias</span>`:`<span class="ok">🟢 faltam ${n} dias</span>`);}
+
+function climaDe(f){const p=D.pontos.find(p=>f.toLowerCase().includes(String(p.nome).toLowerCase().replace('fazenda ','').trim())&&p.nome);
+ const c=p&&D.clima[p.id];if(!c||!c.daily)return '<span class="mut">sem ponto de clima</span>';
+ const d=c.daily,hj=hoje(),i0=d.time.indexOf(hj);if(i0<0)return '<span class="mut">clima desatualizado</span>';
+ const sl=a=>a.slice(i0,i0+7);const chuva=sl(d.precipitation_sum).reduce((a,b)=>a+(b||0),0);
+ const mn=Math.min(...sl(d.temperature_2m_min)),mx=Math.max(...sl(d.temperature_2m_max));
+ const al=mn<=3?'🔴 risco de geada':(mx>=36?'🟡 calor forte':(sl(d.precipitation_sum).some(v=>v>=50)?'🔴 chuva muito forte':'🟢 sem alerta'));
+ return `7 dias: chuva ${nb(chuva)} mm · ${nb(mn)}–${nb(mx)} °C · ${al}`;}
+
+function cards(){document.getElementById('cards').innerHTML=D.fazendas.map(f=>{
+  const ha=D.talhoes.filter(t=>t.fazenda===f).reduce((a,t)=>a+(+t.ha||0),0);
+  const car=AREA_CAR[f];
+  const area=ha?`${nb(ha)} ha mapeados`:(car?`${nb(car)} ha (CAR)`:'<span class="warn">área a confirmar</span>');
+  const h=hoje(),at=D.safras.find(r=>r.fazenda===f&&((r.pi&&h>=r.pi&&h<=(r.cf||r.pf||r.pi))||(r.ci&&h>=r.ci&&h<=r.cf)));
+  const prox=D.safras.filter(r=>r.fazenda===f&&r.ci&&r.cf>=h).sort((a,b)=>a.ci.localeCompare(b.ci))[0];
+  const pr=PRAZOS.filter(p=>p.faz===f&&p.data>=h).sort((a,b)=>a.data.localeCompare(b.data))[0];
+  return `<div class="fz"><h3>${esc(f)}</h3>
+   <div>📐 ${area}</div>
+   <div>🌱 ${at?esc(at.cultura)+' · safra '+esc(at.safra):'<span class="mut">cultura a lançar</span>'}</div>
+   <div>🌾 ${prox?'colheita '+fmtD(prox.ci):'<span class="mut">colheita a lançar</span>'}</div>
+   <div>⏰ ${pr?esc(pr.rot)+' — '+status(pr.data):'<span class="mut">sem prazo cadastrado</span>'}</div>
+   <div class="mut" style="font-size:13px">🌦 ${climaDe(f)}</div></div>`;}).join('');}
+
+function prazos(){const l=PRAZOS.slice().sort((a,b)=>a.data.localeCompare(b.data));
+ pB.innerHTML=l.map(p=>`<tr><td>${esc(curto(p.faz))}</td><td>${esc(p.nome)}${p.aviso?' <span class="tag">'+esc(p.aviso)+'</span>':''}</td><td>${fmtD(p.data)}</td><td>${status(p.data)}</td></tr>`).join('');}
+
+const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function grade(){const anos=new Set([new Date().getFullYear()]);
+ D.safras.forEach(r=>[r.pi,r.pf,r.ci,r.cf].forEach(d=>{if(d)anos.add(+d.slice(0,4));}));
+ const sel=+ano.value||new Date().getFullYear();
+ ano.innerHTML=[...anos].sort().map(a=>`<option ${a===sel?'selected':''}>${a}</option>`).join('');
+ const y=+ano.value;gH.innerHTML='<tr><th>Fazenda · cultura · safra</th>'+MESES.map(m=>`<th class="c">${m}</th>`).join('')+'</tr>';
+ gB.innerHTML=D.safras.map(r=>`<tr><td>${esc(curto(r.fazenda))} · ${esc(r.cultura)} · ${esc(r.safra)}</td>`+MESES.map((_,m)=>`<td class="c">${emMes(r.pi,r.pf,y,m)?'🌱':''}${emMes(r.ci,r.cf,y,m)?'🌾':''}</td>`).join('')+'</tr>').join('')
+  ||'<tr><td colspan=13 class="mut">Nenhuma safra lançada ainda. Lance na gestão completa, aba Safras.</td></tr>';}
+ano.onchange=grade;
+
+// Mapa
+const map=L.map('map',{wheelPxPerZoomLevel:300,wheelDebounceTime:120,zoomSnap:0.25,zoomDelta:0.5,inertia:false,doubleClickZoom:false}).setView([-18.9,-50.65],8);
+const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagens © Esri'});
+const s2=L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg',{maxZoom:14,attribution:'Sentinel-2 cloudless — <a href="https://s2maps.eu" target="_blank">s2maps.eu</a> by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)'});
+sat.addTo(map);L.control.layers({'Satélite':sat,'Sentinel-2 (Copernicus, mosaico 2024)':s2}).addTo(map);
+const fg=L.featureGroup().addTo(map);
+D.talhoes.forEach(t=>{if(t.geom)L.geoJSON(t.geom,{style:{color:'#22c55e',weight:2,fillOpacity:.15}}).bindTooltip(`${t.nome} — ${esc(t.fazenda)} · ${nb(t.ha)} ha`).addTo(fg);});
+D.pontos.forEach(p=>{if(p.lat!=null)L.circleMarker([p.lat,p.lon],{radius:7,color:'#3b82f6'}).bindTooltip(esc(p.nome)).addTo(fg);});
+try{const b=fg.getBounds();if(b&&b.isValid&&b.isValid())map.fitBounds(b.pad(.2));}catch(e){}
+
+cards();prazos();grade();
+</script>
+</body>
+</html>
