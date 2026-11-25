@@ -258,8 +258,9 @@ const map=L.map('map',{wheelPxPerZoomLevel:300,wheelDebounceTime:120,zoomSnap:0.
 const satelite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagens © Esri'});
 const rotulos=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
 const ruas=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'© OpenStreetMap © CARTO'});
+const sentinel=L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg',{maxZoom:14,attribution:'Sentinel-2 cloudless — <a href="https://s2maps.eu" target="_blank">s2maps.eu</a> by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)'});
 satelite.addTo(map);rotulos.addTo(map);
-L.control.layers({'Satélite':satelite,'Mapa escuro':ruas},{'Nomes de lugares':rotulos}).addTo(map);
+L.control.layers({'Satélite':satelite,'Sentinel-2 (Copernicus, mosaico 2024)':sentinel,'Mapa escuro':ruas},{'Nomes de lugares':rotulos}).addTo(map);
 const camada=L.featureGroup().addTo(map);
 
 // Área geodésica aproximada (m²) de um anel [lon,lat]
