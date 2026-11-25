@@ -51,6 +51,13 @@
     <p class="mut" style="margin:8px 0 0">Datas vindas de documentos públicos (licenças e calendário oficial de Goiás). Conferir com os documentos originais.</p>
   </div>
 
+
+  <div class="card">
+    <h2>🚜 Máquinas</h2><div id="mAlt" class="mut">Nenhuma máquina cadastrada.</div>
+  </div>
+  <div class="card">
+    <h2>💰 Vendas × mercado</h2><div id="vAlt" class="mut">Nenhuma venda registrada.</div>
+  </div>
   <div class="card">
     <h2>💸 Onde pode estar saindo dinheiro</h2>
     <table><thead><tr><th>Ponto de atenção</th><th>O que acompanhar</th><th>Quem informa</th></tr></thead><tbody>
@@ -138,6 +145,14 @@ D.talhoes.forEach(t=>{if(t.geom)L.geoJSON(t.geom,{style:{color:'#22c55e',weight:
 D.pontos.forEach(p=>{if(p.lat!=null)L.circleMarker([p.lat,p.lon],{radius:7,color:'#3b82f6'}).bindTooltip(esc(p.nome)).addTo(fg);});
 try{const b=fg.getBounds();if(b&&b.isValid&&b.isValid())map.fitBounds(b.pad(.2));}catch(e){}
 
+
+const brl=v=>(+v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+(function(){const m=D.maquinas||[],v=D.vendas||[];
+ if(m.length){const dp=r=>r.uso?-diasAte(r.uso):null,par=m.filter(r=>dp(r)!==null&&dp(r)>30);
+  mAlt.innerHTML=`Total em máquinas: <b>${brl(m.reduce((a,r)=>a+r.valor,0))}</b> · parado há mais de 30 dias: <b class="${par.length?'bad':'ok'}">${brl(par.reduce((a,r)=>a+r.valor,0))}</b>`+
+   (par.length?'<table style="margin-top:8px"><thead><tr><th>Máquina</th><th>Fazenda</th><th>Dias sem uso</th></tr></thead><tbody>'+par.map(r=>`<tr><td>${esc(r.nome)}</td><td>${esc(curto(r.fazenda))}</td><td class="bad">🔴 ${dp(r)}</td></tr>`).join('')+'</tbody></table>':'');}
+ if(v.length){const t=v.reduce((a,r)=>a+(r.ref?(r.ref-r.preco)*r.qtd:0),0);
+  vAlt.innerHTML=`Vendido: <b>${brl(v.reduce((a,r)=>a+r.qtd*r.preco,0))}</b> · diferença para o mercado: <b class="${t>0?'bad':'ok'}">${brl(t)}</b> <span class="mut">(positivo = vendeu abaixo da referência)</span>`;}})();
 cards();prazos();grade();
 </script>
 </body>
