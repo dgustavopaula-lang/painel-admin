@@ -70,6 +70,28 @@
   </div>
 </section>
 
+<section id="climacal">
+  <div class="card">
+    <h3 style="margin:0 0 8px">📅 Calendário oficial da soja em Goiás, por safra</h3>
+    <table><thead><tr><th>Safra</th><th>Vazio sanitário</th><th>Semeadura permitida</th><th>Cadastro no Sidago até</th><th>Observação</th></tr></thead><tbody id="calTb"></tbody></table>
+    <div class="row" style="margin-top:10px"><button class="btn p" id="btnJanelas">Inserir janelas de semeadura nas fazendas do Centro-Oeste</button><span class="mut" id="janInfo"></span></div>
+    <p class="mut" style="margin-top:8px">Fontes: Mapa (Portaria 1.111/2024 e 1.579/2026), Agrodefesa (IN 6/2024 e IN 5/2026). Colheita não tem data oficial: varia com a variedade e o clima; lance na aba Safras.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin:0 0 8px">🌧 Chuva por ano e mês (histórico medido pelo satélite/reanálise)</h3>
+    <div class="row">
+      <label>Latitude<input id="chLat" value="-18.90" style="width:110px"></label>
+      <label>Longitude<input id="chLon" value="-50.65" style="width:110px"></label>
+      <button class="btn p" id="chBtn">Buscar histórico (2019 até hoje)</button><span class="mut" id="chInfo"></span>
+    </div>
+    <p class="mut">Padrão: referência de Paranaíguara. As fazendas do Centro-Oeste são próximas, então vale como base. Troque pelas coordenadas de cada fazenda quando tiver.</p>
+    <div style="overflow-x:auto"><table><thead id="chH"></thead><tbody id="chTb"></tbody></table></div>
+    <h3 style="margin:14px 0 6px">Resumo por safra</h3>
+    <table><thead><tr><th>Safra</th><th>Chuva Out–Mar (mm)</th><th>Maior veranico Dez–Fev (dias &lt; 2 mm)</th><th>Dias ≥ 36 °C (Set–Mar)</th></tr></thead><tbody id="chSafra"></tbody></table>
+    <p class="mut" style="margin-top:8px">Dados: <a style="color:var(--acc)" target="_blank" href="https://open-meteo.com/">Open-Meteo</a> (histórico por reanálise, CC BY 4.0), não é pluviômetro da fazenda. Meça na fazenda também.</p>
+  </div>
+</section>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   td input,td select{width:100%;min-width:70px;padding:5px}
@@ -127,6 +149,7 @@
   <button data-t="safras">6. 🌾 Safras</button>
   <button data-t="maquinas">7. 🚜 Máquinas</button>
   <button data-t="vendas">8. 💰 Vendas</button>
+  <button data-t="climacal">9. 🌦 Clima e calendário</button>
 </nav>
 
 <main>
@@ -275,7 +298,7 @@ D.fazendas=D.fazendas.map(f=>f==='Malanje (Angola)'?'Fazenda PIPE — Malanje (A
 D.fazendas=D.fazendas.map(f=>f==='Fazenda Brasil 1'?'Fazenda Saudade':f);
 if(!D.fazendas.includes('Fazenda Saudade'))D.fazendas.splice(1,0,'Fazenda Saudade');
 D.talhoes.forEach(t=>{if(t.fazenda==='Fazenda Brasil 1')t.fazenda='Fazenda Saudade';});
-D.safras=D.safras||[];D.maquinas=D.maquinas||[];D.vendas=D.vendas||[];
+D.safras=D.safras||[];D.climaHist=D.climaHist||{};D.maquinas=D.maquinas||[];D.vendas=D.vendas||[];
 const RENOMEAR={'Fazenda Brasil 2':'Fazenda Pateirinho','Fazenda Brasil 3':'Fazenda Santa Luzia','Fazenda Brasil 4':'Fazenda do Lago'};
 D.fazendas=D.fazendas.map(f=>RENOMEAR[f]||f);
 D.talhoes.forEach(t=>{if(RENOMEAR[t.fazenda])t.fazenda=RENOMEAR[t.fazenda];});
@@ -550,7 +573,7 @@ importarBackup.onchange=async()=>{const f=importarBackup.files[0];if(!f)return;
 
 function renderSelects(){const op=D.talhoes.map(t=>`<option value="${t.id}">${esc(t.nome)} — ${esc(t.fazenda)}</option>`).join('');
  [satTalhao,cTalhao,dTalhao].forEach(s=>s.innerHTML=op||'<option value="">(importe talhões no Mapa)</option>');}
-function renderTudo(){renderMaq();renderVendas();renderSafras();renderFicha();renderSelects();renderMapa();renderSat();renderCampo();renderDec();renderVigia();}
+function renderTudo(){renderCal();renderClimaHist();renderMaq();renderVendas();renderSafras();renderFicha();renderSelects();renderMapa();renderSat();renderCampo();renderDec();renderVigia();}
 
 // ===== Safras: calendário de plantio e colheita por ano e mês =====
 const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -610,6 +633,41 @@ function renderVendas(){const dif=r=>r.ref?(r.ref-r.preco)*r.qtd:null;
  vTb.innerHTML=[...D.vendas].sort((a,b)=>b.data.localeCompare(a.data)).map(r=>{const d=dif(r);
   return `<tr><td>${fmtD(r.data)}</td><td>${esc(r.fazenda)}</td><td>${esc(r.produto)}</td><td>${nb(r.qtd)}</td><td>R$ ${nb(r.preco)}</td><td>${r.ref?'R$ '+nb(r.ref):'—'}</td>
   <td>${d===null?'—':(d>0?'🔴 ':'🟢 ')+brl(d)}</td><td>${esc(r.comp)}</td><td>${esc(r.pag)}</td><td><button class="x" onclick="rem('vendas','${r.id}')">🗑</button></td></tr>`;}).join('')||'<tr><td colspan=10 class="mut">Sem vendas.</td></tr>';}
+
+// ===== Clima e calendário =====
+const CAL_SOJA_GO=[
+ {safra:'2023/24',vi:'2023-06-27',vf:'2023-09-24',si:'2023-09-25',sf:'2024-01-12',cad:'',obs:'Prazo final prorrogado em caráter excepcional até 12/01/2024 (clima). Datas-base de 2023 inferidas: conferir.'},
+ {safra:'2024/25',vi:'2024-06-27',vf:'2024-09-24',si:'2024-09-25',sf:'2025-01-02',cad:'2025-01-17',obs:'Portaria SDA/MAPA 1.111/2024.'},
+ {safra:'2025/26',vi:'2025-06-27',vf:'2025-09-24',si:'2025-09-25',sf:'2026-01-02',cad:'2026-01-17',obs:'IN Agrodefesa 6/2024.'},
+ {safra:'2026/27',vi:'2026-06-27',vf:'2026-09-24',si:'2026-09-20',sf:'2027-01-02',cad:'2027-01-17',obs:'Início antecipado de 25/09 para 20/09 (IN 5/2026, exceção só desta safra). Portaria MAPA 1.579/2026.'}];
+function renderCal(){calTb.innerHTML=CAL_SOJA_GO.map(c=>`<tr><td><b>${c.safra}</b></td><td>${fmtD(c.vi)} a ${fmtD(c.vf)}</td><td>${fmtD(c.si)} a ${fmtD(c.sf)}</td><td>${c.cad?fmtD(c.cad):'—'}</td><td class="mut">${esc(c.obs)}</td></tr>`).join('');}
+btnJanelas.onclick=()=>{const fz=D.fazendas.filter(f=>!/angola|malanje/i.test(f));let n=0;
+ if(!confirm('Inserir as janelas oficiais de semeadura (4 safras) em '+fz.length+' fazendas do Centro-Oeste? Aparecem na aba Safras como referência.'))return;
+ fz.forEach(f=>CAL_SOJA_GO.forEach(c=>{if(D.safras.some(r=>r.ref&&r.fazenda===f&&r.safra===c.safra))return;
+  D.safras.push({id:'ref-'+f+'-'+c.safra,fazenda:f,cultura:'Soja (janela oficial)',safra:c.safra,pi:c.si,pf:c.sf,ci:'',cf:'',ha:0,prod:0,ref:true});n++;}));
+ salvar();renderSafras();janInfo.textContent=n?`${n} janelas inseridas (veja a aba Safras).`:'Já estavam inseridas.';};
+chBtn.onclick=async()=>{const lat=parseFloat(String(chLat.value).replace(',','.')),lon=parseFloat(String(chLon.value).replace(',','.'));
+ if(isNaN(lat)||isNaN(lon)){chInfo.textContent='Coordenadas inválidas.';return;}
+ const fim=new Date(Date.now()-5*864e5).toISOString().slice(0,10);
+ chInfo.textContent='Buscando...';
+ try{const u=`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=2019-01-01&end_date=${fim}&daily=precipitation_sum,temperature_2m_max&timezone=auto`;
+  const r=await fetch(u);if(!r.ok)throw new Error(r.status);const j=await r.json();
+  D.climaHist=agregaClima(j.daily,lat,lon,fim);salvar();renderClimaHist();chInfo.textContent='Atualizado.';
+ }catch(e){chInfo.textContent='Falha ao buscar ('+e.message+'). Tente de novo.';}};
+function agregaClima(d,lat,lon,fim){const mm={},saf={};
+ d.time.forEach((t,i)=>{const y=+t.slice(0,4),m=+t.slice(5,7),p=d.precipitation_sum[i]??0,tx=d.temperature_2m_max[i];
+  (mm[y]=mm[y]||Array(12).fill(0))[m-1]+=p;
+  const sy=m>=9?y:y-1;if(sy<2019)return;const S=saf[sy]=saf[sy]||{chuva:0,vmax:0,run:0,quente:0};
+  if(m>=10||m<=3)S.chuva+=p;
+  if(m===12||m<=2){if(p<2){S.run++;S.vmax=Math.max(S.vmax,S.run);}else S.run=0;}
+  if((m>=9||m<=3)&&tx!=null&&tx>=36)S.quente++;});
+ return{lat,lon,fim,em:new Date().toISOString(),mm,saf};}
+function renderClimaHist(){const h=D.climaHist;if(!h||!h.mm){chTb.innerHTML='<tr><td class="mut">Clique em Buscar histórico.</td></tr>';chSafra.innerHTML='';return;}
+ chH.innerHTML='<tr><th>Ano</th>'+MESES.map(m=>`<th class="c">${m}</th>`).join('')+'<th>Total</th></tr>';
+ chTb.innerHTML=Object.keys(h.mm).sort().map(y=>{const a=h.mm[y];return `<tr><td><b>${y}</b></td>`+a.map(v=>`<td style="text-align:center;background:rgba(59,130,246,${Math.min(v/400,1)*0.6})">${Math.round(v)}</td>`).join('')+`<td><b>${Math.round(a.reduce((x,z)=>x+z,0))}</b></td></tr>`;}).join('');
+ const fimD=h.fim;chSafra.innerHTML=Object.keys(h.saf).sort().map(y=>{const S=h.saf[y],ac=fimD<`${+y+1}-03-31`;
+  return `<tr><td><b>${y}/${String(+y+1).slice(2)}</b>${ac?' <span class="mut">(em andamento)</span>':''}</td><td>${Math.round(S.chuva)}</td><td>${S.vmax}</td><td>${S.quente}</td></tr>`;}).join('');
+ chInfo.textContent='Dados de '+new Date(h.em).toLocaleDateString('pt-BR')+' · ponto '+h.lat+', '+h.lon;}
 renderFaz();renderTudo();
 </script>
 </body>

@@ -112,8 +112,8 @@ function cards(){document.getElementById('cards').innerHTML=D.fazendas.map(f=>{
   const ha=D.talhoes.filter(t=>t.fazenda===f).reduce((a,t)=>a+(+t.ha||0),0);
   const car=AREA_CAR[f];
   const area=ha?`${nb(ha)} ha mapeados`:(car?`${nb(car)} ha (CAR)`:'<span class="warn">área a confirmar</span>');
-  const h=hoje(),at=D.safras.find(r=>r.fazenda===f&&((r.pi&&h>=r.pi&&h<=(r.cf||r.pf||r.pi))||(r.ci&&h>=r.ci&&h<=r.cf)));
-  const prox=D.safras.filter(r=>r.fazenda===f&&r.ci&&r.cf>=h).sort((a,b)=>a.ci.localeCompare(b.ci))[0];
+  const h=hoje(),at=D.safras.find(r=>r.fazenda===f&&!r.ref&&((r.pi&&h>=r.pi&&h<=(r.cf||r.pf||r.pi))||(r.ci&&h>=r.ci&&h<=r.cf)));
+  const prox=D.safras.filter(r=>r.fazenda===f&&!r.ref&&r.ci&&r.cf>=h).sort((a,b)=>a.ci.localeCompare(b.ci))[0];
   const pr=PRAZOS.filter(p=>p.faz===f&&p.data>=h).sort((a,b)=>a.data.localeCompare(b.data))[0];
   return `<div class="fz"><h3>${esc(f)}</h3>
    <div>📐 ${area}</div>
