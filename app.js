@@ -430,7 +430,7 @@ function renderCurrentView() {
   if (currentView === 'tela-plantas-toxicas') renderToxicas();
   if (currentView === 'tela-plantas-uteis') renderUteis();
   if (currentView === 'tela-vendas') renderVendas();
-  if (currentView === 'tela-api') { renderApi(); carregarDadosReaisApi(); }
+  if (currentView === 'tela-api') { renderApi(); carregarDadosReaisApi(); desenharSatFazendas(); }
   if (currentView === 'tela-treino') renderTreino();
   if (currentView === 'tela-lab-conhecimento' && typeof window.carregarHistoricoTuring === 'function') window.carregarHistoricoTuring();
   if (currentView === 'tela-posts') {
@@ -1818,6 +1818,69 @@ async function atualizarHomeTuring() {
 }
 
 document.addEventListener('DOMContentLoaded', atualizarHomeTuring);
+
+// ===== Satélite das fazendas (Sentinel-2 via NexoTerraCore API) =====
+const SAT_FAZ_PADRAO = [
+  { nome: 'Fazenda PIPE — Malanje (Angola)', lat: -9.54, lon: 16.34 },
+  { nome: 'Fazenda Saudade', lat: -18.90, lon: -50.65 },
+  { nome: 'Fazenda Pateirinho', lat: '', lon: '' },
+  { nome: 'Fazenda Santa Luzia', lat: '', lon: '' },
+  { nome: 'Fazenda do Lago', lat: '', lon: '' }
+];
+const resultadosSat = {};
+function satFazendas() {
+  const c = appData.config;
+  if (!Array.isArray(c.satFaz) || !c.satFaz.length) c.satFaz = JSON.parse(JSON.stringify(SAT_FAZ_PADRAO));
+  return c.satFaz;
+}
+function editarSatFaz(i, campo, valor) {
+  const f = satFazendas()[i]; if (!f) return;
+  f[campo] = String(valor).trim().replace(',', '.');
+  persistData();
+}
+function desenharSatFazendas() {
+  const tb = document.getElementById('tbody-sat-faz'); if (!tb) return;
+  tb.innerHTML = satFazendas().map((f, i) => {
+    const r = resultadosSat[i] || {};
+    return `<tr>
+      <td>${escapeHtml(f.nome)}</td>
+      <td><input class="inline-input" style="width:110px" value="${escapeHtml(f.lat)}" placeholder="-18.90" onchange="editarSatFaz(${i},'lat',this.value)"></td>
+      <td><input class="inline-input" style="width:110px" value="${escapeHtml(f.lon)}" placeholder="-50.65" onchange="editarSatFaz(${i},'lon',this.value)"></td>
+      <td>${r.data || '—'}</td><td>${r.nuvens || '—'}</td><td>${r.situacao || '<span class="vault-hint">não consultado</span>'}</td></tr>`;
+  }).join('');
+}
+async function consultarSatelites() {
+  const base = (appData?.config?.apiBase || 'https://api.gustavopaulasantos.com.br').replace(/\/+$/, '');
+  const token = tokenDoCofre();
+  const lista = satFazendas();
+  for (let i = 0; i < lista.length; i++) {
+    const f = lista[i];
+    if (f.lat === '' || f.lon === '' || isNaN(Number(f.lat)) || isNaN(Number(f.lon))) {
+      resultadosSat[i] = { situacao: 'informe latitude e longitude' }; continue;
+    }
+    if (!token) { resultadosSat[i] = { situacao: 'sem token no cofre' }; continue; }
+    resultadosSat[i] = { situacao: 'consultando...' }; desenharSatFazendas();
+    try {
+      const url = `${base}/api/geo/sentinel2/latest?lat=${encodeURIComponent(f.lat)}&lon=${encodeURIComponent(f.lon)}&days=30&nome=${encodeURIComponent(f.nome)}`;
+      const r = await fetch(url, { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) { resultadosSat[i] = { situacao: `🔴 erro (${r.status})` }; }
+      else if (!d.encontrado) { resultadosSat[i] = { situacao: '🟡 sem imagem em 30 dias' }; }
+      else {
+        const quando = d.cena.capturadaEm ? new Date(d.cena.capturadaEm) : null;
+        const dias = quando ? Math.round((Date.now() - quando.getTime()) / 864e5) : null;
+        const n = d.cena.nuvens;
+        const sit = n === null ? '🟡 nuvens desconhecidas' : (n <= 20 ? '🟢 imagem boa' : (n <= 60 ? '🟡 nublada' : '🔴 muita nuvem'));
+        resultadosSat[i] = {
+          data: quando ? quando.toLocaleDateString('pt-BR') + (dias !== null ? ` (há ${dias} d)` : '') : '—',
+          nuvens: n === null ? '—' : Math.round(n) + '%', situacao: sit
+        };
+      }
+    } catch (e) { resultadosSat[i] = { situacao: '🔴 falha de rede' }; }
+    desenharSatFazendas();
+  }
+}
+
 
 // deploy-refresh: 2026-10-14T07:18:21-03:00
 

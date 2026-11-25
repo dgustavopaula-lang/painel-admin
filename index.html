@@ -749,6 +749,20 @@
             </button>
           </div>
         </div>
+
+        <div class="project-section">
+          <h3><i class="ph ph-satellite"></i> Satélite das fazendas (Sentinel-2 · Copernicus)</h3>
+          <p class="vault-hint">Imagem mais recente de cada fazenda nos últimos 30 dias. Ajuste latitude e longitude para o ponto real da fazenda (o padrão é só a referência da cidade).</p>
+          <div class="data-table-container">
+            <table>
+              <thead><tr><th>Fazenda</th><th>Latitude</th><th>Longitude</th><th>Última imagem</th><th>Nuvens</th><th>Situação</th></tr></thead>
+              <tbody id="tbody-sat-faz"></tbody>
+            </table>
+          </div>
+          <div class="btn-row">
+            <button class="btn-action secondary" onclick="consultarSatelites()"><i class="ph ph-satellite"></i> Consultar satélite</button>
+          </div>
+        </div>
       </div>
 
       <div id="tela-treino" class="tela-interna">
