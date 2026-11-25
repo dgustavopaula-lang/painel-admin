@@ -253,7 +253,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
  if(b.dataset.t==='mapa')setTimeout(()=>map.invalidateSize(),50);});
 
 // ===== Mapa =====
-const map=L.map('map').setView([-9.54,16.34],9); // cidade de Malanje (ponto exato da Fazenda PIPE a definir)
+const map=L.map('map',{wheelPxPerZoomLevel:300,wheelDebounceTime:120,zoomSnap:0.25,zoomDelta:0.5,inertia:false,doubleClickZoom:false}).setView([-9.54,16.34],9); // cidade de Malanje (ponto exato da Fazenda PIPE a definir)
 // Fundo: satélite (Esri) — funciona aberto do disco; OSM bloqueia file:// (403)
 const satelite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagens © Esri'});
 const rotulos=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
