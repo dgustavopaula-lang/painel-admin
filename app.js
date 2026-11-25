@@ -3091,6 +3091,7 @@ async function renderPlantas() {
   if (resumo) resumo.innerHTML = Object.keys(STATUS_PLANTA).filter(s => s !== 'descartada').map(s =>
     `<div class="metric-card"><span>${STATUS_PLANTA[s]}</span><h3>${conta(s)}</h3></div>`).join('') +
     `<div class="metric-card"><span>Com alerta de toxicidade</span><h3 style="color:var(--danger-red)">${plantasApi.filter(p => p.toxica).length}</h3></div>`;
+  renderCadastroRapido();
   if (!plantasApi.length) { box.innerHTML = '<p class="vault-hint">Nenhuma planta registrada ainda.</p>'; return; }
   box.innerHTML = '<div class="catalogo-grid">' + plantasApi.map(p => {
     const coords = (p.latitude != null && p.longitude != null) ? `${Number(p.latitude).toFixed(5)}, ${Number(p.longitude).toFixed(5)}` : '';
@@ -3171,6 +3172,64 @@ function usarLocalizacaoPlanta() {
   { enableHighAccuracy: true, timeout: 15000 });
 }
 
+
+/* ---------------- Cadastro rápido: várias plantas de uma vez (POST /api/plantas) ---------------- */
+// [nome popular, nome científico provável, família, parte de interesse, marcada por padrão, alerta de toxicidade]
+const PLANTAS_RAPIDAS = [
+  ['Mangueira', 'Mangifera indica', 'Anacardiaceae', 'fruto, folha', true, ''],
+  ['Tamarindo', 'Tamarindus indica', 'Fabaceae', 'fruto', true, ''],
+  ['Eucalipto', 'Eucalyptus spp.', 'Myrtaceae', 'folha, madeira', true, ''],
+  ['Manto-de-rei', 'Thunbergia erecta', 'Acanthaceae', 'flor (ornamental)', true, ''],
+  ['Bambu', 'Bambusa spp.', 'Poaceae', 'colmo', true, ''],
+  ['Bananeira', 'Musa spp.', 'Musaceae', 'fruto, folha', false, ''],
+  ['Goiabeira', 'Psidium guajava', 'Myrtaceae', 'fruto, folha', false, ''],
+  ['Limoeiro', 'Citrus spp.', 'Rutaceae', 'fruto, folha', false, ''],
+  ['Jabuticabeira', 'Plinia cauliflora', 'Myrtaceae', 'fruto', false, ''],
+  ['Pequizeiro', 'Caryocar brasiliense', 'Caryocaraceae', 'fruto', false, ''],
+  ['Ipê-amarelo', 'Handroanthus spp.', 'Bignoniaceae', 'flor, casca', false, ''],
+  ['Abacateiro', 'Persea americana', 'Lauraceae', 'fruto', false, 'Folhas e caroço podem intoxicar animais (cavalos, aves, coelhos).'],
+  ['Mamona', 'Ricinus communis', 'Euphorbiaceae', 'semente (não consumir)', false, 'Sementes contêm ricina, muito tóxica para pessoas e animais.'],
+  ['Leucena', 'Leucaena leucocephala', 'Fabaceae', 'folha (forragem)', false, 'Contém mimosina: em excesso intoxica ruminantes e é tóxica para cavalos.']
+];
+
+function renderCadastroRapido() {
+  const box = document.getElementById('cr-lista');
+  if (!box) return;
+  const ja = new Set((plantasApi || []).map(p => String(p.nome_popular).trim().toLowerCase()));
+  box.innerHTML = PLANTAS_RAPIDAS.map((p, i) => {
+    const existe = ja.has(p[0].toLowerCase());
+    return `<div class="fluxo-item" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <label style="display:flex;gap:10px;align-items:center;cursor:pointer;flex:1;min-width:240px">
+        <input type="checkbox" class="cr-check" data-i="${i}" ${existe ? 'disabled' : (p[4] ? 'checked' : '')}>
+        <span><strong>${escapeHtml(p[0])}</strong> <em class="mini-sem-link">${escapeHtml(p[1])} · ${escapeHtml(p[2])}</em>
+        ${existe ? ' <span class="badge green">já na API</span>' : ''}${p[5] ? ' <span class="badge red">tóxica</span>' : ''}</span>
+      </label>
+      <input type="number" class="form-control cr-qtd" data-i="${i}" min="0" step="1" placeholder="pés" style="width:90px" ${existe ? 'disabled' : ''}>
+    </div>`;
+  }).join('');
+}
+
+async function cadastroRapidoPlantas() {
+  const msg = document.getElementById('cr-msg');
+  const marcadas = [...document.querySelectorAll('.cr-check:checked:not(:disabled)')].map(c => Number(c.dataset.i));
+  if (!marcadas.length) { msg.textContent = 'Nenhuma planta marcada.'; return; }
+  const local = document.getElementById('cr-local').value.trim();
+  let ok = 0; const falhas = [];
+  for (const i of marcadas) {
+    const [nome, cientifico, familia, parte, , alerta] = PLANTAS_RAPIDAS[i];
+    const qtd = document.querySelector(`.cr-qtd[data-i="${i}"]`).value;
+    msg.textContent = `Cadastrando ${ok + falhas.length + 1}/${marcadas.length}: ${nome}…`;
+    try {
+      await apiPlantas('', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        nome_popular: nome, nome_cientifico: cientifico, familia, parte_usada: parte, quantidade: qtd,
+        local_descricao: local, status: 'a_identificar', toxica: !!alerta, alerta,
+        notas: 'Cadastro rápido: nome científico provável, confirmar com Pl@ntNet.' }) });
+      ok++;
+    } catch (e) { falhas.push(nome + ' (' + e.message + ')'); }
+  }
+  await renderPlantas();
+  msg.textContent = `${ok} planta(s) cadastrada(s) na API.` + (falhas.length ? ' Falharam: ' + falhas.join('; ') : '');
+}
 
 /* ---------------- Identificar plantas: fila + treino do Turing ---------------- */
 const _gen = p => ((p.nome_cientifico || '').trim().split(/\s+/)[0] || '').toLowerCase();

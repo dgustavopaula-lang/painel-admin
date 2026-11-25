@@ -957,6 +957,14 @@
 
 <div id="tela-plantas" class="tela-interna">
   <div class="project-section">
+    <h3><i class="ph ph-list-checks"></i> Cadastro rápido · várias plantas de uma vez</h3>
+    <p class="vault-hint"><i class="ph ph-info"></i> Marque as plantas que existem na propriedade, informe quantos pés (opcional) e clique uma vez. As que já estão na API são puladas. O nome científico entra como <strong>provável</strong> e o status fica <strong>A identificar</strong> até você confirmar no Pl@ntNet.</p>
+    <div class="form-group" style="max-width:520px"><label for="cr-local">Onde estão (vale para todas)</label><input id="cr-local" class="form-control" maxlength="300" placeholder="Ex.: fazenda, perto da casa / encosta do morro"></div>
+    <div id="cr-lista"></div>
+    <div class="btn-row"><button class="btn-action" onclick="cadastroRapidoPlantas()"><i class="ph ph-paper-plane-tilt"></i> Cadastrar marcadas na API</button></div>
+    <p id="cr-msg" class="vault-hint" role="status"></p>
+  </div>
+  <div class="project-section">
     <h3><i class="ph ph-plant"></i> Registrar planta</h3>
     <p class="vault-hint"><i class="ph ph-info"></i> Catálogo para <strong>pesquisa botânica</strong> (NexoTerraCore API). Registrar uma planta aqui não significa que ela é segura para consumo. Nunca consuma planta sem identificação confirmada.</p>
     <form id="form-planta" onsubmit="salvarPlanta(event)">
