@@ -85,6 +85,7 @@
     </div>
     <p class="mut">Cada polígono do arquivo vira um talhão <button class="q" data-g="talhao">?</button>. A área é calculada automaticamente em hectares <button class="q" data-g="hectare">?</button>.</p>
   </div>
+  <div class="card" id="fichaFaz" style="display:none"></div>
   <div id="map"></div>
   <div class="card" style="margin-top:14px">
     <table><thead><tr><th>Talhão</th><th>Fazenda</th><th>Área (ha)</th><th>Ações</th></tr></thead><tbody id="talhoesTb"></tbody></table>
@@ -157,7 +158,7 @@
   <div class="card">
     <h3 style="margin:0 0 8px">📍 Pontos monitorados <button class="q" data-g="ponto">?</button></h3>
     <div class="row">
-      <label>Nome<input id="pNome" placeholder="ex.: Fazenda Brasil 1"></label>
+      <label>Nome<input id="pNome" placeholder="ex.: Fazenda Saudade"></label>
       <label>Lat, lon<input id="pCoord" placeholder="-17.79, -50.92" style="width:170px"></label>
       <button class="btn" id="pAdd">+ Adicionar ponto</button>
     </div>
@@ -198,10 +199,14 @@ modoAula.onchange=()=>document.body.classList.toggle('aula',modoAula.checked);
 
 // ===== Armazenamento local (v1) — será substituído pela API NexoTerraCore =====
 const KEY='turingAgro.grandesFazendas.v1';
-let D={fazendas:["Fazenda PIPE — Malanje (Angola)","Fazenda Brasil 1","Fazenda Brasil 2","Fazenda Brasil 3","Fazenda Brasil 4"],talhoes:[],sat:[],campo:[],dec:[]};
+let D={fazendas:["Fazenda PIPE — Malanje (Angola)","Fazenda Saudade","Fazenda Brasil 2","Fazenda Brasil 3","Fazenda Brasil 4"],talhoes:[],sat:[],campo:[],dec:[]};
 try{const s=localStorage.getItem(KEY);if(s)D=JSON.parse(s);}catch(e){}
 ['sat','campo','dec'].forEach(k=>D[k].forEach((r,i)=>{if(!r.id)r.id=k+'-'+Date.now()+'-'+i;}));
 D.fazendas=D.fazendas.map(f=>f==='Malanje (Angola)'?'Fazenda PIPE — Malanje (Angola)':f);
+// Fazenda Brasil 1 passa a ser a Fazenda Saudade (fazenda real, dados públicos do CAR)
+D.fazendas=D.fazendas.map(f=>f==='Fazenda Brasil 1'?'Fazenda Saudade':f);
+if(!D.fazendas.includes('Fazenda Saudade'))D.fazendas.splice(1,0,'Fazenda Saudade');
+D.talhoes.forEach(t=>{if(t.fazenda==='Fazenda Brasil 1')t.fazenda='Fazenda Saudade';});
 function salvar(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){alert('Não foi possível salvar localmente. Faça backup.');}}
 const hoje=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);}; // data local
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -355,6 +360,33 @@ function gerarResumo(){const L=[];const nome=id=>(D.talhoes.find(t=>t.id===id)||
  return L.join('\n');}
 btnCopiar.onclick=()=>{try{navigator.clipboard.writeText(gerarResumo());climaInfo.textContent='Resumo copiado.';}catch(e){alert(gerarResumo());}};
 
+// ===== Ficha da fazenda (dados públicos do CAR; conferir com a matrícula e o topógrafo) =====
+const FICHAS={'Fazenda Saudade':{mun:'Paranaíguara/GO',car:330.84,cons:307.95,nat:21.56,app:20.33,mf:11,
+ fonte:'SICAR (CAR GO-5216304-…), versão de 19/10/2021',
+ prod:'Soja na safra + milho safrinha (a confirmar)',
+ aviso:'8 focos de queimada em 12 meses (Inpe) e 2 sobreposições com outros CARs. Conferir com topógrafo.',
+ cal:[['Vazio sanitário da soja','2026-06-27','2026-09-24'],['Semeadura da soja (Goiás 2026/27)','2026-09-20','2027-01-02'],['Cadastro da lavoura no Sidago','',' 2027-01-17']]}};
+function diasAte(d){return Math.round((Date.parse(d)-Date.parse(hoje()))/864e5);}
+function fmtD(d){const[a,m,x]=d.split('-');return x+'/'+m+'/'+a;}
+function renderFicha(){const f=FICHAS[fazSel.value],box=document.getElementById('fichaFaz');
+ if(!f){box.style.display='none';return;}box.style.display='block';
+ const n=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const linhas=f.cal.map(([nome,ini,fim])=>{const fimT=fim.trim();const d=diasAte(fimT);
+  const st=ini&&hoje()<ini?'⏳ ainda não começou':(d<0?'✔ encerrado':(d<=15?`🔴 faltam ${d} dias`:`🟢 faltam ${d} dias`));
+  return `<tr><td>${esc(nome)}</td><td>${ini?fmtD(ini):'—'}</td><td>até ${fmtD(fimT)}</td><td>${st}</td></tr>`;}).join('');
+ box.innerHTML=`<h3 style="margin:0 0 8px">📋 Ficha — ${esc(fazSel.value)} <span class="mut">(${esc(f.mun)})</span></h3>
+ <div class="row" style="gap:20px">
+  <div><div class="mut">Área no CAR</div><b>${n(f.car)} ha</b></div>
+  <div><div class="mut">Uso consolidado</div><b>${n(f.cons)} ha</b></div>
+  <div><div class="mut">Nativa · APP</div><b>${n(f.nat)} · ${n(f.app)} ha</b></div>
+  <div><div class="mut">Módulos fiscais</div><b>${f.mf} (média propriedade)</b></div>
+ </div>
+ <p class="mut" style="margin:10px 0 4px">Sistema de produção: ${esc(f.prod)}</p>
+ <p style="margin:4px 0">⚠️ ${esc(f.aviso)}</p>
+ <table style="margin-top:8px"><thead><tr><th>Calendário real</th><th>Início</th><th>Fim</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table>
+ <p class="mut" style="margin-top:8px">Fonte: ${esc(f.fonte)}. Área do CAR (330,84 ha) ainda não bate com a estimativa da família (≈200 alqueires): conferir na matrícula.
+ Falta importar o contorno (SICAR/GeoJSON) para virar talhões no mapa.</p>`;}
+fazSel.addEventListener('change',renderFicha);
 function renderFaz(){fazSel.innerHTML=D.fazendas.map(f=>`<option>${esc(f)}</option>`).join('');}
 novaFaz.onclick=()=>{const n=prompt('Nome da nova fazenda:');if(n){D.fazendas.push(n.trim());salvar();renderFaz();}};
 
@@ -444,7 +476,7 @@ importarBackup.onchange=async()=>{const f=importarBackup.files[0];if(!f)return;
 
 function renderSelects(){const op=D.talhoes.map(t=>`<option value="${t.id}">${esc(t.nome)} — ${esc(t.fazenda)}</option>`).join('');
  [satTalhao,cTalhao,dTalhao].forEach(s=>s.innerHTML=op||'<option value="">(importe talhões no Mapa)</option>');}
-function renderTudo(){renderSelects();renderMapa();renderSat();renderCampo();renderDec();renderVigia();}
+function renderTudo(){renderFicha();renderSelects();renderMapa();renderSat();renderCampo();renderDec();renderVigia();}
 renderFaz();renderTudo();
 </script>
 </body>
