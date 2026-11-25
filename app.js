@@ -54,7 +54,6 @@ const SEED_ENDPOINTS = [
   { rota: '/api/turing/security/health', metodo: 'GET', auth: 'token válido', uso: 'Turing Security' },
   { rota: '/api/control-plane', metodo: 'GET', auth: 'control_plane.read', uso: 'Painel de controle da API' },
   { rota: '/api/geo/sentinel2/latest?lat=-18.90&lon=-50.65&days=30', metodo: 'GET', auth: 'token válido', uso: 'Sentinel-2 (Copernicus) · teste Paranaíguara' },
-  { rota: '/api/turing/centro-oeste/resumo', metodo: 'GET', auth: 'token válido', uso: 'Turing Centro-Oeste · resumo' },
   { rota: '/api/turing/angola/resumo', metodo: 'GET', auth: 'token válido', uso: 'Turing Angola · resumo' }
 ];
 const ENDPOINTS_VERSAO = 3;
