@@ -5,6 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Grandes Fazendas — Turing Agro</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<section id="safras">
+  <div class="card">
+    <p class="mut">Calendário de <b>safra e colheita</b> por fazenda, ano e mês. Lance o que foi/será plantado e quando colhe. 🌱 = plantio · 🌾 = colheita.</p>
+    <div class="row">
+      <label>Fazenda<select id="sFaz"></select></label>
+      <label>Cultura<select id="sCult"><option>Soja</option><option>Milho safrinha</option><option>Milho verão</option><option>Sorgo</option><option>Feijão</option><option>Algodão</option><option>Cana</option><option>Pasto</option><option>Outra</option></select></label>
+      <label>Safra<input id="sSafra" placeholder="2026/27" style="width:90px"></label>
+      <label>Plantio início<input type="date" id="sPI"></label>
+      <label>Plantio fim<input type="date" id="sPF"></label>
+      <label>Colheita início<input type="date" id="sCI"></label>
+      <label>Colheita fim<input type="date" id="sCF"></label>
+      <label>Área (ha)<input type="number" id="sHa" step="0.01" style="width:100px"></label>
+      <label>Produtividade (sc/ha)<input type="number" id="sProd" step="0.1" style="width:100px"></label>
+      <button class="btn p" id="sAdd">Registrar safra</button>
+    </div>
+    <p class="mut" style="margin-top:8px">Referência geral para Goiás (varia por ciclo e ano; confirmar com o agrônomo): soja planta de setembro a dezembro e colhe de janeiro a abril; milho safrinha planta de janeiro a março e colhe de maio a agosto.</p>
+  </div>
+  <div class="card">
+    <div class="row"><label>Ano do calendário<select id="sAno"></select></label><label>Fazenda<select id="sFiltro"></select></label></div>
+    <div style="overflow-x:auto"><table><thead id="sGridH"></thead><tbody id="sGrid"></tbody></table></div>
+  </div>
+  <div class="card"><b>Colheita mês a mês</b> <span class="mut">(produção estimada = área × produtividade, contada no mês em que a colheita termina)</span>
+    <table><thead><tr><th>Mês</th><th>Área em colheita (ha)</th><th>Produção que fecha no mês (sc)</th><th>Onde</th></tr></thead><tbody id="sResumo"></tbody></table>
+  </div>
+  <div class="card"><b>Registros</b>
+    <table><thead><tr><th>Fazenda</th><th>Cultura</th><th>Safra</th><th>Plantio</th><th>Colheita</th><th>ha</th><th>sc/ha</th><th></th></tr></thead><tbody id="sTb"></tbody></table>
+  </div>
+</section>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   td input,td select{width:100%;min-width:70px;padding:5px}
@@ -59,6 +88,7 @@
   <button data-t="campo">3. Campo</button>
   <button data-t="decisao">4. Decisão</button>
   <button data-t="vigia">5. 🛰 Turing Vigia</button>
+  <button data-t="safras">6. 🌾 Safras</button>
 </nav>
 
 <main>
@@ -199,7 +229,7 @@ modoAula.onchange=()=>document.body.classList.toggle('aula',modoAula.checked);
 
 // ===== Armazenamento local (v1) — será substituído pela API NexoTerraCore =====
 const KEY='turingAgro.grandesFazendas.v1';
-let D={fazendas:["Fazenda PIPE — Malanje (Angola)","Fazenda Saudade","Fazenda Brasil 2","Fazenda Brasil 3","Fazenda Brasil 4"],talhoes:[],sat:[],campo:[],dec:[]};
+let D={fazendas:["Fazenda PIPE — Malanje (Angola)","Fazenda Saudade","Fazenda Pateirinho","Fazenda Santa Luzia","Fazenda do Lago"],talhoes:[],sat:[],campo:[],dec:[],safras:[]};
 try{const s=localStorage.getItem(KEY);if(s)D=JSON.parse(s);}catch(e){}
 ['sat','campo','dec'].forEach(k=>D[k].forEach((r,i)=>{if(!r.id)r.id=k+'-'+Date.now()+'-'+i;}));
 D.fazendas=D.fazendas.map(f=>f==='Malanje (Angola)'?'Fazenda PIPE — Malanje (Angola)':f);
@@ -207,6 +237,11 @@ D.fazendas=D.fazendas.map(f=>f==='Malanje (Angola)'?'Fazenda PIPE — Malanje (A
 D.fazendas=D.fazendas.map(f=>f==='Fazenda Brasil 1'?'Fazenda Saudade':f);
 if(!D.fazendas.includes('Fazenda Saudade'))D.fazendas.splice(1,0,'Fazenda Saudade');
 D.talhoes.forEach(t=>{if(t.fazenda==='Fazenda Brasil 1')t.fazenda='Fazenda Saudade';});
+D.safras=D.safras||[];
+const RENOMEAR={'Fazenda Brasil 2':'Fazenda Pateirinho','Fazenda Brasil 3':'Fazenda Santa Luzia','Fazenda Brasil 4':'Fazenda do Lago'};
+D.fazendas=D.fazendas.map(f=>RENOMEAR[f]||f);
+D.talhoes.forEach(t=>{if(RENOMEAR[t.fazenda])t.fazenda=RENOMEAR[t.fazenda];});
+D.safras.forEach((r,i)=>{if(!r.id)r.id='safra-'+Date.now()+'-'+i;if(RENOMEAR[r.fazenda])r.fazenda=RENOMEAR[r.fazenda];});
 function salvar(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){alert('Não foi possível salvar localmente. Faça backup.');}}
 const hoje=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);}; // data local
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -291,7 +326,7 @@ btnDemo.onclick=()=>{
 
 // ===== Edição genérica =====
 window.ed=(col,id,campo,el)=>{const r=D[col].find(x=>x.id===id);if(!r)return;
- let v=el.value;if(['ndvi','ndmi','custo'].includes(campo)){v=parseFloat(v);if(isNaN(v)){v=campo==='custo'?0:null;}
+ let v=el.value;if(['ndvi','ndmi','custo','ha','prod'].includes(campo)){v=parseFloat(v);if(isNaN(v)){v=(campo==='custo'||campo==='ha'||campo==='prod')?0:null;}
   if((campo==='ndvi'||campo==='ndmi')&&v!==null&&(v<-1||v>1))return alert('Valor entre -1 e 1.');}
  r[campo]=v;salvar();setTimeout(renderTudo,0);};
 window.rem=(col,id)=>{if(!confirm('Remover este registro?'))return;D[col]=D[col].filter(x=>x.id!==id);salvar();renderTudo();};
@@ -476,7 +511,40 @@ importarBackup.onchange=async()=>{const f=importarBackup.files[0];if(!f)return;
 
 function renderSelects(){const op=D.talhoes.map(t=>`<option value="${t.id}">${esc(t.nome)} — ${esc(t.fazenda)}</option>`).join('');
  [satTalhao,cTalhao,dTalhao].forEach(s=>s.innerHTML=op||'<option value="">(importe talhões no Mapa)</option>');}
-function renderTudo(){renderFicha();renderSelects();renderMapa();renderSat();renderCampo();renderDec();renderVigia();}
+function renderTudo(){renderSafras();renderFicha();renderSelects();renderMapa();renderSat();renderCampo();renderDec();renderVigia();}
+
+// ===== Safras: calendário de plantio e colheita por ano e mês =====
+const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_L=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const emMes=(ini,fim,ano,m)=>{if(!ini)return false;fim=fim||ini;const a=ano*12+m,i=+ini.slice(0,4)*12+(+ini.slice(5,7)-1),f=+fim.slice(0,4)*12+(+fim.slice(5,7)-1);return a>=i&&a<=f;};
+const nb=v=>(+v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
+sAdd.onclick=()=>{if(!sFaz.value||!sCI.value&&!sPI.value){alert('Informe ao menos a fazenda e uma data de plantio ou de colheita.');return;}
+ D.safras.push({id:'safra-'+Date.now(),fazenda:sFaz.value,cultura:sCult.value,safra:sSafra.value.trim(),pi:sPI.value,pf:sPF.value||sPI.value,ci:sCI.value,cf:sCF.value||sCI.value,ha:+sHa.value||0,prod:+sProd.value||0});
+ salvar();renderSafras();};
+function renderSafras(){
+ sFaz.innerHTML=D.fazendas.map(f=>`<option>${esc(f)}</option>`).join('');
+ const anos=new Set([new Date().getFullYear()]);
+ D.safras.forEach(r=>[r.pi,r.pf,r.ci,r.cf].forEach(d=>{if(d)anos.add(+d.slice(0,4));}));
+ const al=[...anos].sort(),sel=+sAno.value||new Date().getFullYear();
+ sAno.innerHTML=al.map(a=>`<option ${a===sel?'selected':''}>${a}</option>`).join('');
+ const fsel=sFiltro.value||'(todas)';
+ sFiltro.innerHTML=['(todas)',...D.fazendas].map(f=>`<option ${f===fsel?'selected':''}>${esc(f)}</option>`).join('');
+ const ano=+sAno.value,lista=D.safras.filter(r=>sFiltro.value==='(todas)'||r.fazenda===sFiltro.value);
+ sGridH.innerHTML='<tr><th>Fazenda · cultura · safra</th>'+MESES.map(m=>`<th>${m}</th>`).join('')+'</tr>';
+ sGrid.innerHTML=lista.map(r=>`<tr><td>${esc(r.fazenda)} · ${esc(r.cultura)} · ${esc(r.safra)}</td>`+MESES.map((_,m)=>{
+  const p=emMes(r.pi,r.pf,ano,m),c=emMes(r.ci,r.cf,ano,m);return `<td style="text-align:center">${p?'🌱':''}${c?'🌾':''}</td>`;}).join('')+'</tr>').join('')
+  ||'<tr><td colspan=13 class="mut">Nenhuma safra lançada ainda.</td></tr>';
+ // resumo mensal de colheita
+ const linhas=MESES.map((_,m)=>{const q=lista.filter(r=>emMes(r.ci,r.cf,ano,m));if(!q.length)return '';
+  const ha=q.reduce((a,r)=>a+r.ha,0),sc=q.filter(r=>emMes(r.cf,r.cf,ano,m)).reduce((a,r)=>a+r.ha*r.prod,0);
+  return `<tr><td>${MESES_L[m]}/${ano}</td><td>${nb(ha)}</td><td>${sc?nb(sc):'—'}</td><td>${esc(q.map(r=>r.fazenda.replace('Fazenda ','')+' ('+r.cultura+')').join(', '))}</td></tr>`;}).join('');
+ sResumo.innerHTML=linhas||`<tr><td colspan=4 class="mut">Sem colheita lançada em ${ano}.</td></tr>`;
+ sTb.innerHTML=[...D.safras].sort((a,b)=>(a.ci||a.pi).localeCompare(b.ci||b.pi)).map(r=>`<tr><td>${esc(r.fazenda)}</td><td>${esc(r.cultura)}</td><td>${esc(r.safra)}</td>
+  <td>${r.pi?fmtD(r.pi)+' → '+fmtD(r.pf):'—'}</td><td>${r.ci?fmtD(r.ci)+' → '+fmtD(r.cf):'—'}</td>
+  <td><input type="number" value="${r.ha}" style="width:90px" onchange="ed('safras','${r.id}','ha',this)"></td>
+  <td><input type="number" value="${r.prod}" style="width:80px" onchange="ed('safras','${r.id}','prod',this)"></td>
+  <td><button class="x" onclick="rem('safras','${r.id}')">🗑</button></td></tr>`).join('')||'<tr><td colspan=8 class="mut">Sem registros.</td></tr>';}
+sAno.onchange=sFiltro.onchange=renderSafras;
 renderFaz();renderTudo();
 </script>
 </body>
