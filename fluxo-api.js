@@ -230,6 +230,27 @@
 
   /* ---------------- Desenho do canvas ---------------- */
   const LARG = 180, ALT = 64;
+  let zoom = 1;
+  try { zoom = Number(localStorage.getItem('gps-fluxos-zoom')) || 1; } catch (e) { /* ignora */ }
+  function mudarZoom(z) { zoom = Math.max(0.4, Math.min(1.6, Math.round(z * 100) / 100)); try { localStorage.setItem('gps-fluxos-zoom', String(zoom)); } catch (e) { /* ignora */ } desenhar(); }
+  function ajustarTela() { // cabe o fluxo inteiro no quadro
+    const c = document.querySelector('#tela-fluxo-api .fx-canvas');
+    if (!c || !atual || !atual.nos.length) return;
+    const mx = Math.min(...atual.nos.map(n => n.x)), my = Math.min(...atual.nos.map(n => n.y));
+    atual.nos.forEach(n => { n.x = n.x - mx + 30; n.y = n.y - my + 30; });
+    const w = Math.max(...atual.nos.map(n => n.x)) + LARG + 40, h = Math.max(...atual.nos.map(n => n.y)) + ALT + 40;
+    mudarZoom(Math.min(1.3, (c.clientWidth - 10) / w, (c.clientHeight - 10) / h));
+    c.scrollLeft = 0; c.scrollTop = 0; salvar();
+  }
+  function alternarGrande(forcar) {
+    const t = document.getElementById('tela-fluxo-api'); if (!t) return;
+    const ligar = typeof forcar === 'boolean' ? forcar : !t.classList.contains('fx-grande');
+    t.classList.toggle('fx-grande', ligar);
+    try { localStorage.setItem('gps-fluxos-grande', ligar ? '1' : '0'); } catch (e) { /* ignora */ }
+    const b = document.getElementById('fx-btn-grande');
+    if (b) b.innerHTML = ligar ? '<i class="ph ph-corners-in"></i> Quadro normal' : '<i class="ph ph-corners-out"></i> Quadro grande';
+    setTimeout(ajustarTela, 50);
+  }
   function portaSaida(n, i) { const k = TIPOS[n.tipo].saidas.length; return { x: n.x + LARG, y: n.y + (k > 1 ? (i === 0 ? 18 : ALT - 18) : ALT / 2) }; }
   function portaEntrada(n) { return { x: n.x, y: n.y + ALT / 2 }; }
 
@@ -261,7 +282,9 @@
     }).join('');
     area.style.width = w + 'px';
     area.style.height = h + 'px';
+    area.style.zoom = zoom;
     area.innerHTML = svg + nos;
+    const zt = document.getElementById('fx-zoom-txt'); if (zt) zt.textContent = Math.round(zoom * 100) + '%';
     document.getElementById('fx-dica').textContent = ligando ? 'Agora clique na ENTRADA (bolinha da esquerda) do nó de destino. Esc cancela.' : 'Arraste os nós. Para ligar: clique na bolinha da direita de um nó e depois na bolinha da esquerda de outro.';
   }
   function resumoNo(n) {
@@ -346,13 +369,13 @@
       const el = ev.target.closest('.fx-no');
       if (!el) { if (ligando) { ligando = null; desenhar(); } return; }
       const n = atual.nos.find(x => x.id === el.dataset.no);
-      arrasto = { n, dx: ev.clientX - n.x, dy: ev.clientY - n.y, moveu: false };
+      arrasto = { n, x0: n.x, y0: n.y, cx: ev.clientX, cy: ev.clientY, moveu: false };
       el.setPointerCapture(ev.pointerId);
     });
     area.addEventListener('pointermove', ev => {
       if (!arrasto) return;
-      arrasto.n.x = Math.max(0, Math.round(ev.clientX - arrasto.dx));
-      arrasto.n.y = Math.max(0, Math.round(ev.clientY - arrasto.dy));
+      arrasto.n.x = Math.max(0, Math.round(arrasto.x0 + (ev.clientX - arrasto.cx) / zoom));
+      arrasto.n.y = Math.max(0, Math.round(arrasto.y0 + (ev.clientY - arrasto.cy) / zoom));
       arrasto.moveu = true; desenhar();
     });
     area.addEventListener('pointerup', () => {
@@ -379,7 +402,7 @@
     const sel = document.getElementById('fx-sel');
     sel.innerHTML = fluxos.map((f, i) => `<option value="${i}" ${f === atual ? 'selected' : ''}>${esc(f.nome)}</option>`).join('');
   }
-  function trocar(i) { try { localStorage.setItem('gps-fluxos-ultimo', String(i)); } catch (e) { /* ignora */ } atual = fluxos[i]; selecionado = null; resultados = {}; ligando = null; preencherSeletor(); desenhar(); mostrarNo(null); document.getElementById('fx-log').innerHTML = ''; }
+  function trocar(i) { try { localStorage.setItem('gps-fluxos-ultimo', String(i)); } catch (e) { /* ignora */ } atual = fluxos[i]; selecionado = null; resultados = {}; ligando = null; preencherSeletor(); desenhar(); mostrarNo(null); document.getElementById('fx-log').innerHTML = ''; setTimeout(ajustarTela, 30); }
 
   /* ---------------- Montagem da tela ---------------- */
   function montarTela() {
@@ -398,6 +421,8 @@
         <button class="btn-action secondary" data-acao="importar"><i class="ph ph-upload-simple"></i> Importar</button>
         <button class="btn-action secondary" data-acao="modelos"><i class="ph ph-arrow-counter-clockwise"></i> Restaurar modelos</button>
         <button class="btn-action secondary" data-acao="centralizar"><i class="ph ph-arrows-in"></i> Centralizar</button>
+        <button class="btn-action secondary" data-acao="grande" id="fx-btn-grande"><i class="ph ph-corners-out"></i> Quadro grande</button>
+        <span class="fx-zoom"><button class="btn-action secondary" data-acao="zoom-" title="Diminuir">➖</button><span id="fx-zoom-txt">100%</span><button class="btn-action secondary" data-acao="zoom+" title="Aumentar">➕</button><button class="btn-action secondary" data-acao="ajustar" title="Mostrar o fluxo inteiro"><i class="ph ph-frame-corners"></i> Ajustar</button></span>
         <button class="btn-action secondary" data-acao="foco" id="fx-btn-foco"><i class="ph ph-sidebar-simple"></i> Recolher menu</button>
         <label class="fx-sim"><input type="checkbox" id="fx-simulacao" checked> Modo simulação</label>
         <button class="btn-action" data-acao="executar"><i class="ph ph-play"></i> Executar</button>
@@ -427,6 +452,10 @@
       const a = b.dataset.acao;
       if (a === 'executar') executarFluxo();
       if (a === 'foco') alternarFoco();
+      if (a === 'grande') alternarGrande();
+      if (a === 'zoom+') mudarZoom(zoom + 0.1);
+      if (a === 'zoom-') mudarZoom(zoom - 0.1);
+      if (a === 'ajustar') ajustarTela();
       if (a === 'centralizar' && atual.nos.length) {
         const mx = Math.min(...atual.nos.map(n => n.x)), my = Math.min(...atual.nos.map(n => n.y));
         atual.nos.forEach(n => { n.x = n.x - mx + 40; n.y = n.y - my + 60; }); salvar(); desenhar();
@@ -490,6 +519,15 @@
 #tela-fluxo-api .fx-bloco:hover{border-color:rgba(52,211,153,.6)}
 #tela-fluxo-api .fx-canvas{overflow:auto;border:1px solid rgba(255,255,255,.08);border-radius:12px;height:460px;background-color:#1b1916;background-image:radial-gradient(rgba(255,255,255,.12) 1px,transparent 1px);background-size:18px 18px}
 #tela-fluxo-api .fx-area{position:relative;min-width:100%;min-height:100%;touch-action:none}
+#tela-fluxo-api .fx-zoom{display:inline-flex;align-items:center;gap:4px}
+#tela-fluxo-api .fx-zoom .btn-action{padding:6px 10px}
+#tela-fluxo-api #fx-zoom-txt{min-width:44px;text-align:center;font-size:.85rem;opacity:.8}
+#tela-fluxo-api.fx-grande .fx-grade{grid-template-columns:1fr 1fr!important}
+#tela-fluxo-api.fx-grande .fx-canvas-box{grid-column:1/-1;order:-1}
+#tela-fluxo-api.fx-grande .fx-canvas{height:68vh}
+#tela-fluxo-api.fx-grande .fx-paleta{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+#tela-fluxo-api.fx-grande .fx-paleta .fx-bloco{width:auto;margin:0}
+#tela-fluxo-api.fx-grande .fx-paleta .fx-h4,#tela-fluxo-api.fx-grande .fx-paleta .vault-hint{width:100%}
 #tela-fluxo-api .fx-svg{position:absolute;left:0;top:0;z-index:1}
 #tela-fluxo-api .fx-no{z-index:2}
 #tela-fluxo-api .fx-lig{fill:none;stroke:rgba(255,255,255,.35);stroke-width:2.5;cursor:pointer}
@@ -542,6 +580,8 @@ body.fx-foco #tela-fluxo-api .fx-canvas{height:calc(100vh - 330px);min-height:46
       const t = document.getElementById('titulo-pagina'); if (t) t.innerText = 'Fluxos da API · estilo n8n';
       const h = document.getElementById('header-actions'); if (h) h.innerHTML = '';
       preencherSeletor(); desenhar(); mostrarNo(selecionado);
+      let grande = true; try { grande = localStorage.getItem('gps-fluxos-grande') !== '0'; } catch (e) { /* ignora */ }
+      alternarGrande(grande);
     };
   }
   window.fluxoApiNovo = function (metodo, caminho, nome) {
