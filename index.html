@@ -265,6 +265,20 @@
   .home-turing-orbit{border-color:rgba(46,232,138,.35)!important}
   @keyframes trPisca{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.15)}}
   @keyframes trPulsa{0%,100%{opacity:1}50%{opacity:.4}}
+  /* Turing vivo: verde intenso quando a API responde (offline continua cinza, por honestidade) */
+  .api-online .turing-rosto .tr-aura{stroke:#2ee88a;stroke-width:2;opacity:.55;filter:drop-shadow(0 0 10px rgba(46,232,138,.6));animation:trAura 3.2s ease-in-out infinite;transform-origin:center;transform-box:fill-box}
+  .api-online .turing-rosto .tr-cabeca{fill:rgba(46,232,138,.10);stroke:#3dfc98;stroke-width:2.6;filter:drop-shadow(0 0 6px rgba(46,232,138,.75))}
+  .api-online .turing-rosto .tr-rede path{stroke:rgba(61,252,152,.75);stroke-width:1.6}
+  .api-online .turing-rosto .tr-rede circle{fill:#7dffbc;filter:drop-shadow(0 0 3px rgba(46,232,138,.9))}
+  .api-online .turing-rosto .tr-olhos rect{fill:#4dffa6;filter:drop-shadow(0 0 7px rgba(46,232,138,1))}
+  .api-online .turing-rosto .tr-boca{stroke:#3dfc98;opacity:.85}
+  .api-online .home-turing-orbit{border-color:#2ee88a!important;box-shadow:0 0 22px rgba(46,232,138,.35),inset 0 0 26px rgba(46,232,138,.18)!important;background:radial-gradient(circle,rgba(46,232,138,.16),rgba(46,232,138,0) 70%)!important}
+  .api-online .home-turing-avatar>strong{color:#4dffa6;text-shadow:0 0 12px rgba(46,232,138,.7)}
+  .api-online .home-turing-avatar>small{color:rgba(125,255,188,.85)}
+  .api-online .turing-face-mini svg{color:#3dfc98;filter:drop-shadow(0 0 4px rgba(46,232,138,.7))}
+  .api-online .turing-face-mini .tm-olho{fill:#4dffa6}
+  .api-online .home-turing-face{border-color:#2ee88a!important;box-shadow:0 0 12px rgba(46,232,138,.4)}
+  @keyframes trAura{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.8;transform:scale(1.03)}}
   @media (prefers-reduced-motion:reduce){.turing-rosto *,.api-online #home-turing-badge .home-turing-dot{animation:none!important}}
   .fluxo-item label>span{min-width:0;white-space:normal;overflow-wrap:anywhere}
   .alerta-apps{grid-column:1/-1;display:flex;gap:14px;align-items:center;padding:14px 18px;border-radius:14px;border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.1);cursor:pointer;margin-bottom:6px}
