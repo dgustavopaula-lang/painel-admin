@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safra da Saudade — Turing Agro</title>
+<style>
+  :root{--bg:#0f1419;--card:#18202a;--line:#2a3542;--txt:#e6edf3;--mut:#8b98a5;--ok:#2ea043;--warn:#d29922;--bad:#da3633;--acc:#3b82f6;--verde:#4ade80;--r:12px}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);font-size:15px;line-height:1.45}
+  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--line)}
+  h1{font-size:19px;margin:0}
+  .mut{color:var(--mut);font-size:13px}
+  main{max-width:1100px;margin:auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:14px}
+  .card h2{font-size:16px;margin:0 0 8px}
+  .btn{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;font-size:14px}
+  .btn.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+  .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .kpi{background:#0b1016;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .kpi b{display:block;font-size:20px}
+  .alerta{border-left:4px solid var(--warn);background:#2a2208;border-radius:8px;padding:10px 12px;margin:8px 0}
+  .alerta.ruim{border-color:var(--bad);background:#2a0d0d}
+  .alerta.bom{border-color:var(--ok);background:#0c2414}
+  .meses{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin:6px 0 12px}
+  .meses span{text-align:center;font-size:12px;padding:6px 0;border-radius:6px;background:#0b1016;border:1px solid var(--line);color:var(--mut)}
+  .meses span.feito{background:#12301c;color:var(--verde);border-color:#1f5f35}
+  .meses span.atual{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+  .jogo{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+  @media (max-width:820px){.jogo{grid-template-columns:1fr}.meses span{font-size:10px}}
+  svg text{font-family:system-ui,sans-serif}
+  .turing{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+  .turing .face{flex:0 0 46px;height:46px;border-radius:50%;border:2px solid var(--verde);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 12px rgba(74,222,128,.35)}
+  .bal{background:#0b1016;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .opc{display:block;width:100%;text-align:left;margin:8px 0;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0b1016;color:var(--txt);cursor:pointer;font-size:14.5px}
+  .opc:hover{border-color:var(--acc)}
+  .opc.certa{border-color:var(--ok);background:#0c2414}
+  .opc.errada{border-color:var(--bad);background:#2a0d0d}
+  .opc:disabled{cursor:default}
+  #explica{display:none}
+  .pontos{font-size:22px;font-weight:800;color:var(--verde)}
+  #toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:92%;background:#111;border:2px solid var(--warn);border-radius:12px;padding:11px 14px;z-index:20;display:none}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td,th{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}
+  th{color:var(--mut);font-weight:500}
+  input,select{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎮 Safra da Saudade <span class="mut">— Turing Agro · Fazenda Saudade</span></h1>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn" id="btnSom">🔔 Bipe ligado</button>
+    <button class="btn" id="btnReiniciar">↺ Recomeçar jogo</button>
+  </div>
+</header>
+<main>
+
+  <!-- A FAZENDA REAL -->
+  <div class="card">
+    <h2>A fazenda real (dados públicos do CAR)</h2>
+    <div class="grade">
+      <div class="kpi"><span class="mut">Município</span><b>Paranaiguara/GO</b></div>
+      <div class="kpi"><span class="mut">Área no CAR</span><b>330,84 ha</b><span class="mut">≈ 68 alqueires goianos</span></div>
+      <div class="kpi"><span class="mut">Uso consolidado</span><b>307,95 ha</b><span class="mut">área aberta</span></div>
+      <div class="kpi"><span class="mut">Nativa · APP</span><b>21,56 · 20,33 ha</b></div>
+      <div class="kpi"><span class="mut">Módulos fiscais</span><b>11</b><span class="mut">média propriedade</span></div>
+    </div>
+    <div class="alerta">⚠️ <b>8 focos de queimada</b> em 12 meses (Inpe) e <b>2 sobreposições</b> com outros CARs. O CAR está ativo, aguardando análise. Conferir com topógrafo.</div>
+    <div class="row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <label class="mut">Sistema de produção (ajuste quando confirmar):
+        <select id="sistema"><option value="soja-milho">Soja na safra + milho safrinha</option></select></label>
+      <span class="mut">Fonte: SICAR (CAR GO-5216304-…), versão de 19/10/2021.</span>
+    </div>
+  </div>
+
+  <!-- HOJE (CALENDÁRIO REAL) -->
+  <div class="card">
+    <h2>📅 Hoje, no calendário real de Goiás</h2>
+    <div id="hoje"></div>
+    <p class="mut" style="margin:8px 0 0">Safra 2026/27: vazio sanitário de 27/06 a 24/09/2026 · semeadura de 20/09/2026 (antecipada pela IN Agrodefesa nº 5/2026) a 02/01/2027 · cadastro no Sidago até 17/01/2027. Fontes: Mapa (Portaria nº 1.579/2026) e Agrodefesa.</p>
+  </div>
+
+  <!-- JOGO -->
+  <div class="card">
+    <h2>🎮 O jogo: uma safra inteira, mês a mês</h2>
+    <p class="mut" style="margin:0 0 6px">De setembro a agosto. Em cada mês o Turing mostra o que está acontecendo e pergunta: "o que você faria?". Acertou, ganha pontos e aprende o porquê.</p>
+    <div class="meses" id="meses"></div>
+    <div class="jogo">
+      <div>
+        <svg id="campo" viewBox="0 0 420 250" width="100%" role="img" aria-label="Talhões da Fazenda Saudade"></svg>
+        <div class="mut" id="legenda" style="text-align:center"></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <h2 id="mesTitulo" style="margin:0">Setembro</h2>
+          <span class="pontos" id="pontos">0 pts</span>
+        </div>
+        <div class="turing" style="margin-top:10px">
+          <div class="face">🤖</div>
+          <div class="bal" id="cena"></div>
+        </div>
+        <div id="opcoes"></div>
+        <div id="explica" class="alerta"></div>
+        <button class="btn p" id="btnProximo" style="display:none;width:100%;margin-top:8px">Próximo mês ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📝 Histórico das suas decisões</h2>
+    <table><thead><tr><th>Mês</th><th>Sua decisão</th><th>Resultado</th></tr></thead><tbody id="hist"></tbody></table>
+  </div>
+
+  <p class="mut">Jogo educativo: as recomendações são gerais. Decisões de defensivos, adubação e manejo seguem o agrônomo responsável e o receituário agronômico.</p>
+</main>
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+// ---------- calendário real (Goiás, safra 2026/27) ----------
+const CAL={vazioIni:"2026-06-27",vazioFim:"2026-09-24",plantioIni:"2026-09-20",plantioFim:"2027-01-02",sidago:"2027-01-17"};
+const D0=s=>new Date(s+"T00:00:00");
+const hojeD=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());};
+const dias=(a,b)=>Math.round((b-a)/864e5);
+const br=s=>s.split("-").reverse().join("/");
+
+// ---------- som ----------
+const KEY="turingAgro.safraSaudade.v1";
+let S;try{S=JSON.parse(localStorage.getItem(KEY)||"null");}catch(e){S=null;}
+if(!S||typeof S!=="object")S={mes:0,pontos:0,resp:{},som:true};
+const salvar=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+let ctx=null;
+function tom(f,i,d,t,v){const o=ctx.createOscillator(),g=ctx.createGain();o.type=t||"sine";o.frequency.value=f;g.gain.setValueAtTime(1e-4,ctx.currentTime+i);g.gain.exponentialRampToValueAtTime(v||.22,ctx.currentTime+i+.02);g.gain.exponentialRampToValueAtTime(1e-4,ctx.currentTime+i+d);o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+i);o.stop(ctx.currentTime+i+d+.05);}
+function bipe(tipo){if(!S.som)return;try{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==="suspended")ctx.resume();
+  if(tipo==="alerta"){tom(880,0,.18,"square",.18);tom(880,.25,.18,"square",.18);tom(880,.5,.28,"square",.18);}
+  else if(tipo==="certo"){tom(523,0,.13);tom(659,.13,.13);tom(784,.26,.25);}
+  else if(tipo==="errado"){tom(240,0,.4,"sawtooth",.16);}
+  else tom(600,0,.08,"sine",.1);}catch(e){}}
+let tT;function toast(m){const t=document.getElementById("toast");t.textContent=m;t.style.display="block";clearTimeout(tT);tT=setTimeout(()=>t.style.display="none",6000);}
+
+// ---------- HOJE ----------
+function alertasHoje(){
+  const h=hojeD(),out=[];
+  const pi=D0(CAL.plantioIni),pf=D0(CAL.plantioFim),sd=D0(CAL.sidago),vi=D0(CAL.vazioIni),vf=D0(CAL.vazioFim);
+  if(h>=vi&&h<=vf)out.push({c:"ruim",t:`🚫 <b>Vazio sanitário</b> até ${br(CAL.vazioFim)}: nenhuma soja viva no campo. Elimine a tiguera.`});
+  if(h>=pi&&h<=pf){const r=dias(h,pf);out.push({c:r<=15?"ruim":"",t:`🌱 <b>Janela de plantio da soja aberta.</b> Faltam <b>${r} dias</b> para fechar (${br(CAL.plantioFim)}).`});}
+  if(h<=sd&&dias(h,sd)<=60){const r=dias(h,sd);out.push({c:r<=15?"ruim":"",t:`📝 <b>Cadastro no Sidago</b> até ${br(CAL.sidago)}: faltam <b>${r} dias</b>. É obrigatório para cada lavoura de soja.`});}
+  if(h>sd&&h<D0("2027-06-27"))out.push({c:"",t:`📅 Safra 2026/27 em andamento. O próximo vazio sanitário depende da portaria de 2027 do Mapa: confirme as datas quando sair.`});
+  if(!out.length)out.push({c:"bom",t:"Nenhum prazo oficial próximo."});
+  return out;
+}
+function renderHoje(){
+  const h=hojeD(),al=alertasHoje();
+  document.getElementById("hoje").innerHTML=`<p style="margin:0 0 6px">Hoje é <b>${h.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})}</b>.</p>`+al.map(a=>`<div class="alerta ${a.c}">${a.t}</div>`).join("");
+  return al.some(a=>a.c==="ruim"||a.t.includes("Faltam"));
+}
+
+// ---------- JOGO ----------
+const NOMES=["Set","Out","Nov","Dez","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago"];
+const NOMES_L=["Setembro","Outubro","Novembro","Dezembro","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto"];
+// estágio visual de cada mês: cor do topo e ícone
+const EST=[
+ {c:"#8a6a3a",e:"",l:"Palhada e solo à espera da chuva"},
+ {c:"#7d6a36",e:"🌱",l:"Soja recém-plantada"},
+ {c:"#3f8f3a",e:"🌿",l:"Soja crescendo"},
+ {c:"#2f7d32",e:"🌿",l:"Soja fechando as linhas"},
+ {c:"#b49a3a",e:"🟡",l:"Soja madura: colheita começa"},
+ {c:"#6e7d36",e:"🌱",l:"Milho safrinha plantado"},
+ {c:"#3f8f3a",e:"🌽",l:"Milho crescendo"},
+ {c:"#4a8a34",e:"🌽",l:"Milho enchendo grão"},
+ {c:"#8a8a3a",e:"🌽",l:"Fim das chuvas, milho secando"},
+ {c:"#a08a4a",e:"🚜",l:"Colheita do milho"},
+ {c:"#8a6a3a",e:"",l:"Vazio sanitário: só palhada"},
+ {c:"#8a6a3a",e:"🧪",l:"Planejamento e análise de solo"}
+];
+const PERG=[
+ {cena:"O vazio sanitário acabou em 24/09, e nesta safra o plantio foi liberado a partir de 20/09. Choveu só 10 mm e o solo está seco. O que você faria?",
+  o:["Plantar a soja já, para sair na frente","Fazer a dessecação e esperar a chuva firmar, com o solo úmido","Plantar milho no lugar da soja"],ok:1,
+  x:"Plantar no seco arrisca falha de germinação e replantio, que é custo dobrado. O certo é preparar a área (dessecação) e semear quando as chuvas se regularizarem e o solo tiver umidade."},
+ {cena:"As chuvas firmaram e o solo está úmido. Os talhões estão dessecados. A janela vai até 02/01. O que você faria?",
+  o:["Plantar a soja agora, dentro da janela","Esperar dezembro, para garantir mais chuva"],ok:0,
+  x:"Plantar cedo, com umidade e dentro da janela, deixa espaço para colher a soja a tempo de plantar o milho safrinha ainda com chuva."},
+ {cena:"🔥 O Turing detectou um foco de queimada do Inpe a 3 km da Saudade, vindo do lado de um vizinho. Lembre: o CAR já mostrou 8 focos em 12 meses. O que você faria?",
+  o:["Nada, é longe","Avisar o funcionário, conferir os aceiros e ligar para o vizinho"],ok:1,
+  x:"Fogo anda rápido com vento e palha seca. Aceiro limpo e aviso cedo evitam perder lavoura, cerca e até autuação ambiental."},
+ {cena:"Calor e chuva frequente. Há relatos de ferrugem asiática na região. O que você faria?",
+  o:["Aplicar fungicida por conta própria, sem olhar a lavoura","Monitorar com o agrônomo e aplicar só conforme a recomendação técnica"],ok:1,
+  x:"A ferrugem pode causar grandes perdas, mas aplicar sem critério gasta dinheiro e cria resistência. Monitoramento e receituário agronômico são o caminho."},
+ {cena:"📝 Prazo oficial: cadastro das lavouras de soja no Sidago até 17/01. A colheita dos talhões mais cedo começa. O que você faria?",
+  o:["Cadastrar todas as lavouras no Sidago agora","Deixar o cadastro para depois da colheita"],ok:0,
+  x:"O cadastro no Sidago é obrigatório e tem prazo. Perder o prazo pode gerar autuação da Agrodefesa."},
+ {cena:"A soja foi colhida nos primeiros talhões. As chuvas ainda continuam por pouco tempo. O que você faria?",
+  o:["Plantar o milho safrinha logo atrás da colheitadeira","Esperar abril para plantar o milho"],ok:0,
+  x:"O milho safrinha depende do fim das chuvas. Cada semana de atraso aumenta o risco de faltar água no enchimento do grão."},
+ {cena:"O agrônomo encontrou lagarta no milho acima do nível de controle. O que você faria?",
+  o:["Seguir a recomendação do agrônomo, com receituário","Esperar para ver se some sozinha"],ok:0,
+  x:"Acima do nível de controle, a praga já dá prejuízo maior que o custo do controle. Abaixo dele, aplicar seria desperdício: por isso se mede antes."},
+ {cena:"🛰 O satélite (NDVI) mostra o milho bom em quase tudo, mas um talhão caiu bastante desde a última imagem. O que você faria?",
+  o:["Ir ao talhão conferir o que aconteceu","Ignorar, porque o resto está bom"],ok:0,
+  x:"O satélite aponta onde olhar, mas quem confirma é a visita de campo. Pode ser praga, falha, falta de água ou só nuvem na imagem."},
+ {cena:"As chuvas acabaram há 20 dias e o milho está secando antes do esperado. O que você faria?",
+  o:["Registrar a perda com fotos e datas, e avisar o seguro se a lavoura tiver seguro","Não anotar nada"],ok:0,
+  x:"Registro com data e foto é o que prova a perda para o seguro e ajuda a planejar a próxima safra."},
+ {cena:"Colheita do milho. O vazio sanitário da soja começa no fim de junho (confirme a data na portaria do ano). Nasceu soja tiguera na beira da estrada. O que você faria?",
+  o:["Eliminar toda a soja tiguera antes do vazio","Deixar, porque é pouca"],ok:0,
+  x:"Planta de soja viva no vazio é ponte para a ferrugem atravessar de uma safra para a outra, e é proibida. Pouca tiguera já basta para manter o fungo."},
+ {cena:"Vazio sanitário. Um vizinho comenta que vai plantar soja irrigada agora. O que você diria?",
+  o:["Que é proibido durante o vazio sanitário","Que é boa ideia"],ok:0,
+  x:"No vazio sanitário não pode haver soja viva, nem irrigada. A regra vale para todos, porque a ferrugem não respeita cerca."},
+ {cena:"Faltam semanas para a próxima safra. O que você faria primeiro?",
+  o:["Análise de solo e, se preciso, calcário antes do plantio","Comprar adubo igual ao do ano passado, sem análise"],ok:0,
+  x:"A análise de solo mostra o que falta de verdade. O calcário precisa de tempo e umidade para reagir, por isso entra antes do plantio."}
+];
+
+function renderMeses(){
+  const m=document.getElementById("meses");m.innerHTML="";
+  NOMES.forEach((n,i)=>{const s=document.createElement("span");s.textContent=n;if(S.resp[i]!==undefined)s.classList.add("feito");if(i===S.mes)s.classList.add("atual");m.appendChild(s);});
+}
+function renderCampo(){
+  const e=EST[Math.min(S.mes,11)],W=46,H=23,Dp=14,ox=210,oy=40,R=3,C=4;let s="";
+  const cells=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++)cells.push([r,c]);
+  cells.sort((a,b)=>(a[0]+a[1])-(b[0]+b[1]));
+  cells.forEach(([r,c],k)=>{
+    const x=ox+(c-r)*W,y=oy+(c+r)*H;
+    s+=`<polygon points="${x-W},${y} ${x},${y+H} ${x},${y+H+Dp} ${x-W},${y+Dp}" fill="#4a2f18"/>`;
+    s+=`<polygon points="${x+W},${y} ${x},${y+H} ${x},${y+H+Dp} ${x+W},${y+Dp}" fill="#3a2410"/>`;
+    s+=`<polygon points="${x},${y-H} ${x+W},${y} ${x},${y+H} ${x-W},${y}" fill="${e.c}" stroke="rgba(0,0,0,.3)"/>`;
+    if(e.e)s+=`<text x="${x}" y="${y+7}" text-anchor="middle" font-size="22">${e.e}</text>`;
+  });
+  s+=`<text x="210" y="240" text-anchor="middle" font-size="12" fill="#8b98a5">12 talhões ilustrativos · contorno real virá do CAR</text>`;
+  document.getElementById("campo").innerHTML=s;
+  document.getElementById("legenda").textContent=e.l;
+}
+function renderJogo(){
+  renderMeses();renderCampo();
+  document.getElementById("pontos").textContent=S.pontos+" pts";
+  const fim=S.mes>=12,cena=document.getElementById("cena"),op=document.getElementById("opcoes"),ex=document.getElementById("explica"),pr=document.getElementById("btnProximo");
+  if(fim){
+    const tot=Object.values(S.resp).filter(r=>r.ok).length;
+    document.getElementById("mesTitulo").textContent="Safra concluída!";
+    cena.innerHTML=`Você acertou <b>${tot} de 12</b> decisões e fez <b>${S.pontos} pontos</b>. ${tot>=10?"🏆 Produtor de primeira!":tot>=7?"👍 Bom caminho. Reveja os meses errados.":"📚 Vale jogar de novo e reler as explicações."}`;
+    op.innerHTML="";ex.style.display="none";pr.style.display="none";return;
+  }
+  const p=PERG[S.mes];document.getElementById("mesTitulo").textContent=NOMES_L[S.mes];
+  cena.textContent=p.cena;op.innerHTML="";ex.style.display="none";pr.style.display="none";
+  const ja=S.resp[S.mes];
+  p.o.forEach((t,i)=>{const b=document.createElement("button");b.className="opc";b.textContent=t;
+    if(ja!==undefined){b.disabled=true;if(i===p.ok)b.classList.add("certa");else if(i===ja.i)b.classList.add("errada");}
+    b.onclick=()=>responder(i);op.appendChild(b);});
+  if(ja!==undefined)mostrarExplica(ja.ok);
+}
+function mostrarExplica(ok){
+  const p=PERG[S.mes],ex=document.getElementById("explica");
+  ex.className="alerta "+(ok?"bom":"ruim");ex.innerHTML=(ok?"✅ <b>Boa decisão!</b> ":"❌ <b>Não era a melhor.</b> ")+p.x;ex.style.display="block";
+  document.getElementById("btnProximo").style.display="block";
+}
+function responder(i){
+  if(S.resp[S.mes]!==undefined)return;
+  const p=PERG[S.mes],ok=i===p.ok;
+  S.resp[S.mes]={i,ok};S.pontos+=ok?10:-5;salvar();
+  bipe(ok?"certo":"errado");renderJogo();renderHist();
+}
+function renderHist(){
+  const tb=document.getElementById("hist");tb.innerHTML="";
+  Object.keys(S.resp).map(Number).sort((a,b)=>a-b).forEach(m=>{const r=S.resp[m];
+    const tr=document.createElement("tr");tr.innerHTML=`<td>${NOMES_L[m]}</td><td></td><td>${r.ok?"✅ +10":"❌ −5"}</td>`;tr.children[1].textContent=PERG[m].o[r.i];tb.appendChild(tr);});
+  if(!tb.children.length)tb.innerHTML='<tr><td colspan="3" class="mut">Ainda nenhuma decisão.</td></tr>';
+}
+document.getElementById("btnProximo").onclick=()=>{S.mes++;salvar();bipe("clique");renderJogo();
+  const al=EST[Math.min(S.mes,11)];if(S.mes===4||S.mes===9){bipe("alerta");toast(S.mes===4?"📝 Mês de prazo oficial: cadastro no Sidago!":"🚫 Vazio sanitário chegando: elimine a tiguera!");}};
+document.getElementById("btnReiniciar").onclick=function(){if(this.dataset.c!=="1"){this.dataset.c="1";this.textContent="Toque de novo para confirmar";setTimeout(()=>{this.dataset.c="";this.textContent="↺ Recomeçar jogo";},4000);return;}
+  S.mes=0;S.pontos=0;S.resp={};salvar();this.dataset.c="";this.textContent="↺ Recomeçar jogo";renderJogo();renderHist();};
+const bs=document.getElementById("btnSom");const rot=()=>bs.textContent=S.som?"🔔 Bipe ligado":"🔕 Bipe desligado";
+bs.onclick=()=>{S.som=!S.som;salvar();rot();if(S.som){bipe("alerta");}};
+
+// alerta real: o navegador só deixa tocar som depois do primeiro toque na página
+const temAlerta=renderHoje();
+let avisou=false;document.addEventListener("pointerdown",()=>{if(avisou||!temAlerta)return;avisou=true;bipe("alerta");toast("🔔 Prazo real em andamento: veja o quadro 'Hoje'.");},{once:false});
+rot();renderJogo();renderHist();
+})();
+</script>
+</body>
+</html>
