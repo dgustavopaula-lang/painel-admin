@@ -41,6 +41,12 @@
   .rel h4 { margin:14px 0 6px; font-size:14px; color:var(--sub); text-transform:uppercase; letter-spacing:.5px; }
   .rel ul { margin:0; padding-left:18px; } .rel li { margin:4px 0; }
   .msg { margin-top:10px; font-size:14px; color:var(--sub); min-height:18px; }
+  .h-acoes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px; }
+  .h-acoes .btn { width:auto; min-width:0; }
+  .h-acoes .btn { margin-top:0; padding:12px 6px; font-size:22px; line-height:1.15; }
+  .h-acoes .btn small { font-size:12px; font-weight:600; }
+  .h-diario { padding-left:18px; margin:0; } .h-diario li { margin:8px 0; }
+  .h-cant { cursor:pointer; }
 </style>
 </head>
 <body>
@@ -52,6 +58,7 @@
 <nav>
   <button data-tela="t-registrar" class="ativo">Registrar</button>
   <button data-tela="t-plantas">Plantas</button>
+  <button data-tela="t-horta">🥬 Horta</button>
   <button data-tela="t-config">Config</button>
 </nav>
 <main>
@@ -115,6 +122,30 @@
     <div id="detalhe" class="card" hidden></div>
   </section>
 
+  <section id="t-horta" class="tela">
+    <div class="card">
+      <h3 style="margin-top:0">🥬 Horta orgânica · diário de campo</h3>
+      <p class="aviso">Toque num canteiro e registre o que fez: reguei, semeei, vi praga, colhi… Funciona sem internet; vai para a NexoTerraCore API quando houver rede.</p>
+      <div id="h-lista"></div>
+      <button class="btn sec" id="h-sync">🔄 Sincronizar horta</button>
+      <p class="msg" id="h-msg"></p>
+    </div>
+    <div class="card" id="h-detalhe" hidden></div>
+    <div class="card">
+      <h3 style="margin-top:0">➕ Novo canteiro</h3>
+      <form id="h-form">
+        <label for="hc-nome">Nome *</label><input id="hc-nome" maxlength="80" placeholder="Ex.: Canteiro 1 · perto da represa">
+        <div class="linha"><div><label for="hc-larg">Largura (m)</label><input id="hc-larg" type="number" min="0.1" max="50" step="0.1" placeholder="1"></div>
+          <div><label for="hc-comp">Comprimento (m)</label><input id="hc-comp" type="number" min="0.1" max="500" step="0.1" placeholder="5"></div></div>
+        <label for="hc-local">Onde fica</label><input id="hc-local" maxlength="300" placeholder="Ex.: atrás da casa, perto da caixa d'água">
+        <div class="linha"><div><label for="hc-lat">Latitude</label><input id="hc-lat" type="number" step="any"></div><div><label for="hc-lon">Longitude</label><input id="hc-lon" type="number" step="any"></div></div>
+        <button type="button" class="btn sec" id="hc-gps">📍 Usar minha localização</button>
+        <button class="btn" type="submit">Criar canteiro na API</button>
+      </form>
+      <p class="aviso">Dica real: canteiro com 1 m de largura (alcança o meio sem pisar), 20–30 cm de altura e caminhos de 40–50 cm.</p>
+    </div>
+  </section>
+
   <section id="t-config" class="tela">
     <div class="card">
       <h3 style="margin-top:0">Conexão com a NexoTerraCore API</h3>
@@ -135,5 +166,6 @@
   </section>
 </main>
 <script src="/plantas/app.js"></script>
+<script src="/plantas/horta.js"></script>
 </body>
 </html>
