@@ -14,8 +14,17 @@
   const CHAVE_SESSAO = "gf.sessao.v1";
   const BASE = API + "/api/grandes-fazendas";
 
+  // Com "lembrar este aparelho" a sessão fica no localStorage (30 dias); sem, só na aba.
   let sessao = null;
-  try { sessao = JSON.parse(sessionStorage.getItem(CHAVE_SESSAO) || "null"); } catch (e) { sessao = null; }
+  try {
+    sessao = JSON.parse(localStorage.getItem(CHAVE_SESSAO) || sessionStorage.getItem(CHAVE_SESSAO) || "null");
+    if (sessao && sessao.expiraEm && Date.parse(sessao.expiraEm) < Date.now()) sessao = null;
+  } catch (e) { sessao = null; }
+  function guardarSessao() {
+    localStorage.removeItem(CHAVE_SESSAO); sessionStorage.removeItem(CHAVE_SESSAO);
+    if (!sessao) return;
+    (sessao.lembrar ? localStorage : sessionStorage).setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+  }
   let fazendasApi = []; // [{id, nome, ...}]
   let enviando = false;
 
@@ -30,6 +39,7 @@
     '<div id="apiLogin" class="row" style="margin-top:10px">' +
     '<label>E-mail<input id="apiEmail" type="email" autocomplete="username"></label>' +
     '<label>Senha<input id="apiSenha" type="password" autocomplete="current-password"></label>' +
+    '<label style="flex-direction:row;align-items:center;gap:6px"><input id="apiLembrar" type="checkbox" checked> Lembrar este aparelho</label>' +
     '<button class="btn p" id="apiEntrar">Entrar</button></div>' +
     '<div id="apiEscolha" class="row" style="margin-top:10px;display:none">' +
     '<label>Escolha a fazenda<select id="apiFazSel"></select></label>' +
@@ -79,9 +89,9 @@
   /* ---------- login ---------- */
   let desafioAtual = null;
 
-  async function concluirSessao(s, email) {
-    sessao = { token: s.token, expiraEm: s.expiraEm, nome: (s.usuario && s.usuario.nome) || "", email };
-    sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+  async function concluirSessao(s, email, lembrar) {
+    sessao = { token: s.token, expiraEm: s.expiraEm, nome: (s.usuario && s.usuario.nome) || "", email, lembrar: !!lembrar };
+    guardarSessao();
     $("apiSenha").value = "";
     desenharEstado();
     await carregarDaApi();
@@ -90,12 +100,17 @@
   $("apiEntrar").onclick = async () => {
     const email = $("apiEmail").value.trim();
     const senha = $("apiSenha").value;
+    const lembrar = $("apiLembrar").checked;
     if (!email || !senha) return msg("Informe e-mail e senha.", true);
     msg("Entrando…");
     try {
-      const r = await chamar(API + "/api/auth/login", { method: "POST", body: JSON.stringify({ email, senha }) });
+      const r = await chamar(API + "/api/auth/login", { method: "POST", body: JSON.stringify({ email, senha, lembrar }) });
       if (r.requerSelecaoFazenda) {
-        desafioAtual = { desafio: r.desafio, email };
+        desafioAtual = { desafio: r.desafio, email, lembrar };
+        // Entra direto, sem perguntar: a fazenda aberta na tela, a Saudade, ou a primeira da lista.
+        const alvo = r.fazendas.find((f) => f.nome === fazSel.value) ||
+          r.fazendas.find((f) => f.nome === "Fazenda Saudade") || r.fazendas[0];
+        if (alvo) { $("apiFazSel").innerHTML = `<option value="${alvo.id}"></option>`; return $("apiConfirmar").onclick(); }
         const ops = r.fazendas.map((f) => `<option value="${f.id}">${esc(f.nome)} — ${esc(f.organizacao.nome)}</option>`);
         $("apiFazSel").innerHTML = ops.join("");
         const local = r.fazendas.find((f) => f.nome === fazSel.value);
@@ -105,7 +120,7 @@
         msg("Escolha a fazenda para esta sessão.");
         return;
       }
-      await concluirSessao(r, email);
+      await concluirSessao(r, email, lembrar);
     } catch (e) { falha(e); }
   };
 
@@ -114,9 +129,9 @@
     try {
       const r = await chamar(API + "/api/auth/selecionar-fazenda", {
         method: "POST",
-        body: JSON.stringify({ desafio: desafioAtual.desafio, fazendaId: Number($("apiFazSel").value) })
+        body: JSON.stringify({ desafio: desafioAtual.desafio, fazendaId: Number($("apiFazSel").value), lembrar: desafioAtual.lembrar })
       });
-      await concluirSessao(r, desafioAtual.email);
+      await concluirSessao(r, desafioAtual.email, desafioAtual.lembrar);
       desafioAtual = null;
     } catch (e) { falha(e); }
   };
@@ -126,7 +141,7 @@
       fetch(API + "/api/auth/logout", { method: "POST", headers: { Authorization: "Bearer " + sessao.token } }).catch(() => {});
     }
     sessao = null;
-    sessionStorage.removeItem(CHAVE_SESSAO);
+    guardarSessao();
     fazendasApi = [];
     desenharEstado();
     msg("Você saiu. Os dados continuam salvos na API.");
