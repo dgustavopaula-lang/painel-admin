@@ -111,3 +111,85 @@ input:focus, select:focus, textarea:focus,
   .gps-sidebar-nav .nav-item, .metric-card, .btn-action, .btn-create { transition: none; }
   .metric-card:hover, .btn-action:active, .btn-create:active { transform: none; }
 }
+
+/* GPS COMMAND CENTER — TURING NAVAL */
+
+:root {
+  --bg-main: #080f12;
+  --bg-sidebar: #091519;
+  --bg-card: #0e2026;
+  --accent-orange: #00ff9d;
+  --accent-hover: #67ffca;
+  --border-color: #21443e;
+  --text-primary: #e2f5ee;
+  --text-secondary: #91b9af;
+}
+
+body {
+  background: #080f12;
+}
+
+.sidebar {
+  background: linear-gradient(180deg,#0c1c20,#080f12);
+  border-right: 1px solid #1c5548;
+}
+
+.gps-sidebar-nav .nav-item.active-menu {
+  background: linear-gradient(90deg,#104b39,#0b2426) !important;
+  border-left: 3px solid #00ff9d !important;
+  color: #a4ffda !important;
+  box-shadow: 0 0 14px #00ff9d20;
+}
+
+.gps-sidebar-nav .nav-item:hover {
+  background: #12332e;
+  color: #67ffca;
+}
+
+.top-header {
+  background: #0c191e;
+  border-bottom: 1px solid #21443e;
+}
+
+.top-header h1 {
+  font-family: system-ui, sans-serif;
+  letter-spacing: .02em;
+}
+
+.home-turing-card,
+.metric-card,
+.card,
+.project-section {
+  background: linear-gradient(145deg,#10252b,#0a171b);
+  border-color: #245449;
+  box-shadow: 0 0 18px #00ff9d09;
+}
+
+.home-turing-head {
+  border-bottom-color: #245449;
+}
+
+.home-turing-runtime-box {
+  background: #10282c;
+  border-color: #245449;
+}
+
+.btn-create,
+.btn-action:not(.secondary) {
+  background: #00ff9d !important;
+  color: #06251b !important;
+  box-shadow: 0 0 10px #00ff9d22;
+}
+
+.login-overlay {
+  background: radial-gradient(circle at 25% 15%,#123c32,#080f12 75%);
+}
+
+.login-box {
+  background: #0e2026;
+  border-color: #245449;
+}
+
+.login-box h1 {
+  color: #00ff9d;
+}
