@@ -3541,6 +3541,16 @@ async function inserirUteis() {
 
 /* ---------------- Treinos temáticos (pacotes prontos → Pendentes) ---------------- */
 const PACOTES_TREINO = [
+  { titulo: 'Goiás · Fazenda Saudade (Paranaiguara)', icone: 'ph-plant', area: 'Goiás · Fazenda Saudade', itens: [
+    ['Qual é o calendário da soja em Goiás na safra 2026/27?', 'Vazio sanitário de 27/06 a 24/09/2026. Semeadura liberada a partir de 20/09/2026 (antecipação excepcional pela IN Agrodefesa nº 5/2026) até 02/01/2027. Cadastro da lavoura no Sidago até 17/01/2027.'],
+    ['Por que existe o vazio sanitário da soja?', 'Para interromper o ciclo da ferrugem asiática, a principal doença da soja. Durante o vazio é proibido manter qualquer planta viva de soja no campo, inclusive as que nascem sozinhas (tigueras).'],
+    ['Quando plantar a soja se a chuva ainda não firmou?', 'Esperar o solo ter umidade adequada. Plantar no seco arrisca germinação ruim e replantio, que é um custo alto. A decisão final é do agrônomo responsável.'],
+    ['O que é o cadastro no Sidago e por que importa?', 'É o registro obrigatório de cada lavoura de soja na Agrodefesa, feito até 15 dias após o fim da semeadura. Sem o cadastro o produtor fica irregular e sujeito a penalidades.'],
+    ['O que o CAR da Fazenda Saudade mostra?', '330,84 ha no CAR (cerca de 68 alqueires goianos), 307,95 ha de uso consolidado, 21,56 ha de vegetação nativa e 20,33 ha de APP. O CAR tem 2 sobreposições com outros CARs e está aguardando análise. A área precisa ser conferida na matrícula.'],
+    ['O que fazer com focos de queimada registrados na fazenda?', 'Verificar data e local de cada foco no Inpe, conferir se foi dentro da propriedade ou em vizinhos e manter aceiros. Queimadas podem gerar multa ambiental e problemas no CAR.'],
+    ['Qual é o sistema de produção comum na região de Paranaiguara?', 'Soja na safra de verão seguida de milho safrinha logo após a colheita da soja. Na Fazenda Saudade isso ainda precisa ser confirmado com a família.'],
+    ['Quais alertas o Turing deve dar para a Fazenda Saudade?', 'Prazos (semeadura e Sidago), falta de chuva no plantio, focos de queimada próximos, queda de vigor da lavoura nas imagens de satélite e preço da soja muito fora da média. O Turing nunca deve inventar números da fazenda.']
+  ]},
   { titulo: 'Angola · Fazenda PIPE (Malanje)', icone: 'ph-tractor', area: 'Angola · Fazenda PIPE', itens: [
     ['Qual é o calendário de chuvas em Malanje e quando plantar?', 'Em Malanje a estação chuvosa vai, em geral, de outubro/novembro a abril, e a seca (cacimbo) de maio a setembro. Culturas de sequeiro devem ser plantadas no início das chuvas. Antes de decidir, conferir a previsão do ano e o histórico da própria fazenda.'],
     ['Quais culturas são adequadas para a Fazenda PIPE em Malanje?', 'Culturas tradicionais da região: mandioca, milho, feijão, ginguba (amendoim) e batata-doce. A escolha deve considerar análise de solo, mercado comprador e capacidade de transporte da fazenda.'],
