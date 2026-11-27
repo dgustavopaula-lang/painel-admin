@@ -3894,3 +3894,44 @@ async function enviarPacote(pi) {
   await renderPacotes();
   document.getElementById('pac-msg').textContent = `${p.titulo}: ${ok} enviado(s) para Pendentes.` + (falhas.length ? ' Falhas: ' + falhas.join('; ') : ' Aprove no Fluxo de treino.');
 }
+
+
+/* ---------- Grandes Fazendas: abre já conectado à API, sem pedir senha ----------
+   O painel (desbloqueado) usa o item "Grandes Fazendas login" do cofre: e-mail em "Usuário / Email"
+   e a senha da conta da NexoTerraCore. Faz o login na API e entrega só a SESSÃO ao módulo
+   (mesmo endereço do painel). A senha nunca sai do cofre nem é gravada em outro lugar. */
+const GF_ITEM = 'grandes fazendas login';
+const GF_SESSAO = 'gf.sessao.v1';
+async function abrirGrandesFazendas() {
+  const janela = window.open('about:blank', '_blank'); // abre já (evita bloqueio de pop-up)
+  const destino = 'modulos/grandes-fazendas.html';
+  const ir = (aviso) => {
+    if (aviso) { try { sessionStorage.setItem('gf.aviso', aviso); localStorage.setItem('gf.aviso', aviso); } catch (e) { /* nada */ } }
+    if (janela) janela.location = destino; else window.location = destino;
+  };
+  try {
+    const atual = JSON.parse(localStorage.getItem(GF_SESSAO) || 'null');
+    if (atual && atual.token && (!atual.expiraEm || Date.parse(atual.expiraEm) > Date.now() + 3600e3)) return ir(); // sessão ainda vale
+  } catch (e) { /* segue */ }
+  const it = (appData.senhas || []).find(x => String(x.servico || '').trim().toLowerCase() === GF_ITEM);
+  if (!it || !it.user || !it.pass) return ir('Cadastre no cofre do painel um item "Grandes Fazendas login" com o e-mail e a senha da conta da API.');
+  const base = (appData.config && appData.config.apiBase) || 'https://api.gustavopaulasantos.com.br';
+  const post = async (rota, corpo) => {
+    const r = await fetch(base + rota, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.erro || ('HTTP ' + r.status));
+    return d;
+  };
+  try {
+    let s = await post('/api/auth/login', { email: it.user.trim(), senha: it.pass, lembrar: true });
+    if (s.requerSelecaoFazenda) {
+      const alvo = (s.fazendas || []).find(f => f.nome === 'Fazenda Saudade') || (s.fazendas || [])[0];
+      if (!alvo) throw new Error('a conta não tem fazenda liberada');
+      s = await post('/api/auth/selecionar-fazenda', { desafio: s.desafio, fazendaId: alvo.id, lembrar: true });
+    }
+    localStorage.setItem(GF_SESSAO, JSON.stringify({ token: s.token, expiraEm: s.expiraEm, nome: (s.usuario && s.usuario.nome) || '', email: it.user.trim(), lembrar: true }));
+    ir();
+  } catch (e) {
+    ir('O painel não conseguiu entrar na API (' + e.message + '). Confira a senha do item "Grandes Fazendas login" no cofre.');
+  }
+}

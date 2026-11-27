@@ -1,7 +1,8 @@
 /*
  * Grandes Fazendas — ligação com a NexoTerraCore API (v1: talhões).
  *
- * - Login de pessoa (e-mail + senha) em /api/auth/login. Chave de API não é usada.
+ * - Login de pessoa em /api/auth/login, feito pelo PAINEL com o cofre (item "Grandes Fazendas login").
+ *   O módulo recebe só a sessão; a tela de e-mail/senha ficou como reserva ("Entrar manualmente").
  * - O token da sessão fica em sessionStorage: some ao fechar a aba.
  * - Talhões desenhados ou importados são enviados para a API quando conectado.
  * - Renomear e remover talhão também é refletido na API.
@@ -45,15 +46,17 @@
     '<label>Escolha a fazenda<select id="apiFazSel"></select></label>' +
     '<button class="btn p" id="apiConfirmar">Continuar</button></div>' +
     '<p id="apiMsg" class="mut" style="margin:8px 0 0"></p>';
+  // Aberto pelo painel: o login é feito lá, com o cofre. A tela de e-mail/senha fica só como reserva.
   const main = document.querySelector("main") || document.body;
   main.insertBefore(card, main.firstChild);
 
   const $ = (id) => document.getElementById(id);
   const msg = (t, erro) => { $("apiMsg").textContent = t || ""; $("apiMsg").style.color = erro ? "var(--bad)" : ""; };
 
+  let mostrarLogin = false;
   function desenharEstado() {
     const ligado = !!(sessao && sessao.token);
-    $("apiLogin").style.display = ligado ? "none" : "";
+    $("apiLogin").style.display = ligado || !mostrarLogin ? "none" : "";
     $("apiEscolha").style.display = "none";
     $("apiStatus").textContent = ligado
       ? `conectado como ${sessao.nome || sessao.email} — os talhões são salvos na API`
@@ -63,7 +66,9 @@
       ? '<button class="btn" id="apiBaixar">⬇ Carregar da API</button>' +
         '<button class="btn" id="apiEnviar">⬆ Enviar talhões pendentes</button>' +
         '<button class="btn" id="apiSair">Sair</button>'
-      : "";
+      : '<button class="btn" id="apiMostrar">Entrar manualmente</button>';
+    if (!ligado) $("apiMostrar").onclick = () => { mostrarLogin = !mostrarLogin; desenharEstado(); };
+    if (!ligado && !mostrarLogin) $("apiStatus").textContent = "desconectado — abra o Grandes Fazendas pelo painel para conectar sem senha";
     if (ligado) {
       $("apiBaixar").onclick = () => carregarDaApi().catch(falha);
       $("apiEnviar").onclick = () => enviarPendentes(true).catch(falha);
@@ -234,5 +239,9 @@
   };
 
   desenharEstado();
+  try {
+    const aviso = sessionStorage.getItem("gf.aviso") || localStorage.getItem("gf.aviso");
+    if (aviso) { msg(aviso, true); sessionStorage.removeItem("gf.aviso"); localStorage.removeItem("gf.aviso"); }
+  } catch (e) { /* nada */ }
   if (sessao && sessao.token) carregarDaApi().catch(falha);
 })();

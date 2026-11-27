@@ -174,7 +174,7 @@
       <button class="btn" id="btnCancelar" style="display:none">✖ Cancelar</button>
       <span class="mut" id="desenhoInfo"></span>
     </div>
-    <p class="mut">Cada polígono do arquivo vira um talhão <button class="q" data-g="talhao">?</button>. A área é calculada automaticamente em hectares <button class="q" data-g="hectare">?</button>.</p>
+    <p id="fazLocalInfo" class="mut" style="margin:6px 0"></p><p class="mut">Cada polígono do arquivo vira um talhão <button class="q" data-g="talhao">?</button>. A área é calculada automaticamente em hectares <button class="q" data-g="hectare">?</button>.</p>
   </div>
   <div class="card" id="fichaFaz" style="display:none"></div>
   <div id="map"></div>
@@ -299,6 +299,10 @@ D.fazendas=D.fazendas.map(f=>f==='Fazenda Brasil 1'?'Fazenda Saudade':f);
 if(!D.fazendas.includes('Fazenda Saudade'))D.fazendas.splice(1,0,'Fazenda Saudade');
 D.talhoes.forEach(t=>{if(t.fazenda==='Fazenda Brasil 1')t.fazenda='Fazenda Saudade';});
 D.safras=D.safras||[];D.climaHist=D.climaHist||{};D.maquinas=D.maquinas||[];D.vendas=D.vendas||[];
+// Onde fica cada fazenda no mapa: [lat, lon, zoom]. Saudade e PIPE aproximadas (município); ajuste com "Ir" + "Salvar local".
+D.locais=D.locais||{};
+if(!D.locais['Fazenda PIPE — Malanje (Angola)'])D.locais['Fazenda PIPE — Malanje (Angola)']=[-9.54,16.34,9,'aproximado: cidade de Malanje'];
+if(!D.locais['Fazenda Saudade'])D.locais['Fazenda Saudade']=[-18.90,-50.65,12,'aproximado: região de Paranaíguara/GO'];
 const RENOMEAR={'Fazenda Brasil 2':'Fazenda Pateirinho','Fazenda Brasil 3':'Fazenda Santa Luzia','Fazenda Brasil 4':'Fazenda do Lago'};
 D.fazendas=D.fazendas.map(f=>RENOMEAR[f]||f);
 D.talhoes.forEach(t=>{if(RENOMEAR[t.fazenda])t.fazenda=RENOMEAR[t.fazenda];});
@@ -338,7 +342,19 @@ function areaHa(geom){let m2=0;
 // ===== Ir para coordenada =====
 btnIr.onclick=()=>{const m=coordIr.value.replace(/\s/g,'').split(',').map(Number);
  if(m.length!==2||m.some(isNaN)||Math.abs(m[0])>90||Math.abs(m[1])>180)return alert('Use o formato: -9.54, 16.34');
- map.setView(m,15);L.circleMarker(m,{radius:6,color:'#3b82f6'}).addTo(map);};
+ map.setView(m,15);L.circleMarker(m,{radius:6,color:'#3b82f6'}).addTo(map);
+ if(confirm('Guardar este ponto como local da "'+fazSel.value+'"? Da próxima vez o mapa abre aqui ao escolher a fazenda.')){
+  D.locais[fazSel.value]=[m[0],m[1],15,'definido por você'];salvar();irParaFazenda();}};
+
+// ===== Escolher fazenda = mapa vai até ela =====
+function irParaFazenda(){const f=fazSel.value,info=document.getElementById('fazLocalInfo');
+ const ts=D.talhoes.filter(t=>t.fazenda===f);
+ if(ts.length){map.fitBounds(L.geoJSON(ts.map(t=>t.geom)).getBounds(),{padding:[20,20]});
+  if(info)info.textContent=`📍 ${ts.length} talhão(ões) desta fazenda no mapa.`;return;}
+ const l=D.locais[f];
+ if(l){map.setView([l[0],l[1]],l[2]||12);if(info)info.textContent=`📍 Local ${l[3]||''}. Para o ponto exato: digite a coordenada da sede em "Ir para coordenada" e confirme "Guardar".`;return;}
+ if(info)info.textContent=`📍 Ainda não sei onde fica "${f}". Digite a coordenada da sede em "Ir para coordenada" (ex.: -18.90, -50.65) e confirme "Guardar".`;}
+fazSel.addEventListener('change',irParaFazenda);
 
 // ===== Desenhar talhão clicando no mapa =====
 let pts=[],linha=null,desenhando=false;
@@ -501,7 +517,7 @@ function renderMapa(){camada.clearLayers();
  D.talhoes.forEach(t=>{const st=ultimaSituacao(t.id);
   L.geoJSON(t.geom,{style:{color:st.cor,weight:2,fillOpacity:.25}})
    .bindPopup(`<b>${esc(t.nome)}</b><br>${esc(t.fazenda)}<br>${t.ha} ha<br>${st.txt}`).addTo(camada);});
- if(D.talhoes.length)map.fitBounds(camada.getBounds(),{padding:[20,20]});
+ if(typeof irParaFazenda==='function')irParaFazenda();else if(D.talhoes.length)map.fitBounds(camada.getBounds(),{padding:[20,20]});
  talhoesTb.innerHTML=D.talhoes.map(t=>`<tr><td><input value="${esc(t.nome)}" onchange="edT('${t.id}','nome',this)"></td>
   <td><select onchange="edT('${t.id}','fazenda',this)">${optF(t.fazenda)}</select></td><td>${t.ha.toLocaleString('pt-BR')}${t.demo?' <span class=mut>(demo)</span>':''}</td>
   <td><button class="x" onclick="zoomT('${t.id}')">🔍</button> <button class="x" onclick="remTalhao('${t.id}')">🗑</button></td></tr>`).join('')||'<tr><td colspan=4 class="mut">Nenhum talhão ainda. Importe um arquivo GeoJSON.</td></tr>';
@@ -670,6 +686,5 @@ function renderClimaHist(){const h=D.climaHist;if(!h||!h.mm){chTb.innerHTML='<tr
  chInfo.textContent='Dados de '+new Date(h.em).toLocaleDateString('pt-BR')+' · ponto '+h.lat+', '+h.lon;}
 renderFaz();renderTudo();
 </script>
-<script src="grandes-fazendas-api.js"></script>
 </body>
 </html>
