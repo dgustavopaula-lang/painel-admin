@@ -153,7 +153,11 @@
   }
 
   /* ---------- sincronização de talhões ---------- */
-  const fazendaApiDe = (nomeLocal) => fazendasApi.find((f) => f.nome === nomeLocal);
+  // Nome no módulo → nome na API (quando forem diferentes)
+  const APELIDOS = { "Fazenda PIPE — Malanje (Angola)": "Fazenda PIPE" };
+  const nomeApi = (local) => APELIDOS[local] || local;
+  const nomeLocal = (api) => Object.keys(APELIDOS).find((k) => APELIDOS[k] === api) || api;
+  const fazendaApiDe = (local) => fazendasApi.find((f) => f.nome === nomeApi(local));
 
   async function carregarDaApi() {
     fazendasApi = await chamar("/fazendas");
@@ -161,14 +165,14 @@
     for (const f of fazendasApi) {
       const lista = await chamar(`/fazendas/${f.id}/talhoes`);
       // Só cria a fazenda na lista local se ela tiver talhões na API (evita nomes duplicados).
-      if (lista.length && !D.fazendas.includes(f.nome)) D.fazendas.push(f.nome);
+      if (lista.length && !D.fazendas.includes(nomeLocal(f.nome))) D.fazendas.push(nomeLocal(f.nome));
       for (const t of lista) {
         if (!t.contorno) continue;
         const local = D.talhoes.find((x) => x.apiId === t.id);
         if (local) {
           Object.assign(local, { nome: t.nome, ha: Number(t.area_hectares) || local.ha, geom: t.contorno });
         } else {
-          D.talhoes.push({ id: "api-" + t.id, apiId: t.id, nome: t.nome, fazenda: f.nome,
+          D.talhoes.push({ id: "api-" + t.id, apiId: t.id, nome: t.nome, fazenda: nomeLocal(f.nome),
             ha: Number(t.area_hectares) || +areaHa(t.contorno).toFixed(2), geom: t.contorno, origem: "API" });
           novos++;
         }
