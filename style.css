@@ -788,3 +788,18 @@ button.primary,
 #tela-pacotes .vault-hint i { vertical-align: -2px; margin-right: 6px; }
 #tela-pacotes .mini-sem-link { white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
 #tela-pacotes .fluxo-item label > span { min-width: 0; flex: 1; }
+
+/* Saúde das rotas — histórico, detalhes e barra (27/nov/2026) */
+#tela-api .rotas-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 8px 0 14px; }
+#tela-api .rotas-auto { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+#tela-api .rotas-barra .btn-action { margin-left: auto; }
+#tela-api .spark { display: inline-flex; align-items: flex-end; gap: 2px; height: 18px; }
+#tela-api .spark i { display: block; width: 4px; border-radius: 1px; opacity: .9; }
+#tela-api .rota-grupo td { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); padding-top: 14px; border-bottom: 0; }
+#tela-api .rota-legado { opacity: .6; }
+#tela-api .rota-abrir { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; color: inherit; }
+#tela-api .rota-abrir code { text-decoration: underline dotted; text-underline-offset: 3px; }
+#tela-api .rota-detalhe td { background: rgba(255,255,255,.03); font-size: 13px; line-height: 1.6; }
+#tela-api .rota-previa { margin-top: 6px; max-height: 160px; overflow: auto; white-space: pre-wrap; word-break: break-all; font-size: 11px; padding: 8px; border-radius: 6px; background: rgba(0,0,0,.3); color: var(--text-secondary); }
+#tela-api .cp-eventos { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.9; }
+#tela-api .metric-card small { display: block; margin-top: 2px; }

@@ -44,19 +44,22 @@ const SEED_VENDAS = [
   { id: 4, nome: 'Turing Agro — proposta', desc: 'Inteligência e gestão para fazendas: insumos, estoque, máquinas, custos e alertas.', url: '', status: 'A configurar' }
 ];
 
-// Rotas reais usadas pelo painel (conferidas na API em 20/11/2026).
+// Rotas reais usadas pelo painel (conferidas na API em 27/11/2026).
+// grupo: organiza a tabela · externo: URL completa fora da API central · legado: testada, mas fora da contagem.
 const SEED_ENDPOINTS = [
-  { rota: '/api/health', metodo: 'GET', auth: 'Pública', uso: 'API no ar' },
-  { rota: '/api/turing/conhecimento/listar', metodo: 'GET', auth: 'turing:training', uso: 'Fluxo de treino do Turing' },
-  { rota: '/api/plantas', metodo: 'GET', auth: 'plantas.read', uso: 'Natureza · plantas' },
-  { rota: '/api/apps', metodo: 'GET', auth: 'apps.read', uso: 'Mini-softwares' },
-  { rota: '/api/imoveis', metodo: 'GET', auth: 'assets.read', uso: 'Patrimônio · imóveis' },
-  { rota: '/api/turing/security/health', metodo: 'GET', auth: 'token válido', uso: 'Turing Security' },
-  { rota: '/api/control-plane', metodo: 'GET', auth: 'control_plane.read', uso: 'Painel de controle da API' },
-  { rota: '/api/geo/sentinel2/latest?lat=-18.90&lon=-50.65&days=30', metodo: 'GET', auth: 'token válido', uso: 'Sentinel-2 (Copernicus) · teste Paranaíguara' },
-  { rota: '/api/turing/angola/resumo', metodo: 'GET', auth: 'token válido', uso: 'Turing Angola · resumo' }
+  { rota: '/api/health', metodo: 'GET', auth: 'Pública', uso: 'API no ar', grupo: 'Núcleo' },
+  { rota: '/api/control-plane', metodo: 'GET', auth: 'control_plane.read', uso: 'Painel de controle da API', grupo: 'Núcleo' },
+  { rota: '/api/turing/conhecimento/listar', metodo: 'GET', auth: 'turing:training', uso: 'Fluxo de treino do Turing', grupo: 'Turing' },
+  { rota: '/api/turing/conhecimento/aprovados?q=soja', metodo: 'GET', auth: 'turing:training', uso: 'Conhecimentos aprovados (dicas do Play Farm)', grupo: 'Turing' },
+  { rota: '/api/turing/security/health', metodo: 'GET', auth: 'token válido', uso: 'Turing Security', grupo: 'Turing' },
+  { rota: '/api/plantas', metodo: 'GET', auth: 'plantas.read', uso: 'Natureza · plantas', grupo: 'Dados' },
+  { rota: '/api/apps', metodo: 'GET', auth: 'apps.read', uso: 'Mini-softwares', grupo: 'Dados' },
+  { rota: '/api/imoveis', metodo: 'GET', auth: 'assets.read', uso: 'Patrimônio · imóveis', grupo: 'Dados' },
+  { rota: '/api/geo/sentinel2/latest?lat=-18.90&lon=-50.65&days=30', metodo: 'GET', auth: 'token válido', uso: 'Sentinel-2 (Copernicus) · teste Paranaíguara', grupo: 'Satélite' },
+  { rota: 'https://minifazenda.gustavopaulasantos.com.br/api/health', metodo: 'GET', auth: 'Pública', uso: 'Play Farm Agro · jogo e ligação com a API', grupo: 'Apps', externo: true, semToken: true },
+  { rota: '/api/turing/angola/resumo', metodo: 'GET', auth: 'token válido', uso: 'Turing Angola · resumo (legado: decisão de 18/11 de não manter)', grupo: 'Legado', legado: true }
 ];
-const ENDPOINTS_VERSAO = 3;
+const ENDPOINTS_VERSAO = 4;
 
 function configPadrao() {
   return { apiBase: 'https://api.gustavopaulasantos.com.br', treinoPath: '/api/turing/training/feedback', endpoints: JSON.parse(JSON.stringify(SEED_ENDPOINTS)), endpointsVersao: ENDPOINTS_VERSAO };
@@ -1399,13 +1402,49 @@ function renderApi() {
     ? `<i class="ph ph-shield-check"></i> Token encontrado no cofre (item "Turing API token"). Ele nunca é gravado fora do cofre criptografado.`
     : `<i class="ph ph-warning"></i> Nenhum token no cofre. Cadastre um item chamado "Turing API token" em Senhas e Acessos.`;
 
+  const auto = document.getElementById('api-auto-teste');
+  if (auto) { auto.checked = localStorage.getItem('gps_api_auto') === '1'; if (auto.checked && !autoTesteTimer) alternarAutoTeste(true); }
   desenharEndpoints();
   testarTodosEndpoints();
 }
 
+// ---------- histórico e métricas das rotas ----------
+const HIST_KEY = 'gps_api_rotas_hist_v1';
+const HIST_MAX = 20;
+let histRotas = (() => { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || {}; } catch (e) { return {}; } })();
+let autoTesteTimer = null;
+let ultimoTesteGeral = null;
+let controlPlaneDados = null;
+const abertosDetalhe = new Set();
+
+function histSalvar() { try { localStorage.setItem(HIST_KEY, JSON.stringify(histRotas)); } catch (e) { /* sem espaço */ } }
+function histAdd(rota, reg) {
+  const h = histRotas[rota] || (histRotas[rota] = []);
+  h.push(reg);
+  if (h.length > HIST_MAX) h.splice(0, h.length - HIST_MAX);
+  histSalvar();
+}
+const corMs = ms => ms < 300 ? 'var(--success-green)' : ms < 1000 ? '#eab308' : 'var(--danger-red)';
+function percentil(arr, p) {
+  if (!arr.length) return null;
+  const a = [...arr].sort((x, y) => x - y);
+  return a[Math.min(a.length - 1, Math.ceil(p / 100 * a.length) - 1)];
+}
+function sparkline(rota) {
+  const h = histRotas[rota] || [];
+  if (!h.length) return '';
+  const max = Math.max(300, ...h.map(r => r.ms || 0));
+  return `<span class="spark" title="Últimos ${h.length} testes">` + h.map(r => {
+    const alt = r.ok ? Math.max(3, Math.round(18 * (r.ms || 0) / max)) : 18;
+    const cor = r.ok ? corMs(r.ms) : 'var(--danger-red)';
+    return `<i style="height:${alt}px;background:${cor}" title="${new Date(r.t).toLocaleTimeString('pt-BR')} · ${r.ok ? r.ms + ' ms' : 'falha ' + (r.s || '')}"></i>`;
+  }).join('') + '</span>';
+}
+const urlRota = e => e.externo ? e.rota : appData.config.apiBase + e.rota;
+
 function desenharEndpoints() {
   const c = appData.config;
-  if (c.endpoints.length !== SEED_ENDPOINTS.length || c.endpoints.some((e, i) => e.rota !== SEED_ENDPOINTS[i].rota || !e.uso)) {
+  if (c.endpoints.length !== SEED_ENDPOINTS.length || c.endpointsVersao !== ENDPOINTS_VERSAO || c.endpoints.some((e, i) => e.rota !== SEED_ENDPOINTS[i].rota || !e.uso)) {
     c.endpoints = JSON.parse(JSON.stringify(SEED_ENDPOINTS));
     c.endpointsVersao = ENDPOINTS_VERSAO;
     for (const k in resultadosTeste) delete resultadosTeste[k];
@@ -1413,28 +1452,170 @@ function desenharEndpoints() {
   }
   const tbody = document.getElementById('tbody-endpoints');
   if (!tbody) return;
+  let grupoAtual = '';
   tbody.innerHTML = c.endpoints.map((e, i) => {
     const r = resultadosTeste[i];
     const cls = !r ? '' : r.ok ? 'green' : 'red';
-    return `<tr>
-      <td><code>${escapeHtml(e.rota)}</code><br><span class="mini-sem-link">${escapeHtml(e.uso || '')}</span></td>
+    const h = (histRotas[e.rota] || []);
+    const okH = h.filter(x => x.ok).length;
+    const disp = h.length ? Math.round(100 * okH / h.length) + '%' : '—';
+    const cab = e.grupo !== grupoAtual ? `<tr class="rota-grupo"><td colspan="5">${escapeHtml(e.grupo || '')}</td></tr>` : '';
+    grupoAtual = e.grupo;
+    const msTxt = r && r.ok ? `<b style="color:${corMs(r.ms)}">${r.ms} ms</b>` : '';
+    const detalhe = abertosDetalhe.has(i) && r ? `<tr class="rota-detalhe"><td colspan="5">
+        <div><b>Status:</b> ${escapeHtml(r.texto)} · testado às ${r.hora || '—'}</div>
+        ${r.tamanho != null ? `<div><b>Tamanho da resposta:</b> ${r.tamanho.toLocaleString('pt-BR')} bytes</div>` : ''}
+        ${r.resumo ? `<div><b>Resumo:</b> ${escapeHtml(r.resumo)}</div>` : ''}
+        ${r.previa ? `<pre class="rota-previa">${escapeHtml(r.previa)}</pre>` : ''}
+      </td></tr>` : '';
+    return cab + `<tr class="${e.legado ? 'rota-legado' : ''}">
+      <td><button class="link-inline rota-abrir" onclick="alternarDetalheRota(${i})" title="Ver detalhes da resposta"><code>${escapeHtml(e.rota)}</code></button>${e.legado ? ' <span class="badge orange">legado</span>' : ''}<br><span class="mini-sem-link">${escapeHtml(e.uso || '')}</span></td>
       <td><span class="mini-sem-link">${escapeHtml(e.auth)}</span></td>
-      <td>${r ? `<span class="badge ${cls}">${escapeHtml(r.texto)}</span>` : '<span class="mini-sem-link">aguardando…</span>'}</td>
+      <td>${r ? `<span class="badge ${cls}">${escapeHtml(r.ok ? 'HTTP ' + r.status + ' · OK' : r.texto)}</span> ${msTxt}` : '<span class="mini-sem-link">aguardando…</span>'}</td>
+      <td>${sparkline(e.rota)}<br><span class="mini-sem-link">disp. ${disp}</span></td>
       <td><button class="btn-icon" title="Testar de novo" onclick="testarEndpoint(${i})"><i class="ph ph-arrows-clockwise"></i></button></td>
-    </tr>`;
+    </tr>` + detalhe;
   }).join('');
-  const feitos = Object.values(resultadosTeste).filter(Boolean);
+
+  // resumo (rotas legadas ficam fora da contagem)
+  const idxAtivos = c.endpoints.map((e, i) => i).filter(i => !c.endpoints[i].legado);
+  const feitos = idxAtivos.map(i => resultadosTeste[i]).filter(Boolean);
   const ok = feitos.filter(r => r.ok);
+  const msOk = ok.map(r => r.ms);
+  const lenta = ok.length ? idxAtivos.filter(i => resultadosTeste[i] && resultadosTeste[i].ok).sort((a, b) => resultadosTeste[b].ms - resultadosTeste[a].ms)[0] : null;
+  const hoje = new Date().toDateString();
+  let totHoje = 0, okHoje = 0;
+  for (const e of c.endpoints) if (!e.legado) for (const x of (histRotas[e.rota] || [])) if (new Date(x.t).toDateString() === hoje) { totHoje++; if (x.ok) okHoje++; }
   const resumo = document.getElementById('api-resumo-rotas');
   if (resumo) resumo.innerHTML =
-    `<div class="metric-card"><span>Rotas OK</span><h3 style="color:var(--success-green)">${ok.length}/${c.endpoints.length}</h3></div>` +
-    `<div class="metric-card"><span>Com problema</span><h3 style="color:var(--danger-red)">${feitos.length - ok.length}</h3></div>` +
-    `<div class="metric-card"><span>Tempo médio</span><h3>${ok.length ? Math.round(ok.reduce((a, r) => a + r.ms, 0) / ok.length) + ' ms' : '—'}</h3></div>`;
+    `<div class="metric-card"><span>Rotas OK</span><h3 style="color:var(--success-green)">${ok.length}/${idxAtivos.length}</h3></div>` +
+    `<div class="metric-card"><span>Com problema</span><h3 style="color:${feitos.length - ok.length ? 'var(--danger-red)' : 'var(--text-primary)'}">${feitos.length - ok.length}</h3></div>` +
+    `<div class="metric-card"><span>Tempo médio</span><h3>${msOk.length ? Math.round(msOk.reduce((a, b) => a + b, 0) / msOk.length) + ' ms' : '—'}</h3></div>` +
+    `<div class="metric-card"><span>p95</span><h3>${msOk.length ? percentil(msOk, 95) + ' ms' : '—'}</h3></div>` +
+    `<div class="metric-card"><span>Mais lenta</span><h3 style="font-size:15px">${lenta != null ? escapeHtml(c.endpoints[lenta].rota.replace(/^https:\/\/[^/]+/, '').split('?')[0]) + ' · ' + resultadosTeste[lenta].ms + ' ms' : '—'}</h3></div>` +
+    `<div class="metric-card"><span>Disponibilidade hoje</span><h3>${totHoje ? (100 * okHoje / totHoje).toFixed(1) + '%' : '—'}</h3><small class="mini-sem-link">${okHoje}/${totHoje} testes</small></div>`;
+  const ult = document.getElementById('api-ultimo-teste');
+  if (ult) ult.textContent = ultimoTesteGeral ? 'Último teste completo: ' + ultimoTesteGeral.toLocaleTimeString('pt-BR') : '';
+  desenharControlPlane();
 }
 
-async function testarTodosEndpoints() {
+function alternarDetalheRota(i) {
+  abertosDetalhe.has(i) ? abertosDetalhe.delete(i) : abertosDetalhe.add(i);
   desenharEndpoints();
-  for (let i = 0; i < appData.config.endpoints.length; i++) await testarEndpoint(i);
+}
+
+let testandoTodas = false;
+async function testarTodosEndpoints() {
+  if (testandoTodas) return;
+  testandoTodas = true;
+  desenharEndpoints();
+  try {
+    for (let i = 0; i < appData.config.endpoints.length; i++) await testarEndpoint(i);
+    ultimoTesteGeral = new Date();
+    desenharEndpoints();
+  } finally { testandoTodas = false; }
+}
+
+function alternarAutoTeste(ligar) {
+  if (autoTesteTimer) { clearInterval(autoTesteTimer); autoTesteTimer = null; }
+  try { localStorage.setItem('gps_api_auto', ligar ? '1' : '0'); } catch (e) { /* nada */ }
+  if (ligar) autoTesteTimer = setInterval(() => { if (currentView === 'tela-api' && !document.hidden) testarTodosEndpoints(); }, 60000);
+}
+
+function exportarRelatorioRotas() {
+  const c = appData.config;
+  const rel = {
+    gerado_em: new Date().toISOString(),
+    api: c.apiBase,
+    rotas: c.endpoints.map((e, i) => ({
+      rota: e.rota, uso: e.uso, permissao: e.auth, grupo: e.grupo, legado: !!e.legado,
+      ultimo: resultadosTeste[i] ? { ok: resultadosTeste[i].ok, status: resultadosTeste[i].status, ms: resultadosTeste[i].ms, hora: resultadosTeste[i].hora } : null,
+      historico: (histRotas[e.rota] || []).map(x => ({ quando: new Date(x.t).toISOString(), ok: x.ok, ms: x.ms, status: x.s })),
+    })),
+    control_plane: controlPlaneDados ? resumoControlPlane(controlPlaneDados) : null,
+  };
+  const blob = new Blob([JSON.stringify(rel, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `saude-rotas-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+// Resumo curto da resposta (sem tokens): ajuda a ver o que a rota devolveu.
+function resumirResposta(rota, j) {
+  if (!j || typeof j !== 'object') return '';
+  const partes = [];
+  const lista = Object.entries(j).find(([, v]) => Array.isArray(v));
+  if (lista) partes.push(`${lista[0]}: ${lista[1].length} itens`);
+  for (const k of ['api', 'banco', 'status', 'app', 'versao', 'ok']) if (k in j && typeof j[k] !== 'object') partes.push(`${k}: ${j[k]}`);
+  if ('api_ms' in j) partes.push(`tempo da NexoTerraCore: ${j.api_ms} ms`);
+  return partes.join(' · ');
+}
+function previaSegura(txt) {
+  return String(txt || '').replace(/ntc_live_[A-Za-z0-9_-]+/g, 'ntc_live_***').replace(/"(token|senha|password|hash|secret)[^"]*"\s*:\s*"[^"]*"/gi, '"$1":"***"').slice(0, 600);
+}
+
+// Só GET, sem enviar dados: serve para ver se a API responde.
+async function testarEndpoint(i) {
+  const e = appData.config.endpoints[i];
+  if (!e || e.metodo !== 'GET' || (!appData.config.apiBase && !e.externo)) return;
+  const t0 = performance.now();
+  const hora = new Date().toLocaleTimeString('pt-BR');
+  try {
+    const tk = e.semToken ? '' : tokenDoCofre();
+    const res = await fetch(urlRota(e), { method: 'GET', cache: 'no-store', headers: tk ? { Authorization: 'Bearer ' + tk } : {} });
+    const ms = Math.round(performance.now() - t0);
+    const txt = await res.text().catch(() => '');
+    let j = null; try { j = JSON.parse(txt); } catch (err) { /* não é JSON */ }
+    let ok = (res.status >= 200 && res.status < 300) || (res.status === 400 && e.rota === '/api/geo/ndvi');
+    let extra = '';
+    if (ok && e.externo && j && j.api && j.api !== 'online') { ok = false; extra = ` · jogo no ar, API: ${j.api}`; }
+    resultadosTeste[i] = { ok, ms, status: res.status, hora, tamanho: txt.length, resumo: resumirResposta(e.rota, j), previa: previaSegura(txt),
+      texto: `HTTP ${res.status} · ${ms} ms · ${significadoHttp(res.status)}${extra}` };
+    if (e.rota === '/api/control-plane' && ok && j) controlPlaneDados = j;
+    histAdd(e.rota, { t: Date.now(), ok, ms, s: res.status });
+  } catch (err) {
+    const texto = !navigator.onLine ? 'sem internet' : e.externo ? 'sem resposta (servidor fora ou CORS não liberado)' : 'sem resposta (rede ou CORS)';
+    resultadosTeste[i] = { ok: false, ms: 0, status: 0, hora, texto };
+    histAdd(e.rota, { t: Date.now(), ok: false, ms: 0, s: 0 });
+  }
+  desenharEndpoints();
+}
+
+// ---------- painel de controle da API (/api/control-plane) ----------
+function resumoControlPlane(j) {
+  const d = j.dados || j;
+  const keys = Array.isArray(d.apiKeys) ? d.apiKeys : [];
+  const ativas = keys.filter(k => k.ativo && !k.revogado_em);
+  const consumo = (Array.isArray(d.consumo) ? d.consumo[0] : d.consumo) || {};
+  const evs = Array.isArray(d.turingEventos) ? d.turingEventos : [];
+  const org = d.organizacao && (d.organizacao.nome || d.organizacao.slug);
+  const ociosas = ativas.filter(k => !k.ultimo_uso_em || (Date.now() - new Date(k.ultimo_uso_em)) > 30 * 86400000);
+  return {
+    organizacao: org || null,
+    chaves_total: keys.length, chaves_ativas: ativas.length, chaves_ociosas_30d: ociosas.length,
+    requisicoes: consumo.total_requisicoes ?? null,
+    eventos_turing: evs.length,
+    ultimos_eventos: evs.slice(0, 5).map(x => ({ tipo: x.tipo || x.evento || x.categoria || '?', quando: x.criado_em || x.em || null, nivel: x.severidade || x.nivel || null })),
+  };
+}
+function desenharControlPlane() {
+  const box = document.getElementById('api-control-plane');
+  if (!box) return;
+  if (!controlPlaneDados) { box.innerHTML = '<p class="vault-hint">Aguardando o teste de /api/control-plane…</p>'; return; }
+  const r = resumoControlPlane(controlPlaneDados);
+  const ev = r.ultimos_eventos.length
+    ? `<ul class="cp-eventos">${r.ultimos_eventos.map(x => `<li><span class="badge ${/alta|crit|high/i.test(x.nivel || '') ? 'red' : 'blue'}">${escapeHtml(String(x.nivel || 'info'))}</span> ${escapeHtml(String(x.tipo))} <span class="mini-sem-link">${x.quando ? new Date(x.quando).toLocaleString('pt-BR') : ''}</span></li>`).join('')}</ul>`
+    : '<p class="mini-sem-link">Nenhum evento recente do Turing.</p>';
+  box.innerHTML = `<div class="metrics-grid">
+      ${r.organizacao ? `<div class="metric-card"><span>Organização</span><h3 style="font-size:16px">${escapeHtml(String(r.organizacao))}</h3></div>` : ''}
+      <div class="metric-card"><span>Chaves ativas</span><h3>${r.chaves_ativas}<small class="mini-sem-link"> / ${r.chaves_total}</small></h3></div>
+      <div class="metric-card"><span>Chaves ociosas (30 dias)</span><h3 style="color:${r.chaves_ociosas_30d ? '#eab308' : 'var(--text-primary)'}">${r.chaves_ociosas_30d}</h3></div>
+      <div class="metric-card"><span>Requisições registradas</span><h3>${r.requisicoes != null ? Number(r.requisicoes).toLocaleString('pt-BR') : '—'}</h3></div>
+      <div class="metric-card"><span>Eventos do Turing</span><h3>${r.eventos_turing}</h3></div>
+    </div>
+    <h4 style="margin:12px 0 6px">Últimos eventos do Turing</h4>${ev}`;
 }
 
 function salvarConfig() {
@@ -1466,23 +1647,6 @@ function significadoHttp(c) {
   if (c === 404) return 'rota não existe';
   if (c === 429) return 'limite de uso';
   return c >= 500 ? 'erro na API' : 'verificar';
-}
-
-// Só GET, sem enviar dados: serve para ver se a API responde.
-async function testarEndpoint(i) {
-  const e = appData.config.endpoints[i];
-  if (!e || e.metodo !== 'GET' || !appData.config.apiBase) return;
-  const t0 = performance.now();
-  try {
-    const tk = tokenDoCofre();
-    const res = await fetch(appData.config.apiBase + e.rota, { method: 'GET', cache: 'no-store', headers: tk ? { Authorization: 'Bearer ' + tk } : {} });
-    const ms = Math.round(performance.now() - t0);
-    const ok = (res.status >= 200 && res.status < 300) || (res.status === 400 && e.rota === '/api/geo/ndvi');
-    resultadosTeste[i] = { ok, ms, texto: `HTTP ${res.status} · ${ms} ms · ${significadoHttp(res.status)}` };
-  } catch (err) {
-    resultadosTeste[i] = { ok: false, ms: 0, texto: navigator.onLine ? 'sem resposta (rede ou CORS)' : 'sem internet' };
-  }
-  desenharEndpoints();
 }
 
 function cadastrarTokenNoCofre() {

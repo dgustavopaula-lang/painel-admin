@@ -777,14 +777,25 @@
         </div>
         <div class="project-section">
           <h3><i class="ph ph-list-checks"></i> Saúde das rotas <button class="btn-action secondary" onclick="testarTodosEndpoints()"><i class="ph ph-pulse"></i> Testar todas</button></h3>
-          <p class="vault-hint"><i class="ph ph-info"></i> O painel testa sozinho cada rota ao abrir esta tela (só leitura, sem gravar nada), usando a chave do cofre.</p>
+          <p class="vault-hint"><i class="ph ph-info"></i> O painel testa sozinho cada rota ao abrir esta tela (só leitura, sem gravar nada), usando a chave do cofre. Clique no nome de uma rota para ver o que ela respondeu.</p>
+          <div class="rotas-barra">
+            <label class="rotas-auto"><input type="checkbox" id="api-auto-teste" onchange="alternarAutoTeste(this.checked)"> Testar automaticamente a cada 60 s</label>
+            <span id="api-ultimo-teste" class="mini-sem-link"></span>
+            <button class="btn-action secondary" onclick="exportarRelatorioRotas()"><i class="ph ph-download-simple"></i> Exportar relatório</button>
+          </div>
           <div id="api-resumo-rotas" class="metrics-grid"></div>
           <div class="data-table-container">
             <table>
-              <thead><tr><th>Rota · para quê</th><th>Permissão</th><th>Resultado</th><th></th></tr></thead>
+              <thead><tr><th>Rota · para quê</th><th>Permissão</th><th>Resultado</th><th>Histórico</th><th></th></tr></thead>
               <tbody id="tbody-endpoints"></tbody>
             </table>
           </div>
+        </div>
+
+        <div class="project-section">
+          <h3><i class="ph ph-gauge"></i> Painel de controle da API</h3>
+          <p class="vault-hint"><i class="ph ph-info"></i> Lido de /api/control-plane: chaves (só contagem, nunca o valor), consumo e eventos do Turing.</p>
+          <div id="api-control-plane"></div>
         </div>
 
         <div class="project-section">
