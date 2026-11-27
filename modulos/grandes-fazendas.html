@@ -129,12 +129,13 @@
 </head>
 <body>
 <header>
-  <h1>🌾 Grandes Fazendas <span class="mut">— Turing Agro</span><span class="tag">dados locais · v1.5</span></h1>
+  <h1>🌾 Grandes Fazendas <span class="mut">— Turing Agro</span><span class="tag">v2.0</span></h1>
   <div class="row">
     <label style="flex-direction:row;align-items:center;gap:6px;color:var(--txt)">
       <input type="checkbox" id="modoAula"> Modo Aula
     </label>
-    <button class="btn" id="btnDemo">🧪 Demonstração</button>
+    <button class="btn" id="btnManual" type="button">📘 Manual</button>
+<button class="btn" id="btnDemo">🧪 Demonstração</button>
     <button class="btn" id="exportar">Backup (exportar)</button>
     <label class="btn" style="flex-direction:row">Restaurar<input type="file" id="importarBackup" accept=".json" hidden></label>
   </div>
@@ -687,5 +688,25 @@ function renderClimaHist(){const h=D.climaHist;if(!h||!h.mm){chTb.innerHTML='<tr
 renderFaz();renderTudo();
 </script>
 <script src="grandes-fazendas-api.js"></script>
+
+<dialog id="manualDlg" style="max-width:760px;width:94%;background:var(--card,#111827);color:var(--txt,#e5e7eb);border:1px solid var(--line,#334155);border-radius:12px;padding:20px">
+<h2 style="margin-top:0">📘 Manual — Grandes Fazendas (Turing Agro)</h2>
+<p class="mut">Gestão das fazendas da família em um só lugar: mapa por satélite, talhões, campo, decisões, safras, máquinas e vendas. Tudo salvo na NexoTerraCore/API, com auditoria, e com cópia neste navegador.</p>
+<ol style="line-height:1.7">
+<li><b>Entrar:</b> abra pelo painel (🌾 Grandes Fazendas). O painel conecta sozinho; o topo mostra “conectado como …”.</li>
+<li><b>Escolher a fazenda:</b> no seletor “Fazenda”. O mapa vai até ela.</li>
+<li><b>Marcar a sede:</b> copie a coordenada no Google Maps (botão direito), cole em “Ir para coordenada”, clique Ir e confirme Guardar. Fica salvo na API.</li>
+<li><b>Talhões:</b> importe o contorno do CAR (GeoJSON) ou use ✏️ Desenhar talhão clicando nos cantos. A área em hectares é calculada sozinha.</li>
+<li><b>Satélite da semana:</b> registre NDVI/NDMI de cada talhão; queda forte vira alerta.</li>
+<li><b>Campo e Decisão:</b> o que foi visto na roça, o custo e o que se decidiu fazer.</li>
+<li><b>Safras, Máquinas, Vendas:</b> calendário de plantio/colheita, máquinas paradas (capital parado) e preço de venda × referência.</li>
+<li><b>Clima e calendário:</b> janelas oficiais da soja em Goiás, vazio sanitário e histórico de chuva.</li>
+</ol>
+<p><b>Segurança:</b> só entra quem tem conta na API e vínculo com a fazenda. Vendas exigem permissão financeira. Cada alteração fica registrada na auditoria.</p>
+<p><b>Backup:</b> use “Backup (exportar)” de vez em quando; “Restaurar” devolve o arquivo.</p>
+<p class="mut">Informação técnica de apoio: decisões de manejo devem ser confirmadas com o agrônomo responsável.</p>
+<button class="btn p" type="button" onclick="document.getElementById('manualDlg').close()">Fechar</button>
+</dialog>
+<script>document.getElementById('btnManual').onclick=()=>document.getElementById('manualDlg').showModal();</script>
 </body>
 </html>
