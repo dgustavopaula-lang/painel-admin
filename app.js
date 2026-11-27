@@ -56,10 +56,9 @@ const SEED_ENDPOINTS = [
   { rota: '/api/apps', metodo: 'GET', auth: 'apps.read', uso: 'Mini-softwares', grupo: 'Dados' },
   { rota: '/api/imoveis', metodo: 'GET', auth: 'assets.read', uso: 'Patrimônio · imóveis', grupo: 'Dados' },
   { rota: '/api/geo/sentinel2/latest?lat=-18.90&lon=-50.65&days=30', metodo: 'GET', auth: 'token válido', uso: 'Sentinel-2 (Copernicus) · teste Paranaíguara', grupo: 'Satélite' },
-  { rota: 'https://minifazenda.gustavopaulasantos.com.br/api/health', metodo: 'GET', auth: 'Pública', uso: 'Play Farm Agro · jogo e ligação com a API', grupo: 'Apps', externo: true, semToken: true },
-  { rota: '/api/turing/angola/resumo', metodo: 'GET', auth: 'token válido', uso: 'Turing Angola · resumo (legado: decisão de 18/11 de não manter)', grupo: 'Legado', legado: true }
+  { rota: 'https://minifazenda.gustavopaulasantos.com.br/api/health', metodo: 'GET', auth: 'Pública', uso: 'Play Farm Agro · jogo e ligação com a API', grupo: 'Apps', externo: true, semToken: true }
 ];
-const ENDPOINTS_VERSAO = 4;
+const ENDPOINTS_VERSAO = 5; // 27/11/2026: rota legada do Turing Angola removida da API
 
 function configPadrao() {
   return { apiBase: 'https://api.gustavopaulasantos.com.br', treinoPath: '/api/turing/training/feedback', endpoints: JSON.parse(JSON.stringify(SEED_ENDPOINTS)), endpointsVersao: ENDPOINTS_VERSAO };
