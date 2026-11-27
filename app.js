@@ -3665,9 +3665,81 @@ const UTEIS_REF = [
   ['Jatobá-do-cerrado', 'Hymenaea stigonocarpa', 'Fabaceae', 'casca, fruto', 'tosse; fruto é alimento', '']
 ];
 
+/* ---------------- Medicinais aprovados e regras (pesquisa de 27/11/2026) ----------------
+   Fontes oficiais: Anvisa e Ministério da Saúde. Informação geral, sem dose: não substitui médico ou farmacêutico. */
+const RENAME_FITO = [
+  // [popular, científico, para que é usado no SUS (resumo), cuidado principal]
+  ['Alcachofra', 'Cynara scolymus', 'má digestão (dispepsia)', 'Evitar com obstrução das vias biliares.'],
+  ['Aroeira', 'Schinus terebinthifolia', 'cicatrizante e anti-inflamatório de uso ginecológico (tópico)', 'Uso externo/tópico.'],
+  ['Babosa', 'Aloe vera', 'queimaduras e feridas leves (uso tópico)', 'Uso externo; não ingerir o látex amarelo.'],
+  ['Cáscara-sagrada', 'Rhamnus purshiana', 'prisão de ventre ocasional', 'Uso curto; não usar com dor abdominal sem diagnóstico, gravidez ou amamentação.'],
+  ['Espinheira-santa', 'Monteverdia ilicifolia (Maytenus ilicifolia)', 'azia e gastrite (dispepsia)', 'Evitar na gravidez e na amamentação.'],
+  ['Garra-do-diabo', 'Harpagophytum procumbens', 'dor lombar e dor de artrose', 'Cuidado com úlcera e com anticoagulantes.'],
+  ['Guaco', 'Mikania glomerata', 'tosse com catarro (expectorante)', 'Contém cumarina: não usar com anticoagulantes.'],
+  ['Hortelã-pimenta', 'Mentha x piperita', 'cólicas e gases; intestino irritável', 'Pode piorar refluxo.'],
+  ['Isoflavona de soja', 'Glycine max', 'sintomas do climatério (menopausa)', 'Não usar em câncer dependente de hormônio sem orientação.'],
+  ['Plantago (psílio)', 'Plantago ovata', 'prisão de ventre (fibra)', 'Tomar com bastante água; afastar de outros remédios.'],
+  ['Salgueiro', 'Salix alba', 'dor lombar (analgésico)', 'Não usar com alergia a AAS, úlcera ou anticoagulantes.'],
+  ['Unha-de-gato', 'Uncaria tomentosa', 'apoio em artrite e artrose (anti-inflamatório)', 'Evitar na gravidez e com imunossupressores.'],
+];
+
+const REGRAS_MEDICINAIS = [
+  { titulo: 'Fitoterápicos: como a Anvisa aprova', icone: 'ph-certificate', itens: [
+    'Novo marco: RDC nº 1.004, de 17/12/2025 (publicada no DOU em 23/12/2025). Substitui a RDC 26/2014 e a IN 4/2014.',
+    'Duas categorias: <b>medicamento fitoterápico</b> (eficácia e segurança por estudos clínicos, sempre registrado) e <b>medicamento tradicional fitoterápico</b> (uso tradicional comprovado; registro ou notificação).',
+    'Preparações não industrializadas de povos e comunidades tradicionais, distribuídas sem fins lucrativos, não precisam de registro.',
+    'Junto com a RDC vieram instruções normativas, entre elas a lista brasileira de espécies para registro simplificado (IN 412/2025).',
+    'Consulte se um produto é regularizado em consultas.anvisa.gov.br antes de comprar.',
+  ]},
+  { titulo: 'SUS: RENAME e RENISUS', icone: 'ph-first-aid-kit', itens: [
+    '<b>RENAME</b>: 12 fitoterápicos fazem parte da Relação Nacional de Medicamentos Essenciais e podem ser ofertados pelo SUS (lista abaixo).',
+    '<b>RENISUS</b> (2009): 71 espécies de <i>interesse</i> para pesquisa e desenvolvimento no SUS. Estar na RENISUS <b>não</b> significa que a planta é aprovada como remédio.',
+    'Referência técnica: Formulário de Fitoterápicos da Farmacopeia Brasileira e o Memento Fitoterápico.',
+  ]},
+  { titulo: 'Cannabis medicinal (canabidiol) — regras de 2026', icone: 'ph-plant', itens: [
+    'Em 28/01/2026 a Anvisa aprovou, em cumprimento à decisão do STJ (IAC 16, nov/2024), novas RDCs publicadas em 04/02/2026, com vigência 6 meses depois (a partir de agosto/2026).',
+    '<b>RDC 1.012/2026</b>: pesquisa com cannabis (instituições com Autorização Especial).',
+    '<b>RDC 1.013/2026</b>: cultivo e produção só por <b>pessoas jurídicas</b> autorizadas, com inspeção e rastreabilidade. Não há previsão de cultivo por pessoa física. THC da planta até 0,3%.',
+    '<b>RDC 1.014/2026</b>: associações de pacientes sem fins lucrativos (sem comércio, com controle de qualidade).',
+    '<b>RDC 1.015/2026</b>: revisa a antiga RDC 327/2019 (produtos de cannabis em farmácias, com prescrição). Amplia o uso de produtos com THC acima de 0,2% para doenças graves e debilitantes e acrescenta vias dermatológica, sublingual, bucal e inalatória.',
+    'Manipulação em farmácias de manipulação: admitida para o futuro, ainda depende de norma específica.',
+    'Importação excepcional por paciente com prescrição: <b>RDC 660/2022</b>, que continua vigente.',
+    'Controle: CBD está na lista C1 da Portaria 344/1998; uso recreativo segue proibido.',
+  ]},
+  { titulo: 'Suplementos alimentares e importados', icone: 'ph-pill', itens: [
+    'Regras brasileiras: <b>RDC 243/2018</b> e <b>IN 28/2018</b>, com listas positivas de ingredientes permitidos, limites máximos por idade e alegações autorizadas.',
+    'Suplemento é para pessoas saudáveis; não pode prometer tratar ou curar doença.',
+    '<b>Importação por pessoa física</b> (RDC 81/2008): só para uso próprio, em quantidade e frequência compatíveis com o uso pessoal. Revenda exige empresa (CNPJ) e produto regularizado.',
+    'Produto importado pode conter ingrediente proibido ou acima do limite brasileiro: confira a composição na lista da IN 28/2018 e evite estimulantes e "hormonais" sem orientação.',
+    'Compras pelo correio ou remessa expressa passam por fiscalização da Anvisa e da Receita (impostos à parte).',
+  ]},
+];
+
+function htmlRegulacaoMedicinais() {
+  const blocos = REGRAS_MEDICINAIS.map(b => `<article class="mini-card med-regra">
+      <div class="mini-card-top"><strong class="venda-nome"><i class="ph ${b.icone}"></i> ${escapeHtml(b.titulo)}</strong></div>
+      <ul>${b.itens.map(t => `<li>${t}</li>`).join('')}</ul>
+    </article>`).join('');
+  const rename = RENAME_FITO.map(([pop, cient, uso, cuidado]) => `<article class="mini-card">
+      <div class="mini-card-top"><strong class="venda-nome">${escapeHtml(pop)}</strong><span class="badge green">RENAME · SUS</span></div>
+      <p class="venda-desc"><em>${escapeHtml(cient)}</em></p>
+      <p class="mini-sem-link">Uso no SUS: ${escapeHtml(uso)}</p>
+      <p class="venda-desc" style="color:var(--danger-red)"><i class="ph ph-warning"></i> ${escapeHtml(cuidado)}</p>
+    </article>`).join('');
+  return `<h4 class="med-titulo">O que é aprovado no Brasil · regras atuais</h4>
+    <p class="vault-hint" style="color:var(--danger-red)"><i class="ph ph-warning"></i> Informação geral, sem dose. Remédio de planta, canabidiol e suplemento podem interagir com outros remédios: decida com médico ou farmacêutico.</p>
+    <div class="catalogo-grid med-regras">${blocos}</div>
+    <h4 class="med-titulo">Os 12 fitoterápicos do SUS (RENAME)</h4>
+    <div class="catalogo-grid">${rename}</div>
+    <p class="mini-sem-link med-fontes">Fontes: Anvisa — RDC 1.004/2025 (fitoterápicos), RDCs 1.012 a 1.015/2026 (cannabis), RDC 660/2022 (importação de cannabis), RDC 243/2018 e IN 28/2018 (suplementos), RDC 81/2008 (importação por pessoa física); Ministério da Saúde — RENAME e RENISUS. Pesquisa de 27/11/2026: confira se houve atualização.</p>
+    <h4 class="med-titulo">Plantas de uso tradicional · referência da propriedade</h4>`;
+}
+
 async function renderUteis() {
   const caixa = document.getElementById('uteis-lista');
   if (!caixa) return;
+  const reg = document.getElementById('uteis-regulacao');
+  if (reg && !reg.dataset.ok) { reg.innerHTML = htmlRegulacaoMedicinais(); reg.dataset.ok = '1'; }
   try { plantasApi = (await apiPlantas('')).plantas || []; } catch (e) { document.getElementById('uteis-msg').textContent = 'Erro ao ler a API: ' + e.message; }
   const naApi = new Set(plantasApi.map(p => _norm(p.nome_cientifico)));
   caixa.innerHTML = '<div class="catalogo-grid">' + UTEIS_REF.map(([pop, cient, fam, parte, uso, alerta]) => `

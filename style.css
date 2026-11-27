@@ -803,3 +803,13 @@ button.primary,
 #tela-api .rota-previa { margin-top: 6px; max-height: 160px; overflow: auto; white-space: pre-wrap; word-break: break-all; font-size: 11px; padding: 8px; border-radius: 6px; background: rgba(0,0,0,.3); color: var(--text-secondary); }
 #tela-api .cp-eventos { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.9; }
 #tela-api .metric-card small { display: block; margin-top: 2px; }
+
+/* Plantas medicinais — regras e aprovados (27/nov/2026) */
+#tela-plantas-uteis .med-titulo { margin: 22px 0 10px; font-size: 16px; }
+#tela-plantas-uteis .med-regras { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+#tela-plantas-uteis .med-regra ul { margin: 8px 0 0 18px; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+#tela-plantas-uteis .med-regra li { margin-bottom: 4px; }
+#tela-plantas-uteis .med-regra b { color: var(--text-primary); }
+#tela-plantas-uteis .med-fontes { margin-top: 10px; white-space: normal; }
+#tela-plantas-uteis .vault-hint { display: block; line-height: 1.6; }
+#tela-plantas-uteis .vault-hint i { vertical-align: -2px; margin-right: 6px; }
