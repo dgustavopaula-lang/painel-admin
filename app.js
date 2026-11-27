@@ -3934,3 +3934,34 @@ async function abrirGrandesFazendas() {
     ir('O painel não conseguiu entrar na API (' + e.message + '). Confira a senha do item "Grandes Fazendas login" no cofre.');
   }
 }
+
+
+/* ---------- Cofre entre aparelhos (notebook → celular) ----------
+   O arquivo leva o cofre JÁ criptografado (AES-GCM, chave PBKDF2 210.000 iterações da senha do painel).
+   Sem a senha do painel o arquivo não abre. No outro aparelho, a senha passa a ser a mesma deste. */
+function exportarCofre() {
+  const auth = localStorage.getItem(STORAGE_AUTH), vault = localStorage.getItem(STORAGE_VAULT);
+  if (!auth || !vault) return alert('Este aparelho ainda não tem cofre para exportar.');
+  if (!confirm('Gerar o arquivo do cofre criptografado? Guarde-o só com você e apague depois de importar no outro aparelho.')) return;
+  baixarJSON(`gps-cofre-${new Date().toISOString().slice(0, 10)}.json`,
+    { formato: 'gps-cofre-v1', gerado_em: new Date().toISOString(), auth: JSON.parse(auth), vault: JSON.parse(vault) });
+}
+function importarCofre(ev) {
+  const arq = ev.target.files && ev.target.files[0];
+  if (!arq) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (d.formato !== 'gps-cofre-v1' || !d.auth || !d.auth.salt || !d.auth.check || !d.vault || !d.vault.ct) throw new Error('arquivo não é um cofre do painel');
+      const ja = localStorage.getItem(STORAGE_VAULT);
+      if (ja && !confirm('Este aparelho já tem um cofre. Substituir pelo cofre do arquivo? A senha do painel aqui passa a ser a do outro aparelho.')) return;
+      localStorage.setItem(STORAGE_AUTH, JSON.stringify(d.auth));
+      localStorage.setItem(STORAGE_VAULT, JSON.stringify(d.vault));
+      alert('Cofre importado. Entre com a senha do painel do outro aparelho.');
+      location.reload();
+    } catch (e) { alert('Não foi possível importar: ' + e.message); }
+    finally { ev.target.value = ''; }
+  };
+  r.readAsText(arq);
+}

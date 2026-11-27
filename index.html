@@ -343,6 +343,9 @@
       <div id="login-campos"></div>
       <button type="submit" class="btn-action" style="width:100%; justify-content:center; margin-top:12px;">Entrar</button>
       <p id="login-erro" class="login-erro"></p>
+      <label class="btn-action secondary" style="width:100%; justify-content:center; margin-top:10px; cursor:pointer;"><i class="ph ph-upload-simple"></i> Importar cofre de outro aparelho
+        <input type="file" accept=".json,application/json" hidden onchange="importarCofre(event)">
+      </label>
       <p id="login-aviso" class="login-aviso" hidden>
         <strong>Importante:</strong> esta senha criptografa o cofre de "Cofre · Senhas e Acessos" no seu navegador.
         Se você esquecê-la, não existe recuperação — o conteúdo do cofre fica irrecuperável.
@@ -865,6 +868,13 @@
             <label class="btn-action secondary" style="cursor:pointer;"><i class="ph ph-upload-simple"></i> Importar backup
               <input type="file" accept=".json,application/json" hidden onchange="importarBackup(event)">
             </label>
+          </div>
+        </div>
+        <div class="project-section">
+          <h3><i class="ph ph-device-mobile"></i> Levar o cofre para outro aparelho</h3>
+          <p class="regra-texto">Gera um arquivo com o cofre <strong>ainda criptografado</strong> (as chaves só abrem com a senha do painel). No outro aparelho, na tela de entrada, use <strong>Importar cofre</strong> e entre com a mesma senha do painel deste aparelho.</p>
+          <div class="btn-row">
+            <button class="btn-action" onclick="exportarCofre()"><i class="ph ph-lock-key"></i> Exportar cofre criptografado</button>
           </div>
         </div>
       </div>
