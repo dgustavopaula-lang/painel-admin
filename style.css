@@ -782,3 +782,9 @@ button.primary,
     grid-template-columns:1fr;
   }
 }
+
+/* Treinos temáticos — correção de layout (27/nov/2026) */
+#tela-pacotes .vault-hint { display: block; line-height: 1.6; }
+#tela-pacotes .vault-hint i { vertical-align: -2px; margin-right: 6px; }
+#tela-pacotes .mini-sem-link { white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
+#tela-pacotes .fluxo-item label > span { min-width: 0; flex: 1; }
