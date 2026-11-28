@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turing BioGarden Premium</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#071710;color:#e3f5e8;font:16px system-ui,sans-serif}
+header{padding:24px;background:#10291e;border-bottom:1px solid #315c42}
+h1{margin:0;color:#8de9a5;font-size:26px}
+main{max-width:1400px;margin:auto;padding:20px}
+small{color:#9cbba8}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+button{background:#183d29;color:#d7ffe1;border:1px solid #39734d;padding:12px 18px;border-radius:8px;cursor:pointer}
+button:hover{background:#28613d}
+.garden{position:relative;overflow:hidden;min-height:440px;padding:30px;display:grid;grid-template-columns:repeat(2,1fr);gap:24px;background:linear-gradient(145deg,#466c32,#213e21);border:1px solid #71905a;border-radius:20px}
+.bed{position:relative;background:repeating-linear-gradient(0deg,#473221 0px,#473221 24px,#62452c 25px,#62452c 30px);border:9px solid #98714a;border-radius:12px;padding:20px;box-shadow:0 12px 20px #0005}
+.plants{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center;font-size:36px}
+.plant{animation:sway 4s ease-in-out infinite alternate}
+@keyframes sway{to{transform:rotate(7deg)}}
+.particle{position:absolute;width:9px;height:9px;border-radius:50%;animation:float 5s infinite alternate ease-in-out;pointer-events:none}
+@keyframes float{to{transform:translate(25px,-35px)}}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+.metric{background:#10291e;padding:18px;border:1px solid #284c36;border-radius:12px}
+.metric strong{display:block;font-size:25px;color:#8de9a5}
+.panel{background:#10291e;padding:20px;border-radius:12px;margin-top:20px}
+@media(max-width:600px){.garden{gap:10px;padding:12px}.bed{padding:8px;border-width:5px}.plants{font-size:24px;gap:4px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+
+.gold-layout{
+ display:grid;
+ grid-template-columns:1.2fr 1fr;
+ gap:18px;
+}
+.gold-avatar{
+ background:#061810;
+ border:1px solid #b69b55;
+ border-radius:20px;
+ padding:16px;
+ overflow:hidden;
+}
+.gold-avatar h2{
+ color:#d8bd75;
+ font-size:18px;
+}
+#gold3d{width:100%;height:440px}
+@media(max-width:800px){
+ .gold-layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>TURING · BIOGARDEN PREMIUM</h1>
+<small>NexoTerraCore | Laboratório de ecossistemas</small>
+</header>
+<main>
+<div class="metrics">
+<div class="metric">Dia virtual<strong id="day">1</strong></div>
+<div class="metric">Umidade virtual<strong id="water">65%</strong></div>
+<div class="metric">Atividades<strong id="points">0</strong></div>
+<div class="metric">API Central<strong id="api">Pendente</strong></div>
+</div>
+<div class="toolbar">
+<button id="irrigar">Irrigar</button>
+<button id="compostar">Compostagem</button>
+<button id="avancar">Avançar dia</button>
+<button id="conectar">Verificar API</button>
+</div>
+
+<div class="gold-layout">
+  <section class="garden" id="garden"></section>
+  <section class="gold-avatar">
+    <h2>MICROBIOMA · GOLD 3D</h2>
+    <div id="gold3d"></div>
+    <small>Modelo anatômico educacional</small>
+  </section>
+</div>
+
+<div class="panel">
+<h2>Turing · Laboratório ecológico</h2>
+<p>🟢 Atividade benéfica · 🔴 Condição crítica · 🟡 Atenção · 🔵 Umidade · 🟣 Fungos</p>
+<p id="message" role="status">Observe as interações entre plantas, água, solo e microrganismos.</p>
+<small>Simulação educacional. Não representa diagnóstico ou tratamento clínico.</small>
+</div>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let day=1, water=65, points=0;
+const crops=[
+["Tomates","🍅"],
+["Alfaces","🥬"],
+["Cenouras","🥕"],
+["Ervas aromáticas","🌿"]
+];
+for(const [name,emoji] of crops){
+ const bed=document.createElement("article");
+ bed.className="bed";
+ const title=document.createElement("h3");
+ title.textContent=name;
+ bed.append(title);
+ const plants=document.createElement("div");
+ plants.className="plants";
+ for(let i=0;i<8;i++){
+  const plant=document.createElement("span");
+  plant.className="plant";
+  plant.textContent=emoji;
+  plants.append(plant);
+ }
+ bed.append(plants);
+ $("garden").append(bed);
+}
+const colors=["#4ade80","#ef4444","#eab308","#38bdf8","#a855f7"];
+for(let i=0;i<50;i++){
+ const p=document.createElement("span");
+ p.className="particle";
+ p.style.background=colors[i%5];
+ p.style.left=Math.random()*96+"%";
+ p.style.top=Math.random()*96+"%";
+ p.style.animationDelay=Math.random()*5+"s";
+ $("garden").append(p);
+}
+function update(message){
+ $("day").textContent=day;
+ $("water").textContent=water+"%";
+ $("points").textContent=points;
+ $("message").textContent=message;
+}
+$("irrigar").onclick=()=>{
+ water=Math.min(100,water+10);
+ points++;
+ update("Irrigação virtual registrada.");
+};
+$("compostar").onclick=()=>{
+ points++;
+ update("A compostagem transforma matéria orgânica em nutrientes.");
+};
+$("avancar").onclick=()=>{
+ day++;
+ water=Math.max(0,water-5);
+ update("Novo dia na horta virtual.");
+};
+$("conectar").onclick=async()=>{
+ try{
+  const session=JSON.parse(
+   sessionStorage.getItem("gf.sessao.v1") ||
+   localStorage.getItem("gf.sessao.v1") || "null"
+  );
+  if(!session?.token){
+   $("api").textContent="Sem sessão";
+   return;
+  }
+  const response=await fetch(
+   "https://api.gustavopaulasantos.com.br/api/turing/biogarden/health",
+   {headers:{Authorization:"Bearer "+session.token}}
+  );
+  $("api").textContent="HTTP "+response.status;
+  if(response.ok){
+   const data=await response.json();
+   $("api").textContent=data.ok===true?"Online":"Não validada";
+  }
+ }catch{
+  $("api").textContent="Indisponível";
+ }
+};
+</script>
+
+<script type="module">
+import { iniciarGold } from './biogarden-gold.mjs';
+try {
+ iniciarGold(document.getElementById('gold3d'));
+} catch(e) {
+ document.getElementById('gold3d').textContent =
+ 'Renderização 3D indisponível neste navegador.';
+ console.error(e);
+}
+</script>
+</body>
+</html>
